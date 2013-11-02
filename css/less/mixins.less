@@ -1,0 +1,580 @@
+.clearfix {
+    *zoom: 1;
+    &:before,
+    &:after {
+        display: table;
+        content: "";
+        // Fixes Opera/contenteditable bug:
+        // http://nicolasgallagher.com/micro-clearfix-hack/#comment-36952
+        line-height: 0;
+    }
+    &:after {
+        clear: both;
+    }
+}
+
+// Webkit-style focus
+.tab-focus() {
+    // Default
+    outline: thin dotted #333;
+    // Webkit
+    outline: 5px auto -webkit-focus-ring-color;
+    outline-offset: -2px;
+}
+
+// Center-align a block level element
+.center-block() {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+// Sizing shortcuts
+.size(@width; @height) {
+    width: @width;
+    height: @height;
+}
+.square(@size) {
+    .size(@size; @size);
+}
+
+// Placeholder text
+.placeholder(@color: @input-color-placeholder) {
+    &:-moz-placeholder            { color: @color; } // Firefox 4-18
+    &::-moz-placeholder           { color: @color; } // Firefox 19+
+    &:-ms-input-placeholder       { color: @color; } // Internet Explorer 10+
+    &::-webkit-input-placeholder  { color: @color; } // Safari and Chrome
+}
+
+// Text overflow
+// Requires inline-block or block for proper styling
+.text-overflow() {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-shadow (@string: 0 1px 3px rgba(0, 0, 0, 0.25)) {
+    text-shadow: @string;
+}
+
+.box-shadow (@string) {
+    -webkit-box-shadow: @string;
+    -moz-box-shadow: @string;
+    box-shadow: @string;
+}
+
+.drop-shadow (@x: 0, @y: 1px, @blur: 2px, @spread: 0, @alpha: 0.25) {
+    -webkit-box-shadow:	@x @y @blur @spread rgba(0, 0, 0, @alpha);
+    -moz-box-shadow: @x @y @blur @spread rgba(0, 0, 0, @alpha);
+    box-shadow: @x @y @blur @spread rgba(0, 0, 0, @alpha);
+}
+
+.inner-shadow (@x: 0, @y: 1px, @blur: 2px, @spread: 0, @alpha: 0.25) {
+    -webkit-box-shadow: inset @x @y @blur @spread rgba(0, 0, 0, @alpha);
+    -moz-box-shadow: inset @x @y @blur @spread rgba(0, 0, 0, @alpha);
+    box-shadow: inset @x @y @blur @spread rgba(0, 0, 0, @alpha);
+}
+
+// Box sizing
+.box-sizing(@boxmodel) {
+    -webkit-box-sizing: @boxmodel;
+    -moz-box-sizing: @boxmodel;
+    box-sizing: @boxmodel;
+}
+
+.border-radius (@radius: 5px) {
+    -webkit-border-radius: @radius;
+    -moz-border-radius: @radius;
+    border-radius: @radius;
+
+    -webkit-background-clip: padding-box;
+    -moz-background-clip: padding;
+    background-clip: padding-box;
+}
+
+// Single Corner Border Radius
+.border-top-left-radius (@radius) {
+    -webkit-border-top-left-radius: @radius;
+    -moz-border-radius-topleft: @radius;
+    border-top-left-radius: @radius;
+}
+
+.border-top-right-radius (@radius) {
+    -webkit-border-top-right-radius: @radius;
+    -moz-border-radius-topright: @radius;
+    border-top-right-radius: @radius;
+}
+
+.border-bottom-right-radius (@radius) {
+    -webkit-border-bottom-right-radius: @radius;
+    -moz-border-radius-bottomright: @radius;
+    border-bottom-right-radius: @radius;
+}
+
+.border-bottom-left-radius (@radius) {
+    -webkit-border-bottom-left-radius: @radius;
+    -moz-border-radius-bottomleft: @radius;
+    border-bottom-left-radius: @radius;
+}
+
+.border-radiuses (@topright: 0, @bottomright: 0, @bottomleft: 0, @topleft: 0) {
+    -webkit-border-bottom-right-radius: @bottomright;
+    -webkit-border-bottom-left-radius: @bottomleft;
+    -webkit-border-top-right-radius: @topright;
+    -webkit-border-top-left-radius: @topleft;
+
+    -moz-border-radius-bottomright: @bottomright;
+    -moz-border-radius-bottomleft: @bottomleft;
+    -moz-border-radius-topright: @topright;
+    -moz-border-radius-topleft: @topleft;
+
+    border-bottom-right-radius: @bottomright;
+    border-bottom-left-radius: @bottomleft;
+    border-top-right-radius: @topright;
+    border-top-left-radius: @topleft;
+
+    -webkit-background-clip: padding-box;
+    -moz-background-clip: padding;
+    background-clip: padding-box;
+}
+
+.perspective (@perspective) {
+    -webkit-perspective: @perspective;
+    -moz-perspective: @perspective;
+    -ms-perspective: @perspective;
+    -o-perspective: @perspective;
+    perspective: @perspective;
+}
+
+.transition (@transition) {
+    -webkit-transition: @transition;
+    -moz-transition: @transition;
+    -ms-transition: @transition;
+    -o-transition: @transition;
+    transition: @transition;
+}
+
+.transition-delay (@delay) {
+    -webkit-transition-delay: @delay;
+    -moz-transition-delay: @delay;
+    -ms-transition-delay: @delay;
+    -o-transition-delay: @delay;
+    transition-delay: @delay;
+}
+
+.transition-property (@property) {
+    -webkit-transition-property: @property;
+    -moz-transition-property: @property;
+    -ms-transition-property: @property;
+    -o-transition-property: @property;
+    transition-property: @property;
+}
+
+.animation (@animation) {
+    -webkit-animation: @animation;
+    -moz-animation: @animation;
+    -ms-animation: @animation;
+    -o-animation: @animation;
+    animation: @animation;
+}
+
+.transform (@string){
+    -webkit-transform: @string;
+    -moz-transform: @string;
+    -ms-transform: @string;
+    -o-transform: @string;
+    transform: @string;
+}
+
+.transform-style (@transform-style) {
+    -webkit-transform-style: @transform-style;
+    -moz-transform-style: @transform-style;
+    -ms-transform-style: @transform-style;
+    -o-transform-style: @transform-style;
+    transform-style: @transform-style;
+}
+
+.transform-origin (@x:center, @y:center) {
+    -webkit-transform-origin: @x @y;
+    -moz-transform-origin: @x @y;
+    -ms-transform-origin: @x @y;
+    -o-transform-origin: @x @y;
+    transform-origin: @x @y;
+}
+
+.scale (@factor) {
+    -webkit-transform: scale(@factor);
+    -moz-transform: scale(@factor);
+    -ms-transform: scale(@factor);
+    -o-transform: scale(@factor);
+    transform: scale(@factor);
+}
+
+.rotate (@deg) {
+    -webkit-transform: rotate(@deg);
+    -moz-transform: rotate(@deg);
+    -ms-transform: rotate(@deg);
+    -o-transform: rotate(@deg);
+    transform: rotate(@deg);
+}
+
+.skew (@deg, @deg2) {
+    -webkit-transform: skew(@deg, @deg2);
+    -moz-transform: skew(@deg, @deg2);
+    -ms-transform: skew(@deg, @deg2);
+    -o-transform: skew(@deg, @deg2);
+    transform: skew(@deg, @deg2);
+}
+
+.translate (@x, @y:0) {
+    -webkit-transform: translate(@x, @y);
+    -moz-transform: translate(@x, @y);
+    -ms-transform: translate(@x, @y);
+    -o-transform: translate(@x, @y);
+    transform: translate(@x, @y);
+}
+
+.translate3d (@x, @y: 0, @z: 0) {
+    -webkit-transform: translate3d(@x, @y, @z);
+    -moz-transform: translate3d(@x, @y, @z);
+    -ms-transform: translate3d(@x, @y, @z);
+    -o-transform: translate3d(@x, @y, @z);
+    transform: translate3d(@x, @y, @z);
+}
+
+.opacity (@percent) {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=@{percent})";
+    filter: alpha(opacity=@percent);
+    opacity: @percent/100;
+}
+
+.backface-visibility (@visibility: hidden) {
+    -webkit-backface-visibility: @visibility;
+    -moz-backface-visibility: @visibility;
+    -ms-backface-visibility: @visibility;
+    -o-backface-visibility: @visibility;
+    backface-visibility: @visibility;
+}
+
+.gradient (@startColor: #eee, @endColor: white) {
+    background-color: @startColor;
+    background: -webkit-gradient(linear, left top, left bottom, from(@startColor), to(@endColor));
+    background: -webkit-linear-gradient(top, @startColor, @endColor);
+    background: -moz-linear-gradient(top, @startColor, @endColor);
+    background: -ms-linear-gradient(top, @startColor, @endColor);
+    background: -o-linear-gradient(top, @startColor, @endColor);
+}
+
+.horizontal-gradient (@startColor: #eee, @endColor: white) {
+    background-color: @startColor;
+    background-image: -webkit-gradient(linear, left top, right top, from(@startColor), to(@endColor));
+    background-image: -webkit-linear-gradient(left, @startColor, @endColor);
+    background-image: -moz-linear-gradient(left, @startColor, @endColor);
+    background-image: -ms-linear-gradient(left, @startColor, @endColor);
+    background-image: -o-linear-gradient(left, @startColor, @endColor);
+}
+
+.background-size(@cover: cover){
+    -webkit-background-size: @cover;
+    -moz-background-size: @cover;
+    -o-background-size: @cover;
+    background-size: @cover;
+}
+
+// Responsive utilities
+// -------------------------
+// More easily include all the states for responsive-utilities.less.
+.responsive-visibility() {
+    display: block !important;
+    tr& { display: table-row !important; }
+    th&,
+    td& { display: table-cell !important; }
+}
+
+.responsive-invisibility() {
+    &,
+    tr&,
+    th&,
+    td& { display: none !important; }
+}
+
+// Grid System
+// -----------
+
+// Centered container element
+.container-fixed() {
+    margin-right: auto;
+    margin-left: auto;
+    padding-left:  (@grid-gutter-width / 2);
+    padding-right: (@grid-gutter-width / 2);
+    .clearfix();
+}
+
+// Creates a wrapper for a series of columns
+.make-row(@gutter: @grid-gutter-width) {
+    margin-left:  (@gutter / -2);
+    margin-right: (@gutter / -2);
+    .clearfix();
+}
+
+// Generate the extra small columns
+.make-xs-column(@columns; @gutter: @grid-gutter-width) {
+    position: relative;
+    float: left;
+    width: percentage((@columns / @grid-columns));
+    // Prevent columns from collapsing when empty
+    min-height: 1px;
+    // Inner gutter via padding
+    padding-left:  (@gutter / 2);
+    padding-right: (@gutter / 2);
+}
+
+// Generate the small columns
+.make-sm-column(@columns; @gutter: @grid-gutter-width) {
+    position: relative;
+    // Prevent columns from collapsing when empty
+    min-height: 1px;
+    // Inner gutter via padding
+    padding-left:  (@gutter / 2);
+    padding-right: (@gutter / 2);
+
+    // Calculate width based on number of columns available
+    @media (min-width: @screen-sm-min) {
+        float: left;
+        width: percentage((@columns / @grid-columns));
+    }
+}
+
+// Generate the small column offsets
+.make-sm-column-offset(@columns) {
+    @media (min-width: @screen-sm-min) {
+        margin-left: percentage((@columns / @grid-columns));
+    }
+}
+.make-sm-column-push(@columns) {
+    @media (min-width: @screen-sm-min) {
+        left: percentage((@columns / @grid-columns));
+    }
+}
+.make-sm-column-pull(@columns) {
+    @media (min-width: @screen-sm-min) {
+        right: percentage((@columns / @grid-columns));
+    }
+}
+
+// Generate the medium columns
+.make-md-column(@columns; @gutter: @grid-gutter-width) {
+    position: relative;
+    // Prevent columns from collapsing when empty
+    min-height: 1px;
+    // Inner gutter via padding
+    padding-left:  (@gutter / 2);
+    padding-right: (@gutter / 2);
+
+    // Calculate width based on number of columns available
+    @media (min-width: @screen-md-min) {
+        float: left;
+        width: percentage((@columns / @grid-columns));
+    }
+}
+
+// Generate the medium column offsets
+.make-md-column-offset(@columns) {
+    @media (min-width: @screen-md-min) {
+        margin-left: percentage((@columns / @grid-columns));
+    }
+}
+.make-md-column-push(@columns) {
+    @media (min-width: @screen-md) {
+        left: percentage((@columns / @grid-columns));
+    }
+}
+.make-md-column-pull(@columns) {
+    @media (min-width: @screen-md-min) {
+        right: percentage((@columns / @grid-columns));
+    }
+}
+
+// Generate the large columns
+.make-lg-column(@columns; @gutter: @grid-gutter-width) {
+    position: relative;
+    // Prevent columns from collapsing when empty
+    min-height: 1px;
+    // Inner gutter via padding
+    padding-left:  (@gutter / 2);
+    padding-right: (@gutter / 2);
+
+    // Calculate width based on number of columns available
+    @media (min-width: @screen-lg-min) {
+        float: left;
+        width: percentage((@columns / @grid-columns));
+    }
+}
+
+// Generate the large column offsets
+.make-lg-column-offset(@columns) {
+    @media (min-width: @screen-lg-min) {
+        margin-left: percentage((@columns / @grid-columns));
+    }
+}
+.make-lg-column-push(@columns) {
+    @media (min-width: @screen-lg-min) {
+        left: percentage((@columns / @grid-columns));
+    }
+}
+.make-lg-column-pull(@columns) {
+    @media (min-width: @screen-lg-min) {
+        right: percentage((@columns / @grid-columns));
+    }
+}
+
+
+// Framework grid generation
+//
+// Used only by Bootstrap to generate the correct number of grid classes given
+// any value of `@grid-columns`.
+
+.make-grid-columns() {
+    // Common styles for all sizes of grid columns, widths 1-12
+    .col(@index) when (@index = 1) { // initial
+        @item: ~".col-xs-@{index}, .col-sm-@{index}, .col-md-@{index}, .col-lg-@{index}";
+        .col(@index + 1, @item);
+    }
+    .col(@index, @list) when (@index =< @grid-columns) { // general; "=<" isn't a typo
+        @item: ~".col-xs-@{index}, .col-sm-@{index}, .col-md-@{index}, .col-lg-@{index}";
+        .col(@index + 1, ~"@{list}, @{item}");
+    }
+    .col(@index, @list) when (@index > @grid-columns) { // terminal
+        @{list} {
+            position: relative;
+            // Prevent columns from collapsing when empty
+            min-height: 1px;
+            // Inner gutter via padding
+            padding-left:  (@grid-gutter-width / 2);
+            padding-right: (@grid-gutter-width / 2);
+        }
+    }
+    .col(1); // kickstart it
+}
+
+.make-grid-columns-float(@class) {
+    .col(@index) when (@index = 1) { // initial
+        @item: ~".col-@{class}-@{index}";
+        .col(@index + 1, @item);
+    }
+    .col(@index, @list) when (@index < @grid-columns) { // general
+        @item: ~".col-@{class}-@{index}";
+        .col(@index + 1, ~"@{list}, @{item}");
+    }
+    .col(@index, @list) when (@index = @grid-columns) { // terminal
+        @{list} {
+            float: left;
+        }
+    }
+    .col(1); // kickstart it
+}
+
+.calc-grid(@index, @class, @type) when (@type = width) {
+    .col-@{class}-@{index} {
+        width: percentage((@index / @grid-columns));
+    }
+}
+.calc-grid(@index, @class, @type) when (@type = push) {
+    .col-@{class}-push-@{index} {
+        left: percentage((@index / @grid-columns));
+    }
+}
+.calc-grid(@index, @class, @type) when (@type = pull) {
+    .col-@{class}-pull-@{index} {
+        right: percentage((@index / @grid-columns));
+    }
+}
+.calc-grid(@index, @class, @type) when (@type = offset) {
+    .col-@{class}-offset-@{index} {
+        margin-left: percentage((@index / @grid-columns));
+    }
+}
+
+// Basic looping in LESS
+.make-grid(@index, @class, @type) when (@index > 0) {
+    .calc-grid(@index, @class, @type);
+    // next iteration
+    .make-grid(@index - 1, @class, @type);
+}
+
+// Reset filters for IE
+//
+// When you need to remove a gradient background, do not forget to use this to reset
+// the IE filter for IE9 and below.
+.reset-filter() {
+    filter: e(%("progid:DXImageTransform.Microsoft.gradient(enabled = false)"));
+}
+
+
+
+// Retina images
+//
+// Short retina mixin for setting background-image and -size
+
+.img-retina(@file-1x; @file-2x; @width-1x; @height-1x) {
+    background-image: url("@{file-1x}");
+
+    @media
+    only screen and (-webkit-min-device-pixel-ratio: 2),
+    only screen and (   min--moz-device-pixel-ratio: 2),
+    only screen and (     -o-min-device-pixel-ratio: 2/1),
+    only screen and (        min-device-pixel-ratio: 2),
+    only screen and (                min-resolution: 192dpi),
+    only screen and (                min-resolution: 2dppx) {
+        background-image: url("@{file-2x}");
+        background-size: @width-1x @height-1x;
+    }
+}
+
+
+// Responsive image
+//
+// Keep images from scaling beyond the width of their parents.
+
+.img-responsive(@display: block;) {
+    display: @display;
+    max-width: 100%; // Part 1: Set a maximum relative to the parent
+    height: auto; // Part 2: Scale the height according to the width, otherwise you get stretching
+}
+
+.pointer-events(@display: none) {
+    -webkit-pointer-events: @display;
+    -moz-pointer-events: @display;
+    -ms-pointer-events: @display;
+    pointer-events: @display;
+}
+
+.user-select(@display: none) {
+    -webkit-user-select: @display;
+    -moz-user-select: @display;
+    user-select: @display;
+}
+
+.background-size(@sizing){
+    -webkit-background-size: @sizing;
+    -moz-background-size: @sizing;
+    -o-background-size: @sizing;
+    background-size: @sizing;
+}
+
+
+.justify(){
+  text-align: justify;
+
+&:after{
+    content: '';
+    display: inline-block;
+    width: 100%;}
+
+> * {
+    display: inline-block;
+    vertical-align: top;
+    text-align: left;
+  }
+}
