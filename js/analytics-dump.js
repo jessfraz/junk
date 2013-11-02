@@ -303,7 +303,7 @@ function handleCoreReportingResults(response) {
 
             // Put headers in table.
             if (!headersDone){
-                output.push('<table>');
+                output.push('<table class="table table-condensed table-striped">');
                 output.push('<tr>');
                 output.push('<th>Profile Name</th>');
                 for (var i = 0, header; header = response.columnHeaders[i]; ++i) {
