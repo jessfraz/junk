@@ -150,8 +150,8 @@ function handleAuthClick(event) {
  * client library must be loaded before this function is called.
  */
 function makeApiCall() {
-  outputToPage('Querying Accounts.');
-  gapi.client.analytics.management.accounts.list().execute(handleAccounts);
+    outputToPage('Querying Accounts.');
+    gapi.client.analytics.management.accounts.list().execute(handleAccounts);
 }
 
 
@@ -162,22 +162,34 @@ function makeApiCall() {
  * queryWebProeprties.
  * @param {Object} response The response object with data from the
  *     accounts collection.
- */
+ */    
+var max;
+var j;
+var respone_accounts;
 function handleAccounts(response) {
-  if (!response.code) {
-    if (response && response.items && response.items.length) {
-        for(var i=0; i< response.items.length; i++){
-            var account_id = response.items[i].id;
-            queryWebproperties(account_id);
+    if (!response.code) {
+        if (response && response.items && response.items.length) {
+            max=response.items.length;
+            respone_accounts = response.items;
+            doLoop();
+        } else {
+            updatePage('No accounts found for this user.')
         }
     } else {
-      updatePage('No accounts found for this user.')
+        updatePage('There was an error querying accounts: ' + response.message);
     }
-  } else {
-    updatePage('There was an error querying accounts: ' + response.message);
-  }
 }
 
+function doLoop () {
+    setTimeout(function () { 
+        if (j < max){
+            var account_id = respone_accounts[j].id;
+            queryWebproperties(account_id);
+            doLoop();
+        }
+        j++;                       
+    }, 5000);
+}
 
 /**
  * Executes a query to the Management API to retrieve all the users
@@ -187,10 +199,10 @@ function handleAccounts(response) {
  *     webproperties.
  */
 function queryWebproperties(accountId) {
-  updatePage('Querying Webproperties.');
-  gapi.client.analytics.management.webproperties.list({
-      'accountId': accountId
-  }).execute(handleWebproperties);
+    updatePage('Querying Webproperties.');
+    gapi.client.analytics.management.webproperties.list({
+        'accountId': accountId
+    }).execute(handleWebproperties);
 }
 
 
@@ -203,20 +215,20 @@ function queryWebproperties(accountId) {
  *     webproperties collection.
  */
 function handleWebproperties(response) {
-  if (!response.code) {
-    if (response && response.items && response.items.length) {
-        for(var i=0; i< response.items.length; i++){
-           var account_id = response.items[i].accountId;
-            var web_property_id = response.items[i].id;
-            queryProfiles(account_id, web_property_id);
+    if (!response.code) {
+        if (response && response.items && response.items.length) {
+            for(var i=0; i< response.items.length; i++){
+                var account_id = response.items[i].accountId;
+                var web_property_id = response.items[i].id;
+                queryProfiles(account_id, web_property_id);
+            }
+        } else {
+            updatePage('No webproperties found for this user.')
         }
     } else {
-      updatePage('No webproperties found for this user.')
+        updatePage('There was an error querying webproperties: ' +
+                response.message);
     }
-  } else {
-    updatePage('There was an error querying webproperties: ' +
-        response.message);
-  }
 }
 
 
@@ -230,11 +242,11 @@ function handleWebproperties(response) {
  *     retrieve profiles.
  */
 function queryProfiles(accountId, webpropertyId) {
-  updatePage('Querying Profiles.');
-  gapi.client.analytics.management.profiles.list({
-    'accountId': accountId,
-    'webPropertyId': webpropertyId
-  }).execute(handleProfiles);
+    updatePage('Querying Profiles.');
+    gapi.client.analytics.management.profiles.list({
+        'accountId': accountId,
+        'webPropertyId': webpropertyId
+    }).execute(handleProfiles);
 }
 
 
@@ -247,19 +259,19 @@ function queryProfiles(accountId, webpropertyId) {
  *     profiles collection.
  */
 function handleProfiles(response) {
-  if (!response.code) {
-    if (response && response.items && response.items.length) {
-        for(var i=0; i< response.items.length; i++){
-           var profile_id = response.items[i].id;
-            queryCoreReportingApi(profile_id);
+    if (!response.code) {
+        if (response && response.items && response.items.length) {
+            for(var i=0; i< response.items.length; i++){
+                var profile_id = response.items[i].id;
+                queryCoreReportingApi(profile_id);
+            }
+
+        } else {
+            updatePage('No profiles found for this user.')
         }
-      
     } else {
-      updatePage('No profiles found for this user.')
+        updatePage('There was an error querying profiles: ' + response.message);
     }
-  } else {
-    updatePage('There was an error querying profiles: ' + response.message);
-  }
 }
 
 
@@ -270,17 +282,17 @@ function handleProfiles(response) {
  * @param {String} profileId The profileId specifying which profile to query.
  */
 function queryCoreReportingApi(profileId) {
-  updatePage('Querying Core Reporting API.');
-  gapi.client.analytics.data.ga.get({
-    'ids': 'ga:' + profileId,
-    'start-date': lastNDays(14),
-    'end-date': lastNDays(0),
-    'metrics': 'ga:visits',
-    'dimensions': 'ga:source,ga:keyword',
-    'sort': '-ga:visits,ga:source',
-    'filters': 'ga:medium==organic',
-    'max-results': 25
-  }).execute(handleCoreReportingResults);
+    updatePage('Querying Core Reporting API.');
+    gapi.client.analytics.data.ga.get({
+        'ids': 'ga:' + profileId,
+        'start-date': lastNDays(14),
+        'end-date': lastNDays(0),
+        'metrics': 'ga:visits',
+        'dimensions': 'ga:source,ga:keyword',
+        'sort': '-ga:visits,ga:source',
+        'filters': 'ga:medium==organic',
+        'max-results': 25
+    }).execute(handleCoreReportingResults);
 }
 
 
@@ -292,37 +304,37 @@ function queryCoreReportingApi(profileId) {
  * @param {Object} response The reponse returned from the Core Reporting API.
  */
 function handleCoreReportingResults(response) {
-  if (!response.code) {
-    if (response.rows && response.rows.length) {
-      var output = [];
+    if (!response.code) {
+        if (response.rows && response.rows.length) {
+            var output = [];
 
-      // Profile Name.
-      output.push('Profile Name: ', response.profileInfo.profileName, '<br>');
+            // Profile Name.
+            output.push('Profile Name: ', response.profileInfo.profileName, '<br>');
 
-      var table = ['<table>'];
+            var table = ['<table>'];
 
-      // Put headers in table.
-      table.push('<tr>');
-      for (var i = 0, header; header = response.columnHeaders[i]; ++i) {
-        table.push('<th>', header.name, '</th>');
-      }
-      table.push('</tr>');
+            // Put headers in table.
+            table.push('<tr>');
+            for (var i = 0, header; header = response.columnHeaders[i]; ++i) {
+                table.push('<th>', header.name, '</th>');
+            }
+            table.push('</tr>');
 
-      // Put cells in table.
-      for (var i = 0, row; row = response.rows[i]; ++i) {
-        table.push('<tr><td>', row.join('</td><td>'), '</td></tr>');
-      }
-      table.push('</table>');
+            // Put cells in table.
+            for (var i = 0, row; row = response.rows[i]; ++i) {
+                table.push('<tr><td>', row.join('</td><td>'), '</td></tr>');
+            }
+            table.push('</table>');
 
-      output.push(table.join(''));
-      resultsToPage(output.join(''));
+            output.push(table.join(''));
+            resultsToPage(output.join(''));
+        } else {
+            outputToPage('No results found.');
+        }
     } else {
-      outputToPage('No results found.');
+        updatePage('There was an error querying core reporting API: ' +
+                response.message);
     }
-  } else {
-    updatePage('There was an error querying core reporting API: ' +
-        response.message);
-  }
 }
 
 
@@ -333,12 +345,12 @@ function handleCoreReportingResults(response) {
  * @param {String} output The HTML string to output.
  */
 function outputToPage(output) {
-  document.getElementById('output').innerHTML = output;
+    document.getElementById('output').innerHTML = output;
 }
 
 function resultsToPage(output) {
-     document.getElementById('output').innerHTML = '';
-  document.getElementById('results').innerHTML = document.getElementById('results').innerHTML+ output;
+    document.getElementById('output').innerHTML = '';
+    document.getElementById('results').innerHTML += '<br>' + output;
 }
 
 
@@ -349,7 +361,7 @@ function resultsToPage(output) {
  * @param {String} output The HTML string to output.
  */
 function updatePage(output) {
-  document.getElementById('output').innerHTML += '<br>' + output;
+    document.getElementById('output').innerHTML += '<br>' + output;
 }
 
 
@@ -359,23 +371,23 @@ function updatePage(output) {
  *     return a date. Value of 0 returns today.
  */
 function lastNDays(n) {
-  var today = new Date();
-  var before = new Date();
-  before.setDate(today.getDate() - n);
+    var today = new Date();
+    var before = new Date();
+    before.setDate(today.getDate() - n);
 
-  var year = before.getFullYear();
+    var year = before.getFullYear();
 
-  var month = before.getMonth() + 1;
-  if (month < 10) {
-    month = '0' + month;
-  }
+    var month = before.getMonth() + 1;
+    if (month < 10) {
+        month = '0' + month;
+    }
 
-  var day = before.getDate();
-  if (day < 10) {
-    day = '0' + day;
-  }
+    var day = before.getDate();
+    if (day < 10) {
+        day = '0' + day;
+    }
 
-  return [year, month, day].join('-');
+    return [year, month, day].join('-');
 }
 
 
