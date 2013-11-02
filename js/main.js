@@ -86,7 +86,7 @@ function handleWebproperties(response) {
             for(var i=0; i< response.items.length; i++){
                 var account_id = response.items[i].accountId;
                 var web_property_id = response.items[i].id;
-                queryProfiles(account_id, web_property_id);
+                queryProfiles(account_id, web_property_id, i);
             }
         } else {
             updatePage('No webproperties found for this user.')
@@ -106,12 +106,14 @@ function handleWebproperties(response) {
  * @param {String} webpropertyId The ID of the webproperty from which to
  *     retrieve profiles.
  */
-function queryProfiles(accountId, webpropertyId) {
-    updatePage('Querying Profiles.');
-    gapi.client.analytics.management.profiles.list({
-        'accountId': accountId,
-        'webPropertyId': webpropertyId
-    }).execute(handleProfiles);
+function queryProfiles(accountId, webpropertyId, i) {
+    setTimeout(function(){
+        updatePage('Querying Profiles.');
+        gapi.client.analytics.management.profiles.list({
+            'accountId': accountId,
+            'webPropertyId': webpropertyId
+        }).execute(handleProfiles);
+    }, 5000*i);
 }
 
 
