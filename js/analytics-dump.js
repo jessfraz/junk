@@ -163,6 +163,7 @@ function makeApiCall() {
  * @param {Object} response The response object with data from the
  *     accounts collection.
  */
+var accountsDone = false;
 function handleAccounts(response) {
     if (!response.code) {
         if (response && response.items && response.items.length) {
@@ -170,6 +171,9 @@ function handleAccounts(response) {
             for(var i=0; i< max; i++){
                 var account_id = response.items[i].id;
                 queryWebproperties(account_id, i, max);
+                if(i==(max-1)){
+                    accountsDone = true;
+                }
             }
         } else {
             updatePage('No accounts found for this user.')
@@ -194,7 +198,7 @@ function queryWebproperties(accountId, i, max) {
         gapi.client.analytics.management.webproperties.list({
             'accountId': accountId
         }).execute(handleWebproperties);
-        if(i==(max-1)){
+        if(accountsDone && i==(max-1)){
             propertiesDone = true;
         }
     }, 5000*i);
@@ -358,9 +362,10 @@ function outputToPage(output) {
 }
 
 function resultsToPage(output) {
-    if(profilesDone && propertiesDone){
+    if(accountsDone && profilesDone && propertiesDone){
+        console.log(csv_array);
         document.getElementById('output').innerHTML = 'Creating CSV...';
-        createCSV(csv_array);
+        //createCSV(csv_array);
     } else  {
         document.getElementById('output').innerHTML = 'Querying Next...';
     }
