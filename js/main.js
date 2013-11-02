@@ -215,6 +215,7 @@ function outputToPage(output) {
 }
 
 function resultsToPage(output) {
+     document.getElementById('output').innerHTML = '';
   document.getElementById('results').innerHTML = document.getElementById('results').innerHTML+ output;
 }
 

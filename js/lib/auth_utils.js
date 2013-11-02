@@ -86,7 +86,7 @@ function handleAuthorized() {
   authorizeButton.style.display = 'none';
   runDemoButton.style.display = 'block';
   runDemoButton.onclick = makeApiCall;
-  outputToPage('Click the Run Demo button to begin.');
+  outputToPage('Click the Get Data button to begin.');
 }
 
 
