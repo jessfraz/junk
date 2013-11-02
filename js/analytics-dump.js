@@ -294,30 +294,30 @@ function queryCoreReportingApi(profileId) {
  * user.
  * @param {Object} response The reponse returned from the Core Reporting API.
  */
+var headersDone = false;
+var output = [];
 function handleCoreReportingResults(response) {
     if (!response.code) {
         if (response.rows && response.rows.length) {
-            var output = [];
-
-            // Profile Name.
-            output.push('Profile Name: ', response.profileInfo.profileName, '<br>');
-
-            var table = ['<table>'];
+            resultsToPage('Adding Results for Profile Name: '+response.profileInfo.profileName+'...<br>');
 
             // Put headers in table.
-            table.push('<tr>');
-            for (var i = 0, header; header = response.columnHeaders[i]; ++i) {
-                table.push('<th>', header.name, '</th>');
-            }
-            table.push('</tr>');
+            if (!headersDone){
+                var output = ['<table>'];
+                output.push('<tr>');
+                output.push('<th>Profile Name</th>');
+                for (var i = 0, header; header = response.columnHeaders[i]; ++i) {
+                    output.push('<th>', header.name, '</th>');
+                }
+                headersDone = true;
+                output.push('</tr>');
+            }            
 
             // Put cells in table.
             for (var i = 0, row; row = response.rows[i]; ++i) {
-                table.push('<tr><td>', row.join('</td><td>'), '</td></tr>');
+                output.push('<tr><td>'+response.profileInfo.profileName+'</td><td>', row.join('</td><td>'), '</td></tr>');
             }
-            table.push('</table>');
 
-            output.push(table.join(''));
             resultsToPage(output.join(''));
         } else {
             outputToPage('No results found.');
@@ -340,7 +340,7 @@ function outputToPage(output) {
 
 function resultsToPage(output) {
     document.getElementById('output').innerHTML = '';
-    document.getElementById('results').innerHTML += output;
+    document.getElementById('results').innerHTML = output + '</table>';
 }
 
 
