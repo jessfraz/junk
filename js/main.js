@@ -1,51 +1,14 @@
-// Copyright 2012 Google Inc. All Rights Reserved.
-
-/* Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @fileoverview Sample program traverses the Managemt API hierarchy to
- * retrieve the first profile id. This profile id is then used to query the
- * Core Reporting API to retrieve the top 25 organic
- * Note: auth_util.js is required for this to run.
- * @author api.nickm@gmail.com (Nick Mihailovski)
- */
-
-/**
- * Executes a query to the Management API to retrieve all the users accounts.
- * Once complete, handleAccounts is executed. Note: A user must have gone
- * through the Google APIs authorization routine and the Google Anaytics
- * client library must be loaded before this function is called.
- */
 function makeApiCall() {
     outputToPage('Querying Accounts.');
     gapi.client.analytics.management.accounts.list().execute(handleAccounts);
 }
 
 
-/**
- * Handles the API response for querying the accounts collection. This checks
- * to see if any error occurs as well as checks to make sure the user has
- * accounts. It then retrieve the ID of the first account and then executes
- * queryWebProeprties.
- * @param {Object} response The response object with data from the
- *     accounts collection.
- */
 function handleAccounts(response) {
     if (!response.code) {
         if (response && response.items && response.items.length) {
             var max = response.items.length;
-            for(var i=0; i< max; i++){
+            for(var i=0; i < max; i++){
                 var account_id = response.items[i].id;
                 queryWebproperties(account_id, i, max);
             }
@@ -58,13 +21,7 @@ function handleAccounts(response) {
 }
 
 
-/**
- * Executes a query to the Management API to retrieve all the users
- * webproperties for the provided accountId. Once complete,
- * handleWebproperties is executed.
- * @param {String} accountId The ID of the account from which to retrieve
- *     webproperties.
- */
+
 var accountsDone = false;
 function queryWebproperties(accountId, i, max) {
     setTimeout(function(){
@@ -72,22 +29,16 @@ function queryWebproperties(accountId, i, max) {
         gapi.client.analytics.management.webproperties.list({
             'accountId': accountId
         }).execute(handleWebproperties);
-        if (i==(max-1)){
+        if (i>=(max-1)){
             accountsDone = true;
-            console.log('accounts done');
+            console.log('accounts done', i, max);
+        } else {
+            accountsDone = false;
         }
     }, 5000*i);
 }
 
 
-/**
- * Handles the API response for querying the webproperties collection. This
- * checks to see if any error occurs as well as checks to make sure the user
- * has webproperties. It then retrieve the ID of both the account and the
- * first webproperty, then executes queryProfiles.
- * @param {Object} response The response object with data from the
- *     webproperties collection.
- */
 function handleWebproperties(response) {
     if (!response.code) {
         if (response && response.items && response.items.length) {
@@ -106,15 +57,6 @@ function handleWebproperties(response) {
 }
 
 
-/**
- * Executes a query to the Management API to retrieve all the users
- * profiles for the provided accountId and webPropertyId. Once complete,
- * handleProfiles is executed.
- * @param {String} accountId The ID of the account from which to retrieve
- *     profiles.
- * @param {String} webpropertyId The ID of the webproperty from which to
- *     retrieve profiles.
- */
 var propertiesDone = false;
 function queryProfiles(accountId, webpropertyId, i, max) {
     setTimeout(function(){
@@ -123,22 +65,17 @@ function queryProfiles(accountId, webpropertyId, i, max) {
             'accountId': accountId,
             'webPropertyId': webpropertyId
         }).execute(handleProfiles);
-        if (accountsDone && i==(max-1)){
+        if (accountsDone && i>=(max-1)){
             propertiesDone = true;
-            console.log('properties done');
+            console.log('properties done', i, max);
+        } else {
+            propertiesDone = false;
         }
     }, 5000*i);
 }
 
 
-/**
- * Handles the API response for querying the profiles collection. This
- * checks to see if any error occurs as well as checks to make sure the user
- * has profiles. It then retrieve the ID of the first profile and
- * finally executes queryCoreReportingApi.
- * @param {Object} response The response object with data from the
- *     profiles collection.
- */
+
 function handleProfiles(response) {
     if (!response.code) {
         if (response && response.items && response.items.length) {
@@ -157,12 +94,6 @@ function handleProfiles(response) {
 }
 
 
-/**
- * Execute a query to the Core Reporting API to retrieve the top 25
- * organic search terms by visits for the profile specified by profileId.
- * Once complete, handleCoreReportingResults is executed.
- * @param {String} profileId The profileId specifying which profile to query.
- */
 var profilesDone = false;
 function queryCoreReportingApi(profileId, i, max) {
     updatePage('Querying Core Reporting API.');
@@ -176,20 +107,15 @@ function queryCoreReportingApi(profileId, i, max) {
         //'filters': 'ga:medium==organic',
         'max-results': 500
     }).execute(handleCoreReportingResults);
-    if (propertiesDone && i==(max-1)){
+    if (accountsDone && propertiesDone && i>=(max-1)){
         profilesDone = true;
-        console.log('profiles done');
+        console.log('profiles done', i, max);
+    } else {
+        profilesDone = false;
     }
 }
 
 
-/**
- * Handles the API reponse for querying the Core Reporting API. This first
- * checks if any errors occured and prints the error messages to the screen.
- * If sucessful, the profile name, headers, result table are printed for the
- * user.
- * @param {Object} response The reponse returned from the Core Reporting API.
- */
 var headersDone = false;
 var output = [];
 var csv_array = [];
@@ -232,12 +158,6 @@ function handleCoreReportingResults(response) {
 }
 
 
-/**
- * Utility method to update the output section of the HTML page. Used
- * to output messages to the user. This overwrites any existing content
- * in the output area.
- * @param {String} output The HTML string to output.
- */
 function outputToPage(output) {
     document.getElementById('output').innerHTML = output;
 }
@@ -254,22 +174,11 @@ function resultsToPage(output) {
 }
 
 
-/**
- * Utility method to update the output section of the HTML page. Used
- * to output messages to the user. This appends content to any existing
- * content in the output area.
- * @param {String} output The HTML string to output.
- */
 function updatePage(output) {
     document.getElementById('output').innerHTML += '<br>' + output;
 }
 
 
-/**
- * Utility method to return the lastNdays from today in the format yyyy-MM-dd.
- * @param {Number} n The number of days in the past from tpday that we should
- *     return a date. Value of 0 returns today.
- */
 function lastNDays(n) {
     var today = new Date();
     var before = new Date();
