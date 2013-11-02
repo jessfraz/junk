@@ -74,6 +74,7 @@ function queryWebproperties(accountId, i, max) {
         }).execute(handleWebproperties);
         if (i==(max-1)){
             accountsDone = true;
+            console.log('accounts done');
         }
     }, 5000*i);
 }
@@ -124,6 +125,7 @@ function queryProfiles(accountId, webpropertyId, i, max) {
         }).execute(handleProfiles);
         if (accountsDone && i==(max-1)){
             propertiesDone = true;
+            console.log('properties done');
         }
     }, 5000*i);
 }
@@ -176,6 +178,7 @@ function queryCoreReportingApi(profileId, i, max) {
     }).execute(handleCoreReportingResults);
     if (propertiesDone && i==(max-1)){
         profilesDone = true;
+        console.log('profiles done');
     }
 }
 
@@ -241,7 +244,7 @@ function outputToPage(output) {
 
 function resultsToPage(output) {
     if (accountsDone && profilesDone && propertiesDone){
-        console.log(csv_array);
+        console.log('i think im done');
         document.getElementById('output').innerHTML = 'Creating CSV...';
         //createCSV(csv_array);
     } else  {
