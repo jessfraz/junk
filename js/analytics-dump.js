@@ -286,13 +286,13 @@ function queryCoreReportingApi(profileId) {
     updatePage('Querying Core Reporting API.');
     gapi.client.analytics.data.ga.get({
         'ids': 'ga:' + profileId,
-        'start-date': lastNDays(14),
+        'start-date': lastNDays(30),
         'end-date': lastNDays(0),
-        'metrics': 'ga:visits',
-        'dimensions': 'ga:source,ga:keyword',
-        'sort': '-ga:visits,ga:source',
-        'filters': 'ga:medium==organic',
-        'max-results': 25
+        'metrics': 'ga:pageviews, ga:visits',
+        'dimensions': 'ga:date',
+        //'sort': '-ga:visits,ga:source',
+        //'filters': 'ga:medium==organic',
+        'max-results': 500
     }).execute(handleCoreReportingResults);
 }
 
