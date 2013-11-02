@@ -168,7 +168,7 @@ function handleAccounts(response) {
         if (response && response.items && response.items.length) {
             for(var i=0; i< response.items.length; i++){
                 var account_id = response.items[i].id;
-                queryWebproperties(account_id);
+                queryWebproperties(account_id, i);
             }
         } else {
             updatePage('No accounts found for this user.')
@@ -186,11 +186,13 @@ function handleAccounts(response) {
  * @param {String} accountId The ID of the account from which to retrieve
  *     webproperties.
  */
-function queryWebproperties(accountId) {
-    updatePage('Querying Webproperties.');
-    gapi.client.analytics.management.webproperties.list({
-        'accountId': accountId
-    }).execute(handleWebproperties);
+function queryWebproperties(accountId, i) {
+    setTimeout(function(){
+        updatePage('Querying Webproperties.');
+        gapi.client.analytics.management.webproperties.list({
+            'accountId': accountId
+        }).execute(handleWebproperties);
+    }, 5000*i);
 }
 
 
