@@ -187,12 +187,16 @@ function handleAccounts(response) {
  * @param {String} accountId The ID of the account from which to retrieve
  *     webproperties.
  */
+var propertiesDone = false;
 function queryWebproperties(accountId, i, max) {
     setTimeout(function(){
         updatePage('Querying Webproperties '+(i+1)+' of '+max+'.');
         gapi.client.analytics.management.webproperties.list({
             'accountId': accountId
         }).execute(handleWebproperties);
+        if(i==(max-1)){
+            propertiesDone = true;
+        }
     }, 5000*i);
 }
 
@@ -240,7 +244,7 @@ function queryProfiles(accountId, webpropertyId, i, max) {
             'accountId': accountId,
             'webPropertyId': webpropertyId
         }).execute(handleProfiles);
-        if(i == max-1){
+        if(propertiesDone && i==(max-1)){
             profilesDone = true;
         }
     }, 5000*i);
@@ -345,9 +349,9 @@ function outputToPage(output) {
 }
 
 function resultsToPage(output) {
-    if(profilesDone){
+    if(profilesDone && propertiesDone){
         document.getElementById('output').style.display = 'none';
-    } else {
+    } else  {
         document.getElementById('output').innerHTML = 'Querying Next...';
     }
     document.getElementById('results').innerHTML = output + '</tbody></table>';
