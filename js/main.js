@@ -35,7 +35,7 @@ function queryWebproperties(accountId, i, max) {
         } else {
             accountsDone = false;
         }
-    }, 5000*i);
+    }, 3000*i);
 }
 
 
@@ -71,7 +71,7 @@ function queryProfiles(accountId, webpropertyId, i, max) {
         } else {
             propertiesDone = false;
         }
-    }, 5000*i);
+    }, 3000*i);
 }
 
 
@@ -96,23 +96,25 @@ function handleProfiles(response) {
 
 var profilesDone = false;
 function queryCoreReportingApi(profileId, i, max) {
-    updatePage('Querying Core Reporting API.');
-    gapi.client.analytics.data.ga.get({
-        'ids': 'ga:' + profileId,
-        'start-date': lastNDays(30),
-        'end-date': lastNDays(0),
-        'metrics': 'ga:pageviews, ga:visits',
-        'dimensions': 'ga:date',
-        //'sort': '-ga:visits,ga:source',
-        //'filters': 'ga:medium==organic',
-        'max-results': 500
-    }).execute(handleCoreReportingResults);
-    if (accountsDone && propertiesDone && i>=(max-1)){
-        profilesDone = true;
-        console.log('profiles done', i, max);
-    } else {
-        profilesDone = false;
-    }
+    setTimeout(function(){
+        updatePage('Querying Core Reporting API.');
+        gapi.client.analytics.data.ga.get({
+            'ids': 'ga:' + profileId,
+            'start-date': lastNDays(30),
+            'end-date': lastNDays(0),
+            'metrics': 'ga:pageviews, ga:visits',
+            'dimensions': 'ga:date',
+            //'sort': '-ga:visits,ga:source',
+            //'filters': 'ga:medium==organic',
+            'max-results': 500
+        }).execute(handleCoreReportingResults);
+        if (accountsDone && propertiesDone && i>=(max-1)){
+            profilesDone = true;
+            console.log('profiles done', i, max);
+        } else {
+            profilesDone = false;
+        }
+    }, 3000*i);
 }
 
 
