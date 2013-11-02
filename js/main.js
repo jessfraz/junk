@@ -181,14 +181,14 @@ function handleCoreReportingResults(response) {
 
             // Put headers in table.
             if (!headersDone){
-                output.push('<table class="table table-condensed table-striped">');
+                output.push('<table class="table table-condensed table-striped"><thead>');
                 output.push('<tr>');
                 output.push('<th>Profile Name</th>');
                 for (var i = 0, header; header = response.columnHeaders[i]; ++i) {
                     output.push('<th>', header.name, '</th>');
                 }
                 headersDone = true;
-                output.push('</tr>');
+                output.push('</tr></thead><tbody>');
             }            
 
             // Put cells in table.
@@ -218,7 +218,7 @@ function outputToPage(output) {
 
 function resultsToPage(output) {
     document.getElementById('output').innerHTML = '';
-    document.getElementById('results').innerHTML = output + '</table>';
+    document.getElementById('results').innerHTML = output + '</tbody></table>';
 }
 
 

@@ -25,7 +25,7 @@ html {
 }
 body {
   margin: 0;
-  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   color: #313131;
@@ -739,6 +739,7 @@ hr {
 }
 body {
   -webkit-font-smoothing: antialiased;
+  font-weight: 300;
 }
 p {
   margin: 0 0 12px;
@@ -785,7 +786,7 @@ h6,
 .h4,
 .h5,
 .h6 {
-  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 500;
   line-height: 1.1;
   color: inherit;
@@ -1292,11 +1293,47 @@ table th[class*="col-"] {
   float: none;
   display: table-cell;
 }
+code,
+kdb,
+pre,
+samp {
+  font-family: 'Inconsolata', 'Inconsolata-dz', Monaco, Menlo, Consolas, "Courier New", monospace;
+}
+code {
+  padding: 2px 4px;
+  font-size: 95%;
+  color: #c7254e;
+  background-color: #f9f2f4;
+  white-space: nowrap;
+  -webkit-font-smoothing: auto;
+}
+pre {
+  display: block;
+  padding: 11.5px;
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 24px;
+  word-break: break-all;
+  word-wrap: break-word;
+  color: #313131;
+  background-color: #f5f5f5;
+  border: 1px solid #cccccc;
+}
+pre code {
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+  white-space: pre-wrap;
+  background-color: transparent;
+}
 button.btn {
   display: none;
 }
 section {
   padding: 20px 0;
+}
+#output {
+  margin: 20px 0;
 }
 @-ms-viewport {
   width: device-width;
