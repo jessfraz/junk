@@ -237,12 +237,12 @@ function outputToPage(output) {
 
 function resultsToPage(output) {
     if(profilesDone && propertiesDone){
-        document.getElementById('output').style.display = 'none';
+        document.getElementById('output').innerHTML = 'Creating CSV...';
+        createCSV(csv_array);
     } else  {
         document.getElementById('output').innerHTML = 'Querying Next...';
     }
     document.getElementById('results').innerHTML = output + '</tbody></table>';
-    console.log(csv_array);
 }
 
 
@@ -282,4 +282,13 @@ function lastNDays(n) {
     return [year, month, day].join('-');
 }
 
-
+function createCSV(data){
+    var csvContent = "data:text/csv;charset=utf-8,";
+    data.forEach(function(infoArray, index){
+        dataString = infoArray.join(",");
+        csvContent += index < infoArray.length ? dataString+ "\n" : dataString;
+    }); 
+    var encodedUri = encodeURI(csvContent);
+    window.open(encodedUri);
+    document.getElementById('output').style.display = 'none';
+}
