@@ -44,9 +44,10 @@ function makeApiCall() {
 function handleAccounts(response) {
     if (!response.code) {
         if (response && response.items && response.items.length) {
-            for(var i=0; i< response.items.length; i++){
+            var max = response.items.length;
+            for(var i=0; i< max; i++){
                 var account_id = response.items[i].id;
-                queryWebproperties(account_id, i);
+                queryWebproperties(account_id, i, max);
             }
         } else {
             updatePage('No accounts found for this user.')
@@ -64,9 +65,9 @@ function handleAccounts(response) {
  * @param {String} accountId The ID of the account from which to retrieve
  *     webproperties.
  */
-function queryWebproperties(accountId, i) {
+function queryWebproperties(accountId, i, max) {
     setTimeout(function(){
-        updatePage('Querying Webproperties.');
+        updatePage('Querying Webproperties '+(i+1)+' of '+max+'.');
         gapi.client.analytics.management.webproperties.list({
             'accountId': accountId
         }).execute(handleWebproperties);
@@ -85,10 +86,11 @@ function queryWebproperties(accountId, i) {
 function handleWebproperties(response) {
     if (!response.code) {
         if (response && response.items && response.items.length) {
-            for(var i=0; i< response.items.length; i++){
+            var max=response.items.length;
+            for(var i=0; i< max; i++){
                 var account_id = response.items[i].accountId;
                 var web_property_id = response.items[i].id;
-                queryProfiles(account_id, web_property_id, i);
+                queryProfiles(account_id, web_property_id, i, max);
             }
         } else {
             updatePage('No webproperties found for this user.')
@@ -108,13 +110,17 @@ function handleWebproperties(response) {
  * @param {String} webpropertyId The ID of the webproperty from which to
  *     retrieve profiles.
  */
-function queryProfiles(accountId, webpropertyId, i) {
+var profilesDone = false;
+function queryProfiles(accountId, webpropertyId, i, max) {
     setTimeout(function(){
-        updatePage('Querying Profiles.');
+        updatePage('Querying Profiles '+(i+1)+' of '+max+'.');
         gapi.client.analytics.management.profiles.list({
             'accountId': accountId,
             'webPropertyId': webpropertyId
         }).execute(handleProfiles);
+        if(i == max-1){
+            profilesDone = true;
+        }
     }, 5000*i);
 }
 
@@ -217,7 +223,11 @@ function outputToPage(output) {
 }
 
 function resultsToPage(output) {
-    document.getElementById('output').innerHTML = '';
+    if(profilesDone){
+        document.getElementById('output').style.display = 'none';
+    } else {
+        document.getElementById('output').innerHTML = 'Querying Next...';
+    }
     document.getElementById('results').innerHTML = output + '</tbody></table>';
 }
 
