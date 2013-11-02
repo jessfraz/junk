@@ -209,8 +209,9 @@ function handleCoreReportingResults(response) {
             // Put cells in table.
             var row_array = [];
             for (var i = 0, row; row = response.rows[i]; ++i) {
-                row_array.push(response.profileInfo.profileName, row);
+                row_array = row;
                 output.push('<tr><td>'+response.profileInfo.profileName+'</td><td>', row.join('</td><td>'), '</td></tr>');
+                row_array.unshift(response.profileInfo.profileName);
             }
             csv_array.push(row_array);
 
