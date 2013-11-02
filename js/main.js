@@ -40,16 +40,14 @@ function makeApiCall() {
  * queryWebProeprties.
  * @param {Object} response The response object with data from the
  *     accounts collection.
- */    
-var max;
-var j;
-var respone_accounts;
+ */
 function handleAccounts(response) {
     if (!response.code) {
         if (response && response.items && response.items.length) {
-            max=response.items.length;
-            respone_accounts = response.items;
-            doLoop();
+            for(var i=0; i< response.items.length; i++){
+                var account_id = response.items[i].id;
+                queryWebproperties(account_id);
+            }
         } else {
             updatePage('No accounts found for this user.')
         }
@@ -58,16 +56,6 @@ function handleAccounts(response) {
     }
 }
 
-function doLoop () {
-    setTimeout(function () { 
-        if (j < max){
-            var account_id = respone_accounts[j].id;
-            queryWebproperties(account_id);
-            doLoop();
-        }
-        j++;                       
-    }, 5000);
-}
 
 /**
  * Executes a query to the Management API to retrieve all the users
@@ -104,8 +92,7 @@ function handleWebproperties(response) {
             updatePage('No webproperties found for this user.')
         }
     } else {
-        updatePage('There was an error querying webproperties: ' +
-                response.message);
+        updatePage('There was an error querying webproperties: ' + response.message);
     }
 }
 
@@ -210,8 +197,7 @@ function handleCoreReportingResults(response) {
             outputToPage('No results found.');
         }
     } else {
-        updatePage('There was an error querying core reporting API: ' +
-                response.message);
+        updatePage('There was an error querying core reporting API: ' + response.message);
     }
 }
 
@@ -228,7 +214,7 @@ function outputToPage(output) {
 
 function resultsToPage(output) {
     document.getElementById('output').innerHTML = '';
-    document.getElementById('results').innerHTML += '<br>' + output;
+    document.getElementById('results').innerHTML += output;
 }
 
 
