@@ -737,6 +737,9 @@ hr {
     margin-left: 8.333333333333332%;
   }
 }
+body {
+  -webkit-font-smoothing: antialiased;
+}
 p {
   margin: 0 0 12px;
 }
