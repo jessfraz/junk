@@ -306,6 +306,7 @@ function queryCoreReportingApi(profileId) {
  */
 var headersDone = false;
 var output = [];
+var csv_array = [];
 function handleCoreReportingResults(response) {
     if (!response.code) {
         if (response.rows && response.rows.length) {
@@ -313,20 +314,27 @@ function handleCoreReportingResults(response) {
 
             // Put headers in table.
             if (!headersDone){
+                var header_array = [];
                 output.push('<table class="table table-condensed table-striped"><thead>');
                 output.push('<tr>');
                 output.push('<th>Profile Name</th>');
+                header_array.push('Profile Name');
                 for (var i = 0, header; header = response.columnHeaders[i]; ++i) {
                     output.push('<th>', header.name, '</th>');
+                    header_array.push(header.name);
                 }
                 headersDone = true;
                 output.push('</tr></thead><tbody>');
+                csv_array.push(header_array);
             }            
 
             // Put cells in table.
+            var row_array = [];
             for (var i = 0, row; row = response.rows[i]; ++i) {
+                row_array.push(response.profileInfo.profileName, row);
                 output.push('<tr><td>'+response.profileInfo.profileName+'</td><td>', row.join('</td><td>'), '</td></tr>');
             }
+            csv_array.push(row_array);
 
             resultsToPage(output.join(''));
         } else {
@@ -355,6 +363,7 @@ function resultsToPage(output) {
         document.getElementById('output').innerHTML = 'Querying Next...';
     }
     document.getElementById('results').innerHTML = output + '</tbody></table>';
+    console.log(csv_array);
 }
 
 
