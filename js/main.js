@@ -41,7 +41,6 @@ function makeApiCall() {
  * @param {Object} response The response object with data from the
  *     accounts collection.
  */
-var accountsDone = false;
 function handleAccounts(response) {
     if (!response.code) {
         if (response && response.items && response.items.length) {
@@ -49,9 +48,6 @@ function handleAccounts(response) {
             for(var i=0; i< max; i++){
                 var account_id = response.items[i].id;
                 queryWebproperties(account_id, i, max);
-                if(i==(max-1)){
-                    accountsDone = true;
-                }
             }
         } else {
             updatePage('No accounts found for this user.')
@@ -69,15 +65,15 @@ function handleAccounts(response) {
  * @param {String} accountId The ID of the account from which to retrieve
  *     webproperties.
  */
-var propertiesDone = false;
+var accountsDone = false;
 function queryWebproperties(accountId, i, max) {
     setTimeout(function(){
         updatePage('Querying Webproperties '+(i+1)+' of '+max+'.');
         gapi.client.analytics.management.webproperties.list({
             'accountId': accountId
         }).execute(handleWebproperties);
-        if(accountsDone && i==(max-1)){
-            propertiesDone = true;
+        if (i==(max-1)){
+            accountsDone = true;
         }
     }, 5000*i);
 }
@@ -118,7 +114,7 @@ function handleWebproperties(response) {
  * @param {String} webpropertyId The ID of the webproperty from which to
  *     retrieve profiles.
  */
-var profilesDone = false;
+var propertiesDone = false;
 function queryProfiles(accountId, webpropertyId, i, max) {
     setTimeout(function(){
         updatePage('Querying Profiles '+(i+1)+' of '+max+'.');
@@ -126,8 +122,8 @@ function queryProfiles(accountId, webpropertyId, i, max) {
             'accountId': accountId,
             'webPropertyId': webpropertyId
         }).execute(handleProfiles);
-        if(propertiesDone && i==(max-1)){
-            profilesDone = true;
+        if (accountsDone && i==(max-1)){
+            propertiesDone = true;
         }
     }, 5000*i);
 }
@@ -144,9 +140,10 @@ function queryProfiles(accountId, webpropertyId, i, max) {
 function handleProfiles(response) {
     if (!response.code) {
         if (response && response.items && response.items.length) {
-            for(var i=0; i< response.items.length; i++){
+            var max = response.items.length;
+            for(var i=0; i< max; i++){
                 var profile_id = response.items[i].id;
-                queryCoreReportingApi(profile_id);
+                queryCoreReportingApi(profile_id, i, max);
             }
 
         } else {
@@ -164,7 +161,8 @@ function handleProfiles(response) {
  * Once complete, handleCoreReportingResults is executed.
  * @param {String} profileId The profileId specifying which profile to query.
  */
-function queryCoreReportingApi(profileId) {
+var profilesDone = false;
+function queryCoreReportingApi(profileId, i, max) {
     updatePage('Querying Core Reporting API.');
     gapi.client.analytics.data.ga.get({
         'ids': 'ga:' + profileId,
@@ -176,6 +174,9 @@ function queryCoreReportingApi(profileId) {
         //'filters': 'ga:medium==organic',
         'max-results': 500
     }).execute(handleCoreReportingResults);
+    if (propertiesDone && i==(max-1)){
+        profilesDone = true;
+    }
 }
 
 
@@ -211,14 +212,13 @@ function handleCoreReportingResults(response) {
             }            
 
             // Put cells in table.
-            var row_array = [];
+
             for (var i = 0, row; row = response.rows[i]; ++i) {
-                row_array = row;
+                var row_array = row;
                 output.push('<tr><td>'+response.profileInfo.profileName+'</td><td>', row.join('</td><td>'), '</td></tr>');
                 row_array.unshift(response.profileInfo.profileName);
+                csv_array.push(row_array);
             }
-            csv_array.push(row_array);
-
             resultsToPage(output.join(''));
         } else {
             outputToPage('No results found.');
@@ -240,7 +240,7 @@ function outputToPage(output) {
 }
 
 function resultsToPage(output) {
-    if(accountsDone && profilesDone && propertiesDone){
+    if (accountsDone && profilesDone && propertiesDone){
         console.log(csv_array);
         document.getElementById('output').innerHTML = 'Creating CSV...';
         //createCSV(csv_array);
