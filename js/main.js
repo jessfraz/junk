@@ -31,7 +31,7 @@ function queryWebproperties(accountId, i, max) {
         }).execute(handleWebproperties);
         if (i>=(max-1)){
             accountsDone = true;
-            console.log('accounts done', i, max);
+            //console.log('accounts done', i, max);
         } else {
             accountsDone = false;
         }
@@ -67,7 +67,7 @@ function queryProfiles(accountId, webpropertyId, i, max) {
         }).execute(handleProfiles);
         if (accountsDone && i>=(max-1)){
             propertiesDone = true;
-            console.log('properties done', i, max);
+            //console.log('properties done', i, max);
         } else {
             propertiesDone = false;
         }
@@ -110,7 +110,7 @@ function queryCoreReportingApi(profileId, i, max) {
         }).execute(handleCoreReportingResults);
         if (accountsDone && propertiesDone && i>=(max-1)){
             profilesDone = true;
-            console.log('profiles done', i, max);
+            //console.log('profiles done', i, max);
         } else {
             profilesDone = false;
         }
@@ -166,9 +166,9 @@ function outputToPage(output) {
 
 function resultsToPage(output) {
     if (accountsDone && profilesDone && propertiesDone){
-        console.log('i think im done');
+        //console.log('i think im done');
         document.getElementById('output').innerHTML = 'Creating CSV...';
-        //createCSV(csv_array);
+        createCSV(csv_array);
     } else  {
         document.getElementById('output').innerHTML = 'Querying Next...';
     }
@@ -208,6 +208,9 @@ function createCSV(data){
         csvContent += index < infoArray.length ? dataString+ "\n" : dataString;
     }); 
     var encodedUri = encodeURI(csvContent);
-    window.open(encodedUri);
+    var link = document.createElement("a");
+    link.setAttribute("class", 'btn');
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "my_data.csv");
     document.getElementById('output').style.display = 'none';
 }
