@@ -44,8 +44,10 @@ function makeApiCall() {
 function handleAccounts(response) {
   if (!response.code) {
     if (response && response.items && response.items.length) {
-      var firstAccountId = response.items[0].id;
-      queryWebproperties(firstAccountId);
+        for(var i=0; i< response.items.length; i++){
+            var account_id = response.items[i].id;
+            queryWebproperties(account_id);
+        }
     } else {
       updatePage('No accounts found for this user.')
     }
@@ -81,9 +83,11 @@ function queryWebproperties(accountId) {
 function handleWebproperties(response) {
   if (!response.code) {
     if (response && response.items && response.items.length) {
-      var firstAccountId = response.items[0].accountId;
-      var firstWebpropertyId = response.items[0].id;
-      queryProfiles(firstAccountId, firstWebpropertyId);
+        for(var i=0; i< response.items.length; i++){
+           var account_id = response.items[i].accountId;
+            var web_property_id = response.items[i].id;
+            queryProfiles(account_id, web_property_id);
+        }
     } else {
       updatePage('No webproperties found for this user.')
     }
@@ -123,8 +127,11 @@ function queryProfiles(accountId, webpropertyId) {
 function handleProfiles(response) {
   if (!response.code) {
     if (response && response.items && response.items.length) {
-      var firstProfileId = response.items[0].id;
-      queryCoreReportingApi(firstProfileId);
+        for(var i=0; i< response.items.length; i++){
+           var profile_id = response.items[i].id;
+            queryCoreReportingApi(profile_id);
+        }
+      
     } else {
       updatePage('No profiles found for this user.')
     }
@@ -186,7 +193,7 @@ function handleCoreReportingResults(response) {
       table.push('</table>');
 
       output.push(table.join(''));
-      outputToPage(output.join(''));
+      resultsToPage(output.join(''));
     } else {
       outputToPage('No results found.');
     }
@@ -205,6 +212,10 @@ function handleCoreReportingResults(response) {
  */
 function outputToPage(output) {
   document.getElementById('output').innerHTML = output;
+}
+
+function resultsToPage(output) {
+  document.getElementById('results').innerHTML = document.getElementById('results').innerHTML+ output;
 }
 
 

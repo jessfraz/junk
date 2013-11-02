@@ -83,8 +83,8 @@ function handleAuthorized() {
   var authorizeButton = document.getElementById('authorize-button');
   var runDemoButton = document.getElementById('make-api-call-button');
 
-  authorizeButton.style.visibility = 'hidden';
-  runDemoButton.style.visibility = 'visible';
+  authorizeButton.style.display = 'none';
+  runDemoButton.style.display = 'block';
   runDemoButton.onclick = makeApiCall;
   outputToPage('Click the Run Demo button to begin.');
 }
@@ -100,8 +100,8 @@ function handleUnauthorized() {
   var authorizeButton = document.getElementById('authorize-button');
   var runDemoButton = document.getElementById('make-api-call-button');
 
-  runDemoButton.style.visibility = 'hidden';
-  authorizeButton.style.visibility = 'visible';
+  runDemoButton.style.display = 'none';
+  authorizeButton.style.display = 'block';
   authorizeButton.onclick = handleAuthClick;
   outputToPage('Please authorize this script to access Google Analytics.');
 }

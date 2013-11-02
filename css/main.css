@@ -999,7 +999,7 @@ button.btn,
 a.btn {
   display: inline-block;
   padding: 6px 12px;
-  margin-bottom: 0;
+  margin: 0 auto;
   font-size: 16px;
   line-height: 24px;
   text-align: center;
@@ -1212,8 +1212,11 @@ input[type="reset"].btn-block,
 input[type="button"].btn-block {
   width: 100%;
 }
-button {
-  visibility: hidden;
+button.btn {
+  display: none;
+}
+section {
+  padding: 20px 0;
 }
 @-ms-viewport {
   width: device-width;
