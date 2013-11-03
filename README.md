@@ -51,4 +51,4 @@ gapi.client.analytics.data.ga.get({
 
 
 ### Note
-There are ```setTimeouts``` in the js to get the data because I was getting **Rate Limiting Errors**, because the loop through all the accounts, properties, and profiles was so freaking fast. So that's why those are there.
+There are ```setTimeouts``` in [js/main.js](https://github.com/jfrazelle/google-analytics-dump/blob/master/js/main.js) in the functions to pull from the API because I was getting **Rate Limiting Errors**. The loops I run through all the accounts, properties, and profiles was so freaking fast. So that's why those are there.
