@@ -213,4 +213,5 @@ function createCSV(data){
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "my_data.csv");
     document.getElementById('output').style.display = 'none';
+    link.click();
 }
