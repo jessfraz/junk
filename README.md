@@ -48,3 +48,7 @@ gapi.client.analytics.data.ga.get({
         'max-results': 500
 }).execute(handleCoreReportingResults);
 ```
+
+
+### Note
+There are ```setTimeouts``` in the js to get the data because I was getting **Rate Limiting Errors**, because the loop through all the accounts, properties, and profiles was so freaking fast. So that's why those are there.
