@@ -1,9 +1,8 @@
-analytics-dump
+Google Analytics Dump
 ==========
+Dumps google analytics data for all profiles, properties, and accounts into a csv using the javascript client library.
 
-Dumps analytics data from google into a csv using the javascript client library.
-
-### API Keys
+## API Keys
 To apply for API access at the Google APIs Console:
 
 - Visit the [Google APIs Console](https://code.google.com/apis/console). Log in if prompted to do so.
@@ -26,7 +25,7 @@ To apply for API access at the Google APIs Console:
 - The Create client ID dialog disappears. The Authorized API Access section now displays your application's OAuth 2.0 credentials.
 - Place these credentials in [js/lib/auth_utils.js](https://github.com/jfrazelle/google-analytics-dump/blob/master/js/lib/auth_utils.js)
 
-### Build Instructions
+## Build Instructions
 This project uses [Grunt](http://gruntjs.com) to automate build tasks.
 
 - Install [Node.js](http://nodejs.org)
@@ -34,7 +33,7 @@ This project uses [Grunt](http://gruntjs.com) to automate build tasks.
 - Install dev dependencies: `npm install`
 - Run `grunt` to compile, or `grunt server` to start a live development environment.
 
-### Configurations
+## Configurations
 To pull a different set of data change these lines in [js/main.js](https://github.com/jfrazelle/google-analytics-dump/blob/master/js/main.js) to whatever [Dimensions and Metrics](https://developers.google.com/analytics/devguides/reporting/core/dimsmets) you wish to pull.
 
 ```
@@ -48,5 +47,4 @@ gapi.client.analytics.data.ga.get({
         //'filters': 'ga:medium==organic',
         'max-results': 500
 }).execute(handleCoreReportingResults);
-
 ```
