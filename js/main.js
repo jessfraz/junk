@@ -102,7 +102,7 @@ function queryCoreReportingApi(profileId, i, max) {
             'ids': 'ga:' + profileId,
             'start-date': lastNDays(30),
             'end-date': lastNDays(0),
-            'metrics': 'ga:pageviews, ga:visits',
+            'metrics': 'ga:pageTitle, ga:pageviews, ga:visits',
             'dimensions': 'ga:date',
             //'sort': '-ga:visits,ga:source',
             //'filters': 'ga:medium==organic',
