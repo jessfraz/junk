@@ -10,7 +10,7 @@ To apply for API access at the Google APIs Console:
 - Select Services from the menu. The list of accessible Google services appears.
 - Scroll through the list until you find **Google Analytics**, click the Status switch next to the service name (so that it switches from OFF to ON.
 - For some services, the Console will display a Terms of Service pane. To go ahead, check the I agree to these terms box, then click Accept.
-- Scroll back to the top of the page and click API Access in the menu. 
+- Scroll back to the top of the page and click API Access in the menu.
 - The API Access pane appears.
 - Click Create an OAuth 2.0 client ID.
 - The Create Client ID dialog appears.
@@ -36,7 +36,7 @@ This project uses [Grunt](http://gruntjs.com) to automate build tasks.
 ## Configurations
 To pull a different set of data change these lines in [js/main.js](https://github.com/jfrazelle/google-analytics-dump/blob/master/js/main.js) to whatever [Dimensions and Metrics](https://developers.google.com/analytics/devguides/reporting/core/dimsmets) you wish to pull.
 
-```
+```javascript
 gapi.client.analytics.data.ga.get({
         'ids': 'ga:' + profileId,
         'start-date': lastNDays(30),
