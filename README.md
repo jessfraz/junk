@@ -6,7 +6,7 @@ Saves all to a file that is a JSON list of objects, in order of most recent firs
 
 ### Setup Credentials
 
-Add your credentials from the following auths into the [top of main.py](main.py#L14-27).
+Add your credentials from the following auths into the **[top of main.py](main.py#L14-26)**.
 
 #### Create a Twitter application
 1. Sign in with [Twitter Developer](https://dev.twitter.com/)
@@ -21,7 +21,7 @@ Add your credentials from the following auths into the [top of main.py](main.py#
 
 ### Configure
 
-Change the user you wish to query for in [main.py](main.py#L40,41)
+Change the user you wish to query for in **[main.py](main.py#L151-152)**
 
 ### Install on server
 
