@@ -1,0 +1,5 @@
+httplib2==0.9
+moarjson==0.3.4
+python-instagram==0.8.0
+simplejson==3.4.1
+tweepy==2.3.0
