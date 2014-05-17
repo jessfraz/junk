@@ -132,7 +132,7 @@ request.onerror = function() {
 request.send();
 ```
 
-#### Vanilla Javascript
+#### jQuery
 
 ```javascript
 $.ajax({
