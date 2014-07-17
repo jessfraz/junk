@@ -77,6 +77,9 @@ func prompt(prompt string, output string) (val *string, err error) {
 		return val, fmt.Errorf("Reading string from prompt failed: %s", err)
 	}
 	value = strings.TrimSpace(value)
+	if value == "" {
+		return &output, nil
+	}
 	return &value, nil
 }
 
