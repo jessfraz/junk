@@ -5,11 +5,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/dotcloud/docker/pkg/units"
 	"github.com/mitchellh/colorstring"
 	"os"
 	"os/exec"
 	"strings"
+	"text/tabwriter"
+	"time"
 )
+
+func stringTimeToHuman(ts string) (ds string) {
+	tt, err := time.Parse("2006-01-02T15:04:05Z07:00", ts)
+	if err != nil {
+		return ts
+	}
+	d := time.Since(tt)
+	return units.HumanDuration(d)
+}
 
 func printPrettyJson(v interface{}, printRaw bool) {
 	json_byte, _ := json.MarshalIndent(v, "", "  ")
@@ -42,6 +54,34 @@ func printPrettyJson(v interface{}, printRaw bool) {
 		fmt.Println(out.String())
 	}
 
+	return
+}
+
+func stripColon(s string) string {
+	colI := strings.Index(s, ":")
+	if colI > -1 && colI < len(s)-1 {
+		return s[colI+1:]
+	}
+	return s
+}
+
+func printTotals(totals map[string]string) {
+	if len(totals) > 0 {
+		header := []string{"Totals"}
+		row := []string{"-"}
+
+		fmt.Println("")
+		w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
+		for k, v := range totals {
+			header = append(header, stripColon(k))
+			row = append(row, v)
+		}
+
+		fmt.Fprintln(w, colorstring.Color("[cyan]"+strings.Join(header, "\t")))
+		fmt.Fprintln(w, colorstring.Color("[blue]"+strings.Join(row, "\t")))
+
+		w.Flush()
+	}
 	return
 }
 

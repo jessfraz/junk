@@ -19,7 +19,7 @@ To apply for API access at the Google APIs Console:
 - Click Create an OAuth 2.0 Client ID.
 - The Create Client ID dialog appears.
 - Click the *Installed Application* radio button and *Other*. It should look like below:
-    ![client_id](client_id.png)
+    <img src="client_id.png" alt="client_id" style="width:400px;max-width:100%">
 - Click Create.
 - The credentials under **Client ID for native application** can be used when prompted by `ga --configure`
 
@@ -39,6 +39,45 @@ $ go get github.com/jfrazelle/ga
 
 
 ## Usage
+
+**Global Options**
+- **`--disable-plot`**: Disable plotting
+- **`--clientid, -c`**: Google OAuth Client Id, overrides the .ga-cli files
+- **`--secret, -s`**: Google OAuth Client Secret, overrides the .ga-cli files
+- **`--debug, -d`**: Debug mode
+- **`--json`**: Print raw json
+- **`--raw`**: Don't colorize output
+
+
+#### `accounts`
+Get accounts
+
+#### `configure, config`
+Configure your Google API Credentials
+
+#### `now`
+Get Realtime Data, dimensions and data reference available at https://developers.google.com/analytics/devguides/reporting/realtime/dimsmets/
+
+- **`--profile, p`**: Profile id for which to get data
+- **`--metrics, -m`**: Real time metrics to get. default: `'rt:activeUsers'`
+- **`--dimensions, --dim`**: Real time dimensions (comma-separated). ex: `'rt:pagePath,rt:pageTitle'`
+- **`--sort`**: Sort to apply
+
+#### `profiles`
+Get profiles
+
+- **`--account`**: Account id for which to list profiles
+
+#### `properties`
+Get profiles
+
+- **`--account`**: Account id for which to list properties
+
+
+#### `help, h`
+Shows a list of commands or help for one command
+
+
 
 
 
