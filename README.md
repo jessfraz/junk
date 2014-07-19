@@ -40,3 +40,7 @@ $ go get github.com/jfrazelle/ga
 
 ## Usage
 
+
+
+
+[![Analytics](https://ga-beacon.appspot.com/UA-29404280-16/ga/README.md)](https://github.com/jfrazelle/ga)
