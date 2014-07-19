@@ -1,15 +1,11 @@
 package main
 
 import (
-	"bufio"
-	"flag"
 	"fmt"
+	"github.com/codegangsta/cli"
 	"github.com/jfrazelle/ga/analytics"
 	"github.com/jfrazelle/ga/auth"
-	"io/ioutil"
 	"os"
-	"path"
-	"strings"
 )
 
 const (
@@ -19,144 +15,103 @@ const (
 | (_| | (_| |
  \__, |\__,_|
  |___/
-
-Google Analytics via the Command Line
-Version: ` + VERSION + `
-Homepage: https://github.com/jfrazelle/ga
 `
+	scope string = "https://www.googleapis.com/auth/analytics.readonly"
 )
 
-var (
-	plot     *bool   = flag.Bool("p", true, "Plot a chart")
-	version  *bool   = flag.Bool("v", false, "Print version and exit")
-	clientId *string = flag.String("clientid", "", "Google OAuth Client Id, overrides the .ga file")
-	secret   *string = flag.String("secret", "", "Google OAuth client secret, overrides  the .ga file")
-	debug    *bool   = flag.Bool("debug", false, "Debug mode")
-	config   *bool   = flag.Bool("configure", false, "Initial setup, or reset credentitals")
-	scope    string  = "https://www.googleapis.com/auth/analytics.readonly"
-)
-
-func usage() {
-	fmt.Println(BANNER)
-	fmt.Println("Usage:\n")
-	flag.PrintDefaults()
-}
-
-func configure() (err error) {
-	clientId, err = prompt("OAuth Client Id", *clientId)
+func doAuth(clientId, secret string, debug bool) (s *analytics.Service, err error) {
+	clientId, secret, err = getCreds(clientId, secret, "", "")
 	if err != nil {
-		return err
+		return s, err
 	}
-	secret, err = prompt("OAuth Client Secret", *secret)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
-func writeFile(filepath, contents string) error {
-	f, err := os.Create(filepath)
-	if err != nil {
-		return fmt.Errorf("Creating %s failed: %s", filepath, err)
-	}
-	_, err = f.WriteString(contents)
-	if err != nil {
-		return fmt.Errorf("Writing %s to %s failed: %s", contents, filepath, err)
-	}
-	f.Sync()
-	f.Close()
+	a := auth.New(clientId, secret, scope, debug)
+	c := a.GetOAuthClient()
 
-	return nil
-}
-
-func prompt(prompt string, output string) (val *string, err error) {
-	fmt.Printf("%s [%s]: ", prompt, output)
-	reader := bufio.NewReader(os.Stdin)
-	value, err := reader.ReadString('\n')
+	s, err = analytics.New(c)
 	if err != nil {
-		return val, fmt.Errorf("Reading string from prompt failed: %s", err)
+		return s, fmt.Errorf("Creating new analytics service failed: %s", err)
 	}
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return &output, nil
-	}
-	return &value, nil
-}
-
-func valueOrFile(filename string, value string) (val *string) {
-	if value != "" {
-		return &value
-	}
-	slurp, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return &value
-	}
-	value = strings.TrimSpace(string(slurp))
-	return &value
+	return s, nil
 }
 
 func main() {
-	flag.Parse()
-	args := flag.Args()
-
-	if *version {
-		fmt.Println(VERSION)
-		return
+	app := cli.NewApp()
+	app.Name = BANNER
+	app.Version = VERSION
+	app.Author = "Jess Frazelle, @frazelledazzell, github.com/jfrazelle"
+	app.Usage = "Google Analytics via the Command Line"
+	app.EnableBashCompletion = true
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{Name: "disable-plot", Usage: "Disable plotting"},
+		cli.StringFlag{Name: "clientid,c", Value: "", Usage: "Google OAuth Client Id, overrides the .ga-cli files"},
+		cli.StringFlag{Name: "secret,s", Value: "", Usage: "Google OAuth Client Secret, overrides the .ga-cli files"},
+		cli.BoolFlag{Name: "debug,d", Usage: "Debug mode"},
+		cli.BoolFlag{Name: "json", Usage: "Print raw json"},
 	}
 
-	// get home dir
-	// configure details get saved to
-	// ~/.ga-cli/clientid && ~/.ga-cli/secret
-	home := os.Getenv("HOME")
-	gaDirPath := path.Join(home, ".ga-cli")
-	err := os.MkdirAll(gaDirPath, 0777)
-	if err != nil {
-		fmt.Printf("Creating %s failed: %s", gaDirPath, err)
-		return
+	app.Commands = []cli.Command{
+		{
+			Name:  "accounts",
+			Usage: "Get accounts",
+			Action: func(c *cli.Context) {
+				s, err := doAuth(c.String("clientid"), c.String("secret"), c.Bool("debug"))
+				if err != nil {
+					printError(err, true)
+				}
+				accounts, err := getAccounts(s)
+				if err != nil {
+					printError(err, true)
+				}
+				printPrettyJson(accounts, false)
+			},
+		},
+		{
+			Name:      "configure",
+			ShortName: "config",
+			Usage:     "Configure your Google API Credentials",
+			Action: func(c *cli.Context) {
+				err := configure(c.String("clientid"), c.String("secret"))
+				if err != nil {
+					printError(err, true)
+				}
+			},
+		},
+		{
+			Name:  "profiles",
+			Usage: "Get profiles",
+			Action: func(c *cli.Context) {
+				s, err := doAuth(c.String("clientid"), c.String("secret"), c.Bool("debug"))
+				if err != nil {
+					printError(err, true)
+				}
+				profiles, err := getAllProfiles(s)
+				if err != nil {
+					printError(err, true)
+				}
+				printPrettyJson(profiles, false)
+			},
+		},
+		{
+			Name:  "properties",
+			Usage: "Get properties",
+			Action: func(c *cli.Context) {
+				s, err := doAuth(c.String("clientid"), c.String("secret"), c.Bool("debug"))
+				if err != nil {
+					printError(err, true)
+				}
+				accounts, err := getAccounts(s)
+				if err != nil {
+					printError(err, true)
+				}
+				properties, err := getProperties(s, accounts)
+				if err != nil {
+					printError(err, true)
+				}
+				printPrettyJson(properties, false)
+			},
+		},
 	}
 
-	clientIdPath := path.Join(gaDirPath, "clientid")
-	clientId = valueOrFile(clientIdPath, *clientId)
-	secretPath := path.Join(gaDirPath, "secret")
-	secret = valueOrFile(secretPath, *secret)
-
-	if *config {
-		err = configure()
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		err = writeFile(clientIdPath, *clientId)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		err = writeFile(secretPath, *secret)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		return
-	}
-
-	if len(args) < 1 {
-		usage()
-		return
-	}
-
-	// get auth info
-	a := auth.New(*clientId, *secret, scope, *debug)
-	c := a.GetOAuthClient()
-
-	s, err := analytics.New(c)
-	if err != nil {
-		fmt.Printf("Creating new analytics service failed: %s", err)
-		return
-	}
-
-	fmt.Printf("%v", s)
-	response := s.Management.AccountSummaries
-	fmt.Printf("%v", response)
+	app.Run(os.Args)
 }
