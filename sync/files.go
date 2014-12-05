@@ -68,7 +68,6 @@ func (localFile *File) compare(bucket *s3.Bucket, remoteFile File) (err error) {
 
 	// ask what they want to do
 	askString := recentString + `
-
 Keep local (l)
 Keep remote (r)
 View and edit diff (d)
