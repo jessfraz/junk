@@ -325,10 +325,10 @@ func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File, base string, 
 		if err := cmd.Run(); err != nil {
 			return err
 		}
+	}
 
-		if _, err := tmp.Seek(0, 0); err != nil {
-			return err
-		}
+	if _, err := tmp.Seek(0, 0); err != nil {
+		return err
 	}
 
 	// get the changes
@@ -336,7 +336,6 @@ func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File, base string, 
 	if err != nil {
 		return err
 	}
-
 	// save the file locally
 	if err := ioutil.WriteFile(localFile.LongPath, contents, localFile.Mode); err != nil {
 		return err
