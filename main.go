@@ -19,7 +19,6 @@ var (
 	reset   bool
 	debug   bool
 	version bool
-	args    []string
 )
 
 func init() {

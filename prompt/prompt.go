@@ -1,4 +1,4 @@
-package main
+package prompt
 
 import (
 	"bufio"
@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func prompt(prompt string, output string) (val string, err error) {
+func Ask(prompt string, output string) (val string, err error) {
 	fmt.Printf("%s [%s]: ", prompt, output)
 	reader := bufio.NewReader(os.Stdin)
 	value, err := reader.ReadString('\n')

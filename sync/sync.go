@@ -58,7 +58,9 @@ func (creds *Creds) Sync() error {
 			if localFile.Path == remoteFile.Path {
 				found = true
 				// compare the two files
-				localFile.compare(bucket, remoteFile)
+				if err := localFile.compare(bucket, remoteFile); err != nil {
+					log.Warn(err)
+				}
 
 				// delete item from remote
 				copy(remoteFiles[index:], remoteFiles[index+1:])

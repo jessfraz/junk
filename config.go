@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/jfrazelle/budf/prompt"
 	"github.com/jfrazelle/budf/sync"
 )
 
@@ -51,22 +52,22 @@ func config(setup bool) (creds sync.Creds, err error) {
 	}
 
 	if setup {
-		creds.Key, err = prompt("AWS API key", creds.Key)
+		creds.Key, err = prompt.Ask("AWS API key", creds.Key)
 		if err != nil {
 			return creds, err
 		}
 
-		creds.Secret, err = prompt("AWS Secret", creds.Secret)
+		creds.Secret, err = prompt.Ask("AWS Secret", creds.Secret)
 		if err != nil {
 			return creds, err
 		}
 
-		creds.Bucket, err = prompt("AWS Bucket", creds.Bucket)
+		creds.Bucket, err = prompt.Ask("AWS Bucket", creds.Bucket)
 		if err != nil {
 			return creds, err
 		}
 
-		creds.Region, err = prompt("AWS Bucket Region", creds.Region)
+		creds.Region, err = prompt.Ask("AWS Bucket Region", creds.Region)
 		if err != nil {
 			return creds, err
 		}

@@ -14,6 +14,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/crowdmob/goamz/s3"
 	"github.com/jfrazelle/budf/diff"
+	"github.com/jfrazelle/budf/prompt"
 	"github.com/rakyll/magicmime"
 )
 
@@ -26,29 +27,92 @@ type File struct {
 	Mode     os.FileMode
 }
 
-func (localFile *File) compare(bucket *s3.Bucket, remoteFile File) {
-	// if the localfile is the most recent
-	if localFile.Modtime.After(remoteFile.Modtime) {
-		log.Debugf("Local %s is more recent than remote.", localFile.Path)
-
-		if !localFile.sumsEqual(remoteFile.Shasum) {
-			err := localFile.showDiff(bucket, remoteFile)
-			if err != nil {
-				log.Warnf("Show diff failed: %v", err)
-			}
-		}
-	} else if localFile.Modtime.Before(remoteFile.Modtime) {
-		log.Debugf("Remote %s is more recent than local.", localFile.Path)
-
-		if !localFile.sumsEqual(remoteFile.Shasum) {
-			err := localFile.showDiff(bucket, remoteFile)
-			if err != nil {
-				log.Warnf("Show diff failed: %v", err)
-			}
-		}
-	} else if localFile.Modtime.Equal(remoteFile.Modtime) {
-		log.Debugf("Remote and local for %s are the same.", localFile.Path)
+func (localFile *File) compare(bucket *s3.Bucket, remoteFile File) (err error) {
+	// if modtime is equal exit
+	if localFile.Modtime.Equal(remoteFile.Modtime) {
+		log.Debugf("Remote and local modtime for %s are the same.", localFile.Path)
+		return nil
 	}
+
+	// if shasums are equal exit
+	if localFile.sumsEqual(remoteFile.Shasum) {
+		log.Debugf("Remote and local shasums for %s are the same.", localFile.Path)
+		return nil
+	}
+
+	var (
+		recentString  string
+		dfault        string
+		after         = localFile.Modtime.After(remoteFile.Modtime)
+		before        = localFile.Modtime.Before(remoteFile.Modtime)
+		base          = filepath.Base(localFile.Path)
+		isBashHistory = (base == ".bash_history")
+	)
+
+	// just concatenate bash history, if thats the file
+	if isBashHistory {
+		log.Debug("File is .bash_history so we are concatenating it.")
+		if err = localFile.showDiff(bucket, remoteFile, base, true); err != nil {
+			return fmt.Errorf("Show diff failed: %v", err)
+		}
+		return nil
+	}
+
+	if after {
+		recentString = fmt.Sprintf("Local %s is more recent than remote.", localFile.Path)
+		dfault = "l"
+	} else if before {
+		recentString = fmt.Sprintf("Remote %s is more recent than local.", localFile.Path)
+		dfault = "r"
+	}
+
+	// ask what they want to do
+	askString := recentString + `
+
+Keep local (l)
+Keep remote (r)
+View and edit diff (d)
+`
+	answer, err := prompt.Ask(askString, dfault)
+	if err != nil {
+		return fmt.Errorf("Ask prompt failed: %v", err)
+	}
+
+	switch answer {
+	case "l":
+		// keep the localfile
+		// get the contents of the localfile
+		localFile.Content, err = ioutil.ReadFile(localFile.LongPath)
+		if err != nil {
+			return fmt.Errorf("Error reading local file %q: %v", localFile.LongPath, err)
+		}
+		// push to s3
+		if err := localFile.uploadToS3(bucket, remoteFile.LongPath, localFile.Content); err != nil {
+			return err
+		}
+	case "r":
+		// keep the remote file
+		// get the contents of the remote file
+		remoteFile.Content, err = bucket.Get(remoteFile.LongPath)
+		if err != nil {
+			return fmt.Errorf("Error getting %q from s3: %v", remoteFile.LongPath, err)
+		}
+		// write it to the localfile
+		if err := ioutil.WriteFile(localFile.LongPath, remoteFile.Content, localFile.Mode); err != nil {
+			return err
+		}
+		log.Infof("Updated %s locally", localFile.Path)
+	case "d":
+		// show the diff
+		err = localFile.showDiff(bucket, remoteFile, base, false)
+		if err != nil {
+			return fmt.Errorf("Show diff failed: %v", err)
+		}
+	default:
+		return fmt.Errorf("what da fuck: %q is an invalid answer", answer)
+	}
+
+	return nil
 }
 
 func getIgnoredFiles() (patterns []string, err error) {
@@ -205,10 +269,7 @@ func (file *File) sumsEqual(shasum string) bool {
 	return true
 }
 
-func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File) (err error) {
-	basefilename := filepath.Base(localFile.Path)
-	isBashHistory := (basefilename == ".bash_history")
-
+func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File, base string, concat bool) (err error) {
 	// get the contents of the remote file
 	remoteFile.Content, err = bucket.Get(remoteFile.LongPath)
 	if err != nil {
@@ -221,11 +282,7 @@ func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File) (err error) {
 		return fmt.Errorf("Error reading local file %q: %v", localFile.LongPath, err)
 	}
 
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		editor = "nano"
-	}
-	tmp, err := ioutil.TempFile("", "tempfile-"+basefilename)
+	tmp, err := ioutil.TempFile("", "tempfile-"+base)
 	if err != nil {
 		return err
 	}
@@ -246,7 +303,7 @@ func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File) (err error) {
 			c = ">>> - "
 		}
 		// if its bash history we just want to add everything
-		if isBashHistory {
+		if concat {
 			c = ""
 		}
 		if _, err := io.WriteString(tmp, fmt.Sprintf("%s%s", c, d.Text)); err != nil {
@@ -254,16 +311,24 @@ func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File) (err error) {
 		}
 	}
 
-	cmd := exec.Command(editor, tmp.Name())
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return err
-	}
+	if !concat {
+		// open the editor
+		editor := os.Getenv("EDITOR")
+		if editor == "" {
+			editor = "nano"
+		}
 
-	if _, err := tmp.Seek(0, 0); err != nil {
-		return err
+		cmd := exec.Command(editor, tmp.Name())
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+
+		if _, err := tmp.Seek(0, 0); err != nil {
+			return err
+		}
 	}
 
 	// get the changes
