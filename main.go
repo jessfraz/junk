@@ -80,15 +80,15 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 			Name:     prHook.PullRequest.Base.Repo.Name,
 			UserName: prHook.PullRequest.Base.Repo.Owner.Login,
 		}
-		prIssue := &octokat.Issue{
-			Number: prHook.PullRequest.Number,
+		prIssue := octokat.Issue{
+			Number: prHook.Number,
 		}
-		log.Debugf("Adding labels %#v to pr %d", labels, prIssue.Number)
-		if err := gh.AppyLabel(repo, prIssue, labels); err != nil {
+		log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
+		if err := gh.AppyLabel(repo, &prIssue, labels); err != nil {
 			return err
 		}
 
-		log.Infof("Added labels %#v to pr %d", labels, prIssue.Number)
+		log.Infof("Added labels %#v to pr %d", labels, prHook.Number)
 	}
 	return nil
 }
