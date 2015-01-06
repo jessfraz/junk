@@ -83,12 +83,12 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		prIssue := &octokat.Issue{
 			Number: prHook.PullRequest.Number,
 		}
-		log.Debugf("Adding labels #%v to pr %s", labels, prIssue.Number)
+		log.Debugf("Adding labels %#v to pr %d", labels, prIssue.Number)
 		if err := gh.AppyLabel(repo, prIssue, labels); err != nil {
 			return err
 		}
 
-		log.Infof("Added labels #%v to pr %s", labels, prIssue.Number)
+		log.Infof("Added labels %#v to pr %d", labels, prIssue.Number)
 	}
 	return nil
 }
