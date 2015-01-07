@@ -61,10 +61,18 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	}
 
 	var labels []string
+
+	// check if it's a proposal
+	isProposal := strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal")
+	if isProposal {
+		// add proposal label
+		labels = append(labels, "Proposal", "/project/doc")
+	}
+
 	// check if its a docs only PR
-	if isDocsOnly(pr) {
+	if isDocsOnly(pr) && !isProposal {
 		// add docs-only label
-		labels = append(labels, "docs-only", "/project/doc")
+		labels = append(labels, "docs-only")
 	}
 
 	// check if is Proposal
