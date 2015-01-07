@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -8,8 +9,8 @@ import (
 	"time"
 
 	"code.google.com/p/go.codereview/patch"
-
 	log "github.com/Sirupsen/logrus"
+	"github.com/crosbymichael/octokat"
 )
 
 type CommitFile struct {
@@ -96,4 +97,32 @@ func (c Commit) isSigned() bool {
 	}
 
 	return false
+}
+
+// check if all the commits are signed
+func commitsAreSigned(pr octokat.PullRequest) bool {
+	req, err := http.Get(pr.CommitsURL)
+	if err != nil {
+		log.Warn(err)
+		return true
+	}
+	defer req.Body.Close()
+
+	var commits []Commit
+	decoder := json.NewDecoder(req.Body)
+	if err := decoder.Decode(&commits); err != nil {
+		log.Warn(err)
+		return true
+	}
+
+	for _, commit := range commits {
+		if commit.isSigned() {
+			log.Debugf("The commit %s for PR %d IS signed", commit.Sha, pr.Number)
+		} else {
+			log.Warnf("The commit %s for PR %d IS NOT signed", commit.Sha, pr.Number)
+			return false
+		}
+	}
+
+	return true
 }

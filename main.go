@@ -105,19 +105,20 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	}
 
 	// check if all the commits are signed
-	if !areCommitsSigned(pr) {
+	if !commitsAreSigned(pr) {
 		// add comment about having to sign commits
-		command := "`git commit --amend -s --no-edit && git push -f`"
 		comment := `Can you please sign your commits following these rules:
 
 https://github.com/docker/docker/blob/master/CONTRIBUTING.md#sign-your-work
 
 The easiest way to do this is to the last commit:
 
-` + command
+` + "`git commit --amend -s --no-edit && git push -f`"
+
 		if _, err := gh.AddComment(repo, strconv.Itoa(prHook.Number), comment); err != nil {
 			return err
 		}
+		log.Infof("Added comment to unsigned PR %d", prHook.Number)
 	}
 
 	return nil

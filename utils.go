@@ -81,35 +81,6 @@ func getPR(url string) (pr octokat.PullRequest, err error) {
 	return pr, nil
 }
 
-// check if all the commits are signed
-func areCommitsSigned(pr octokat.PullRequest) bool {
-	req, err := http.Get(pr.CommitsURL)
-	if err != nil {
-		log.Warn(err)
-		return true
-	}
-	defer req.Body.Close()
-
-	var commits []Commit
-	decoder := json.NewDecoder(req.Body)
-	if err := decoder.Decode(&commits); err != nil {
-		log.Warn(err)
-		return true
-	}
-
-	areSigned := true
-	for _, commit := range commits {
-		if !commit.isSigned() {
-			log.Infof("The commit %s for PR %d IS NOT signed", commit.Sha, pr.Number)
-			//return false
-		} else {
-			log.Debugf("The commit %s for PR %d IS signed", commit.Sha, pr.Number)
-		}
-	}
-
-	return areSigned
-}
-
 // check if docs-only PR
 func isDocsOnly(pr octokat.PullRequest) bool {
 	req, err := http.Get(pr.DiffURL)
