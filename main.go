@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -81,13 +82,17 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		labels = append(labels, "Proposal")
 	}
 
+	// initialize github client
+	gh := octokat.NewClient()
+	gh = gh.WithToken(h.GHToken)
+	repo := octokat.Repo{
+		Name:     prHook.PullRequest.Base.Repo.Name,
+		UserName: prHook.PullRequest.Base.Repo.Owner.Login,
+	}
+
+	// add labels if there are any
 	if len(labels) > 0 {
-		gh := octokat.NewClient()
-		gh = gh.WithToken(h.GHToken)
-		repo := octokat.Repo{
-			Name:     prHook.PullRequest.Base.Repo.Name,
-			UserName: prHook.PullRequest.Base.Repo.Owner.Login,
-		}
+
 		prIssue := octokat.Issue{
 			Number: prHook.Number,
 		}
@@ -98,6 +103,23 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 
 		log.Infof("Added labels %#v to pr %d", labels, prHook.Number)
 	}
+
+	// check if all the commits are signed
+	if !areCommitsSigned(pr) {
+		// add comment about having to sign commits
+		command := "`git commit --amend -s --no-edit && git push -f`"
+		comment := `Can you please sign your commits following these rules:
+
+https://github.com/docker/docker/blob/master/CONTRIBUTING.md#sign-your-work
+
+The easiest way to do this is to the last commit:
+
+` + command
+		if _, err := gh.AddComment(repo, strconv.Itoa(prHook.Number), comment); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
