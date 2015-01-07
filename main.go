@@ -111,7 +111,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 
 https://github.com/docker/docker/blob/master/CONTRIBUTING.md#sign-your-work
 
-The easiest way to do this is to the last commit:
+The easiest way to do this is to amend the last commit:
 
 ` + "`git commit --amend -s --no-edit && git push -f`"
 
