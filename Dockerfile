@@ -1,18 +1,8 @@
-FROM golang:latest
-MAINTAINER Jess Frazelle <jess@docker.com>
+FROM progrium/busybox
+MAINTAINER Jessica Frazelle <jess@docker.com>
 
-RUN go get github.com/bitly/go-nsq && \
-    go get github.com/Sirupsen/logrus && \
-    go get code.google.com/p/go.codereview/patch && \
-    go get github.com/crosbymichael/octokat && \
-    go get github.com/drone/go-github/github
+ADD https://jesss.s3.amazonaws.com/binaries/gh-patch-parser /usr/local/bin/gh-patch-parser
 
-ADD . /go/src/github.com/jfrazelle/gh-patch-parser
-RUN cd /go/src/github.com/jfrazelle/gh-patch-parser && go install . ./...
-ENV PATH $PATH:/go/bin
+RUN chmod +x /usr/local/bin/gh-patch-parser
 
-# make git happy
-RUN git config --global user.name gh-patch-parser && \
-    git config --global user.email gh-patch-parser@dockerproject.com
-
-ENTRYPOINT ["gh-patch-parser"]
+ENTRYPOINT [ "/usr/local/bin/gh-patch-parser" ]
