@@ -1,16 +1,8 @@
-FROM golang:latest
-MAINTAINER Jess Frazelle <jess@docker.com>
+FROM progrium/busybox
+MAINTAINER Jessica Frazelle <jess@docker.com>
 
-RUN go get github.com/bitly/go-nsq && \
-    go get github.com/Sirupsen/logrus && \
-    go get github.com/drone/go-github/github
+ADD https://jesss.s3.amazonaws.com/binaries/nsqexec /usr/local/bin/nsqexec
 
-COPY . /go/src/github.com/jfrazelle/nsqexec
-RUN cd /go/src/github.com/jfrazelle/nsqexec && go install . ./...
-ENV PATH $PATH:/go/bin
+RUN chmod +x /usr/local/bin/nsqexec
 
-# make git happy
-RUN git config --global user.name nsqexec && \
-    git config --global user.email nsqexec@dockerproject.com
-
-ENTRYPOINT ["nsqexec"]
+ENTRYPOINT [ "/usr/local/bin/nsqexec" ]
