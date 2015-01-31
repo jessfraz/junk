@@ -113,7 +113,20 @@ https://github.com/docker/docker/blob/master/CONTRIBUTING.md#sign-your-work
 
 The easiest way to do this is to amend the last commit:
 
-` + "`git commit --amend -s --no-edit && git push -f`"
+~~~console
+`
+		comment += fmt.Sprintf("$ git clone -b %q %s %s\n", pr.Head.Ref, pr.Head.Repo.SSHURL, "somewhere")
+		comment += fmt.Sprintf("$ cd %s\n", "somewhere")
+		if pr.Commits > 1 {
+			comment += fmt.Sprintf("$ git rebase -i HEAD~%d\n", pr.Commits)
+			comment += "editor opens\nchange each 'pick' to 'edit'\nsave the file and quit\n"
+		}
+		comment += "$ git commit --amend -s --no-edit\n"
+		if pr.Commits > 1 {
+			comment += "$ git rebase --continue # and repeat the amend for each commit\n"
+		}
+		comment += "$ git push -f\n"
+		comment += `~~~`
 
 		if _, err := gh.AddComment(repo, strconv.Itoa(prHook.Number), comment); err != nil {
 			return err
