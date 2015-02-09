@@ -65,21 +65,13 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 
 	// check if it's a proposal
 	isProposal := strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal")
-	if isProposal {
-		// add proposal label
-		labels = append(labels, "Proposal", "/project/doc")
-	}
-
-	// check if its a docs only PR
-	if isDocsOnly(pr) && !isProposal {
-		// add docs-only label
-		labels = append(labels, "docs-only")
-	}
-
-	// check if is Proposal
-	if strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal") {
-		// add proposal label
-		labels = append(labels, "Proposal")
+	switch {
+	case isProposal:
+		labels = []string{"1-design-review"}
+	case isDocsOnly(pr):
+		labels = []string{"3-docs-review"}
+	default:
+		labels = []string{"0-triage"}
 	}
 
 	// initialize github client
