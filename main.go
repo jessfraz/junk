@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/bitly/go-nsq"
@@ -73,6 +74,10 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	default:
 		labels = []string{"0-triage"}
 	}
+
+	// sleep before we apply the labels to try and stop waffle from removing them
+	// this is gross i know
+	time.Sleep(30 * time.Second)
 
 	// initialize github client
 	gh := octokat.NewClient()
