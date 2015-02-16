@@ -2,8 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -125,4 +128,70 @@ func commitsAreSigned(pr octokat.PullRequest) bool {
 	}
 
 	return true
+}
+
+var MergeError = errors.New("Could not merge PR")
+
+func checkout(temp, repo string, prNum int) error {
+	// don't clone the whole repo
+	// it's too slow
+	cmd := exec.Command("git", "clone", repo, temp)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Running command failed: %s, %v", string(output), err)
+	}
+
+	// fetch the PR
+	cmd = exec.Command("git", "fetch", "origin", fmt.Sprintf("+refs/pull/%d/head:refs/remotes/origin/pr/%d", prNum, prNum))
+	cmd.Dir = temp
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Running command failed: %s, %v", string(output), err)
+	}
+
+	// merge the PR
+	cmd = exec.Command("git", "merge", fmt.Sprintf("origin/pr/%d", prNum))
+	cmd.Dir = temp
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		return MergeError
+	}
+
+	return nil
+}
+
+func checkGofmt(temp string, pr octokat.PullRequest) (isGoFmtd bool, files []string) {
+	req, err := http.Get(pr.DiffURL)
+	if err != nil {
+		log.Warn(err)
+		return true, files
+	}
+	defer req.Body.Close()
+
+	diff, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Warn(err)
+		return true, files
+	}
+
+	set, err := patch.Parse(diff)
+	if err != nil {
+		log.Warn(err)
+		return true, files
+	}
+
+	// check the gofmt for each file that is a .go file
+	// but not in vendor
+	for _, fileset := range set.File {
+		if strings.HasSuffix(fileset.Dst, ".go") && !strings.HasPrefix(fileset.Dst, "vendor/") {
+			// check the gofmt
+			cmd := exec.Command("gofmt", "-s", "-l", fileset.Dst)
+			cmd.Dir = temp
+			_, err = cmd.CombinedOutput()
+			if err != nil {
+				files = append(files, fileset.Dst)
+			}
+		}
+	}
+	return len(files) <= 0, files
 }

@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -129,6 +131,38 @@ The easiest way to do this is to amend the last commit:
 			return err
 		}
 		log.Infof("Added comment to unsigned PR %d", prHook.Number)
+	}
+
+	// checkout the repository in a temp dir
+	temp, err := ioutil.TempDir("", fmt.Sprintf("pr-%d", prHook.Number))
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(temp)
+
+	if err := checkout(temp, pr.Base.Repo.HTMLURL, prHook.Number); err != nil {
+		// if it is a merge error, comment on the PR
+		if err == MergeError {
+			comment := "Looks like we would not be able to merge this PR because of conflicts. Please fix them and force push to your branch."
+
+			if _, err := gh.AddComment(repo, strconv.Itoa(prHook.Number), comment); err != nil {
+				return err
+			}
+			log.Infof("Added comment to unmergable PR %d", prHook.Number)
+		}
+		return err
+	}
+
+	// check if the files are gofmt'd
+	isGoFmtd, files := checkGofmt(temp, pr)
+	if !isGoFmtd {
+		comment := fmt.Sprintf("These files are not properly gofmt'd:\n%s\n", strings.Join(files, "\n"))
+		comment += "Please reformat the above files using `gofmt -s -w` and ammend to the commit the result."
+
+		if _, err := gh.AddComment(repo, strconv.Itoa(prHook.Number), comment); err != nil {
+			return err
+		}
+		log.Infof("Added comment to non-gofmt'd PR %d", prHook.Number)
 	}
 
 	return nil
