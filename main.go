@@ -54,32 +54,11 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
-	// we only want opened pull requests
-	if !prHook.IsOpened() {
-		return nil
-	}
-
+	// get the PR
 	pr, err := getPR(prHook.PullRequest.Url)
 	if err != nil {
 		return err
 	}
-
-	var labels []string
-
-	// check if it's a proposal
-	isProposal := strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal")
-	switch {
-	case isProposal:
-		labels = []string{"1-design-review"}
-	case isDocsOnly(pr):
-		labels = []string{"3-docs-review"}
-	default:
-		labels = []string{"0-triage"}
-	}
-
-	// sleep before we apply the labels to try and stop waffle from removing them
-	// this is gross i know
-	time.Sleep(30 * time.Second)
 
 	// initialize github client
 	gh := octokat.NewClient()
@@ -89,19 +68,43 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		UserName: prHook.PullRequest.Base.Repo.Owner.Login,
 	}
 
-	// add labels if there are any
-	if len(labels) > 0 {
+	// we only want apply labels
+	// to opened pull requests
+	if prHook.IsOpened() {
+		var labels []string
 
-		prIssue := octokat.Issue{
-			Number: prHook.Number,
-		}
-		log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
-		if err := gh.ApplyLabel(repo, &prIssue, labels); err != nil {
-			return err
+		// check if it's a proposal
+		isProposal := strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal")
+		switch {
+		case isProposal:
+			labels = []string{"1-design-review"}
+		case isDocsOnly(pr):
+			labels = []string{"3-docs-review"}
+		default:
+			labels = []string{"0-triage"}
 		}
 
-		log.Infof("Added labels %#v to pr %d", labels, prHook.Number)
+		// sleep before we apply the labels to try and stop waffle from removing them
+		// this is gross i know
+		time.Sleep(30 * time.Second)
+
+		// add labels if there are any
+		if len(labels) > 0 {
+			prIssue := octokat.Issue{
+				Number: prHook.Number,
+			}
+			log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
+			if err := gh.ApplyLabel(repo, &prIssue, labels); err != nil {
+				return err
+			}
+
+			log.Infof("Added labels %#v to pr %d", labels, prHook.Number)
+		}
 	}
+
+	// do the following for newly opened PRs
+	// as well as synchonized because
+	// we check if the comment was already made
 
 	// check if all the commits are signed
 	if !commitsAreSigned(pr) {
@@ -127,10 +130,9 @@ The easiest way to do this is to amend the last commit:
 		comment += "$ git push -f\n"
 		comment += `~~~`
 
-		if _, err := gh.AddComment(repo, strconv.Itoa(prHook.Number), comment); err != nil {
+		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "sign your commits"); err != nil {
 			return err
 		}
-		log.Infof("Added comment to unsigned PR %d", prHook.Number)
 	}
 
 	// checkout the repository in a temp dir
@@ -142,16 +144,16 @@ The easiest way to do this is to amend the last commit:
 
 	if err := checkout(temp, pr.Base.Repo.HTMLURL, prHook.Number); err != nil {
 		// if it is a merge error, comment on the PR
-		if err == MergeError {
-			comment := "Looks like we would not be able to merge this PR because of conflicts. Please fix them and force push to your branch."
-
-			if _, err := gh.AddComment(repo, strconv.Itoa(prHook.Number), comment); err != nil {
-				return err
-			}
-			log.Infof("Added comment to unmergable PR %d", prHook.Number)
-			return nil
+		if err != MergeError {
+			return err
 		}
-		return err
+
+		comment := "Looks like we would not be able to merge this PR because of merge conflicts. Please fix them and force push to your branch."
+
+		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "conflicts"); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	// check if the files are gofmt'd
@@ -160,10 +162,9 @@ The easiest way to do this is to amend the last commit:
 		comment := fmt.Sprintf("These files are not properly gofmt'd:\n%s\n", strings.Join(files, "\n"))
 		comment += "Please reformat the above files using `gofmt -s -w` and ammend to the commit the result."
 
-		if _, err := gh.AddComment(repo, strconv.Itoa(prHook.Number), comment); err != nil {
+		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "gofmt"); err != nil {
 			return err
 		}
-		log.Infof("Added comment to non-gofmt'd PR %d", prHook.Number)
 	}
 
 	return nil

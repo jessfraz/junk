@@ -111,3 +111,29 @@ func isDocsOnly(pr octokat.PullRequest) bool {
 
 	return true
 }
+
+// add the comment if it does not exist already
+func addComment(gh *octokat.Client, repo octokat.Repo, prNum, comment, commentType string) error {
+	// get the comments
+	comments, err := gh.Comments(repo, prNum, &octokat.Options{})
+	if err != nil {
+		return err
+	}
+
+	// check if we already made the comment
+	for _, c := range comments {
+		// if we already made the comment return nil
+		if strings.ToLower(c.User.Login) == "gordontheturtle" && strings.Contains(c.Body, commentType) {
+			log.Debugf("Already made comment about %q on PR %s", commentType, prNum)
+			return nil
+		}
+	}
+
+	// add the comment because we must not have already made it
+	if _, err := gh.AddComment(repo, prNum, comment); err != nil {
+		return err
+	}
+
+	log.Infof("Added comment about %q PR %s", commentType, prNum)
+	return nil
+}
