@@ -53,8 +53,20 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
+	// we only want the prs that are opened
+	// or synchronized
+	if !prHook.IsOpened() && !prHook.IsSynchronize() {
+		return nil
+	}
+
 	// get the PR
 	pr := prHook.PullRequest
+
+	// get the patch set
+	patchSet, err := getPatchSet(pr.DiffURL)
+	if err != nil {
+		return err
+	}
 
 	// initialize github client
 	gh := octokat.NewClient()
@@ -62,12 +74,6 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	repo := octokat.Repo{
 		Name:     pr.Base.Repo.Name,
 		UserName: pr.Base.Repo.Owner.Login,
-	}
-
-	// we only want the prs that are opened
-	// or synchronized
-	if !prHook.IsOpened() && !prHook.IsSynchronize() {
-		return nil
 	}
 
 	// we only want apply labels
@@ -80,7 +86,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		switch {
 		case isProposal:
 			labels = []string{"1-design-review"}
-		case isDocsOnly(pr):
+		case isDocsOnly(patchSet):
 			labels = []string{"3-docs-review"}
 		default:
 			labels = []string{"0-triage"}
@@ -159,7 +165,7 @@ The easiest way to do this is to amend the last commit:
 	}
 
 	// check if the files are gofmt'd
-	isGoFmtd, files := checkGofmt(temp, pr)
+	isGoFmtd, files := checkGofmt(temp, patchSet)
 	if !isGoFmtd {
 		comment := fmt.Sprintf("These files are not properly gofmt'd:\n%s\n", strings.Join(files, "\n"))
 		comment += "Please reformat the above files using `gofmt -s -w` and ammend to the commit the result."
