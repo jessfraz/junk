@@ -12,7 +12,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/bitly/go-nsq"
 	"github.com/crosbymichael/octokat"
-	"github.com/drone/go-github/github"
 )
 
 const (
@@ -45,7 +44,7 @@ type Handler struct {
 }
 
 func (h *Handler) HandleMessage(m *nsq.Message) error {
-	prHook, err := github.ParsePullRequestHook(m.Body)
+	prHook, err := octokat.ParsePullRequestHook(m.Body)
 	if err != nil {
 		// Errors will most likely occur because not all GH
 		// hooks are the same format
@@ -55,22 +54,19 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	}
 
 	// get the PR
-	pr, err := getPR(prHook.PullRequest.Url)
-	if err != nil {
-		return err
-	}
+	pr := prHook.PullRequest
 
 	// initialize github client
 	gh := octokat.NewClient()
 	gh = gh.WithToken(h.GHToken)
 	repo := octokat.Repo{
-		Name:     prHook.PullRequest.Base.Repo.Name,
-		UserName: prHook.PullRequest.Base.Repo.Owner.Login,
+		Name:     pr.Base.Repo.Name,
+		UserName: pr.Base.Repo.Owner.Login,
 	}
 
 	// we only want the prs that are opened
 	// or synchronized
-	if !prHook.IsOpened() && prHook.Action != "synchronize" {
+	if !prHook.IsOpened() && !prHook.IsSynchronize() {
 		return nil
 	}
 
@@ -113,7 +109,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	// we check if the comment was already made
 
 	// check if all the commits are signed
-	if !commitsAreSigned(pr) {
+	if !commitsAreSigned(gh, repo, pr) {
 		// add comment about having to sign commits
 		comment := `Can you please sign your commits following these rules:
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -66,23 +65,8 @@ func ProcessQueue(handler nsq.Handler, opts QueueOpts) error {
 	return nil
 }
 
-func getPR(url string) (pr octokat.PullRequest, err error) {
-	req, err := http.Get(url)
-	if err != nil {
-		return pr, err
-	}
-	defer req.Body.Close()
-
-	decoder := json.NewDecoder(req.Body)
-	if err := decoder.Decode(&pr); err != nil {
-		return pr, err
-	}
-
-	return pr, nil
-}
-
 // check if docs-only PR
-func isDocsOnly(pr octokat.PullRequest) bool {
+func isDocsOnly(pr *octokat.PullRequest) bool {
 	req, err := http.Get(pr.DiffURL)
 	if err != nil {
 		log.Warn(err)
