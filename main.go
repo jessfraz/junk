@@ -68,6 +68,12 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		UserName: prHook.PullRequest.Base.Repo.Owner.Login,
 	}
 
+	// we only want the prs that are opened
+	// or synchronized
+	if !prHook.IsOpened() && prHook.Action != "synchronize" {
+		return nil
+	}
+
 	// we only want apply labels
 	// to opened pull requests
 	if prHook.IsOpened() {
