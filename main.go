@@ -12,7 +12,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/bitly/go-nsq"
 	"github.com/crosbymichael/octokat"
-	"github.com/drone/go-github/github"
 )
 
 const (
@@ -45,7 +44,7 @@ type Handler struct {
 }
 
 func (h *Handler) HandleMessage(m *nsq.Message) error {
-	prHook, err := github.ParsePullRequestHook(m.Body)
+	prHook, err := octokat.ParsePullRequestHook(m.Body)
 	if err != nil {
 		// Errors will most likely occur because not all GH
 		// hooks are the same format
@@ -54,8 +53,17 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
+	// we only want the prs that are opened
+	// or synchronized
+	if !prHook.IsOpened() && !prHook.IsSynchronize() {
+		return nil
+	}
+
 	// get the PR
-	pr, err := getPR(prHook.PullRequest.Url)
+	pr := prHook.PullRequest
+
+	// get the patch set
+	patchSet, err := getPatchSet(pr.DiffURL)
 	if err != nil {
 		return err
 	}
@@ -64,14 +72,8 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	gh := octokat.NewClient()
 	gh = gh.WithToken(h.GHToken)
 	repo := octokat.Repo{
-		Name:     prHook.PullRequest.Base.Repo.Name,
-		UserName: prHook.PullRequest.Base.Repo.Owner.Login,
-	}
-
-	// we only want the prs that are opened
-	// or synchronized
-	if !prHook.IsOpened() && prHook.Action != "synchronize" {
-		return nil
+		Name:     pr.Base.Repo.Name,
+		UserName: pr.Base.Repo.Owner.Login,
 	}
 
 	// we only want apply labels
@@ -84,7 +86,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		switch {
 		case isProposal:
 			labels = []string{"1-design-review"}
-		case isDocsOnly(pr):
+		case isDocsOnly(patchSet):
 			labels = []string{"3-docs-review"}
 		default:
 			labels = []string{"0-triage"}
@@ -113,7 +115,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	// we check if the comment was already made
 
 	// check if all the commits are signed
-	if !commitsAreSigned(pr) {
+	if !commitsAreSigned(gh, repo, pr) {
 		// add comment about having to sign commits
 		comment := `Can you please sign your commits following these rules:
 
@@ -163,7 +165,7 @@ The easiest way to do this is to amend the last commit:
 	}
 
 	// check if the files are gofmt'd
-	isGoFmtd, files := checkGofmt(temp, pr)
+	isGoFmtd, files := checkGofmt(temp, patchSet)
 	if !isGoFmtd {
 		comment := fmt.Sprintf("These files are not properly gofmt'd:\n%s\n", strings.Join(files, "\n"))
 		comment += "Please reformat the above files using `gofmt -s -w` and ammend to the commit the result."
