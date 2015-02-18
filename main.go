@@ -96,7 +96,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 			Number: prHook.Number,
 		}
 		log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
-		if err := gh.AppyLabel(repo, &prIssue, labels); err != nil {
+		if err := gh.ApplyLabel(repo, &prIssue, labels); err != nil {
 			return err
 		}
 
@@ -149,6 +149,7 @@ The easiest way to do this is to amend the last commit:
 				return err
 			}
 			log.Infof("Added comment to unmergable PR %d", prHook.Number)
+			return nil
 		}
 		return err
 	}
