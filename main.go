@@ -168,7 +168,7 @@ The easiest way to do this is to amend the last commit:
 	isGoFmtd, files := checkGofmt(temp, patchSet)
 	if !isGoFmtd {
 		comment := fmt.Sprintf("These files are not properly gofmt'd:\n%s\n", strings.Join(files, "\n"))
-		comment += "Please reformat the above files using `gofmt -s -w` and ammend to the commit the result."
+		comment += "Please reformat the above files using `gofmt -s -w` and amend to the commit the result."
 
 		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "gofmt"); err != nil {
 			return err
