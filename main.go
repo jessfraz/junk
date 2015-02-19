@@ -136,7 +136,9 @@ The easiest way to do this is to amend the last commit:
 			comment += "$ git rebase --continue # and repeat the amend for each commit\n"
 		}
 		comment += "$ git push -f\n"
-		comment += `~~~`
+		comment += `~~~
+This will update the existing PR, so you do not need to open a new one.
+`
 
 		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "sign your commits"); err != nil {
 			return err
