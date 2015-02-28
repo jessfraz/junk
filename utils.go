@@ -112,11 +112,11 @@ func addComment(gh *octokat.Client, repo octokat.Repo, prNum, comment, commentTy
 	}
 
 	// add the comment because we must not have already made it
-	if _, err := gh.AddComment(repo, prNum, comment); err != nil {
-		return err
-	}
+	//if _, err := gh.AddComment(repo, prNum, comment); err != nil {
+	//return err
+	//}
 
-	log.Infof("Added comment about %q PR %s", commentType, prNum)
+	log.Infof("Would have added comment about %q PR %s", commentType, prNum)
 	return nil
 }
 
