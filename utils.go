@@ -120,8 +120,8 @@ func addComment(gh *octokat.Client, repo octokat.Repo, prNum, comment, commentTy
 	return nil
 }
 
-func isSigned(c octokat.Commit) bool {
-	req, err := http.Get(c.HtmlURL + ".patch")
+func isSigned(patchUrl string) bool {
+	req, err := http.Get(patchUrl)
 	if err != nil {
 		log.Warn(err)
 		return true
@@ -165,7 +165,7 @@ func commitsAreSigned(gh *octokat.Client, repo octokat.Repo, pr *octokat.PullReq
 	}
 
 	for _, commit := range commits {
-		if isSigned(commit) {
+		if isSigned(commit.HtmlURL + ".patch") {
 			log.Debugf("The commit %s for PR %d IS signed", commit.Sha, pr.Number)
 		} else {
 			log.Warnf("The commit %s for PR %d IS NOT signed", commit.Sha, pr.Number)
