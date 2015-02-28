@@ -121,6 +121,7 @@ func addComment(gh *octokat.Client, repo octokat.Repo, prNum, comment, commentTy
 }
 
 func isSigned(patchUrl string) bool {
+	log.Debugf("patchUrl is %s", patchUrl)
 	req, err := http.Get(patchUrl)
 	if err != nil {
 		log.Warn(err)
