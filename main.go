@@ -54,8 +54,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	}
 
 	// we only want the prs that are opened
-	// or synchronized
-	if !prHook.IsOpened() && !prHook.IsSynchronize() {
+	if !prHook.IsOpened() {
 		return nil
 	}
 
@@ -78,41 +77,35 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 
 	// we only want apply labels
 	// to opened pull requests
-	if prHook.IsOpened() {
-		var labels []string
+	var labels []string
 
-		// check if it's a proposal
-		isProposal := strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal")
-		switch {
-		case isProposal:
-			labels = []string{"1-design-review"}
-		case isDocsOnly(patchSet):
-			labels = []string{"3-docs-review"}
-		default:
-			labels = []string{"0-triage"}
-		}
-
-		// sleep before we apply the labels to try and stop waffle from removing them
-		// this is gross i know
-		time.Sleep(30 * time.Second)
-
-		// add labels if there are any
-		if len(labels) > 0 {
-			prIssue := octokat.Issue{
-				Number: prHook.Number,
-			}
-			log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
-			if err := gh.ApplyLabel(repo, &prIssue, labels); err != nil {
-				return err
-			}
-
-			log.Infof("Added labels %#v to pr %d", labels, prHook.Number)
-		}
+	// check if it's a proposal
+	isProposal := strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal")
+	switch {
+	case isProposal:
+		labels = []string{"1-design-review"}
+	case isDocsOnly(patchSet):
+		labels = []string{"3-docs-review"}
+	default:
+		labels = []string{"0-triage"}
 	}
 
-	// do the following for newly opened PRs
-	// as well as synchonized because
-	// we check if the comment was already made
+	// sleep before we apply the labels to try and stop waffle from removing them
+	// this is gross i know
+	time.Sleep(30 * time.Second)
+
+	// add labels if there are any
+	if len(labels) > 0 {
+		prIssue := octokat.Issue{
+			Number: prHook.Number,
+		}
+		log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
+		if err := gh.ApplyLabel(repo, &prIssue, labels); err != nil {
+			return err
+		}
+
+		log.Infof("Added labels %#v to pr %d", labels, prHook.Number)
+	}
 
 	// check if all the commits are signed
 	if !commitsAreSigned(gh, repo, pr) {
