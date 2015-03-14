@@ -111,11 +111,9 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 
 	// add labels if there are any
 	if len(labels) > 0 {
-		prIssue := octokat.Issue{
-			Number: prHook.Number,
-		}
 		log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
-		if err := gh.ApplyLabel(repo, &prIssue, labels); err != nil {
+
+		if err := addLabel(gh, repo, &prHook.Number, labels...); err != nil {
 			return err
 		}
 
