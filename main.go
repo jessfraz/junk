@@ -149,6 +149,15 @@ This will update the existing PR, so you do not need to open a new one.
 		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "sign your commits"); err != nil {
 			return err
 		}
+
+		if err := addLabel(gh, repo, &prHook.Number, "dco/no"); err != nil {
+			return err
+		}
+
+	} else {
+		if err := addLabel(gh, repo, &prHook.Number, "dco/yes"); err != nil {
+			return err
+		}
 	}
 
 	// checkout the repository in a temp dir
