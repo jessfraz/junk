@@ -77,17 +77,19 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 }
 
 func (h *Handler) handleIssue(issueHook *octokat.IssueHook) error {
+	if !issueHook.IsComment() {
+		// we only want comments
+		return nil
+	}
 
-	if issueHook.IsComment() {
-		for token, label := range labelmap {
-			if strings.Contains(issueHook.Issue.Comment.Body, token) {
-				if err := addLabel(h.getGH(), getRepo(issueHook.Repo), issueHook.Issue.Number, label); err != nil {
-					return err
-				}
+	for token, label := range labelmap {
+		if strings.Contains(issueHook.Comment.Body, token) {
+			if err := addLabel(h.getGH(), getRepo(issueHook.Repo), issueHook.Issue.Number, label); err != nil {
+				return err
 			}
 		}
-
 	}
+
 	return nil
 }
 
