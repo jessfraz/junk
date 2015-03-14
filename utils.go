@@ -94,6 +94,24 @@ func isDocsOnly(set *patch.Set) bool {
 	return true
 }
 
+func addLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels []string) error {
+	issue := octokat.Issue{
+		Number: issueNum,
+	}
+
+	return gh.ApplyLabel(repo, &issue, labels)
+}
+
+func removeLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels []string) error {
+	issue := octokat.Issue{
+		Number: issueNum,
+	}
+
+	for _, label := range labels {
+		return gh.RemoveLabel(repo, &issue, label)
+	}
+}
+
 // add the comment if it does not exist already
 func addComment(gh *octokat.Client, repo octokat.Repo, prNum, comment, commentType string) error {
 	// get the comments
