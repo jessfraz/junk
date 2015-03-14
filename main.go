@@ -113,7 +113,7 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	if len(labels) > 0 {
 		log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
 
-		if err := addLabel(gh, repo, &prHook.Number, labels...); err != nil {
+		if err := addLabel(gh, repo, prHook.Number, labels...); err != nil {
 			return err
 		}
 
@@ -150,12 +150,12 @@ This will update the existing PR, so you do not need to open a new one.
 			return err
 		}
 
-		if err := addLabel(gh, repo, &prHook.Number, "dco/no"); err != nil {
+		if err := addLabel(gh, repo, prHook.Number, "dco/no"); err != nil {
 			return err
 		}
 
 	} else {
-		if err := addLabel(gh, repo, &prHook.Number, "dco/yes"); err != nil {
+		if err := addLabel(gh, repo, prHook.Number, "dco/yes"); err != nil {
 			return err
 		}
 	}
