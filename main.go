@@ -45,14 +45,29 @@ type Handler struct {
 
 func (h *Handler) HandleMessage(m *nsq.Message) error {
 	prHook, err := octokat.ParsePullRequestHook(m.Body)
-	if err != nil {
-		// Errors will most likely occur because not all GH
-		// hooks are the same format
-		// we care about those that are a new pull request
-		log.Debugf("Error parsing hook: %v", err)
-		return nil
+	if err == nil {
+		return h.handlePullRequest(prHook)
 	}
 
+	// there was an error
+	// so it wasn't a pull request hook
+	// lets see if its an issue hook
+	issueHook, err := octokat.ParseIssueHook(m.Body)
+	if err == nil {
+		return h.handleIssue(issueHook)
+	}
+
+	// if there was an error it means
+	// it wasnt an Issue or Pull Request Hook
+	// so we don't care about it
+	return nil
+}
+
+func (h *Handler) handleIssue(issueHook *octokat.IssueHook) error {
+	return nil
+}
+
+func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	// we only want the prs that are opened
 	if !prHook.IsOpened() {
 		return nil

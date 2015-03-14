@@ -110,6 +110,8 @@ func removeLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels []s
 	for _, label := range labels {
 		return gh.RemoveLabel(repo, &issue, label)
 	}
+
+	return nil
 }
 
 // add the comment if it does not exist already
