@@ -111,11 +111,9 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 
 	// add labels if there are any
 	if len(labels) > 0 {
-		prIssue := octokat.Issue{
-			Number: prHook.Number,
-		}
 		log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
-		if err := gh.ApplyLabel(repo, &prIssue, labels); err != nil {
+
+		if err := addLabel(gh, repo, &prHook.Number, labels...); err != nil {
 			return err
 		}
 
@@ -149,6 +147,15 @@ This will update the existing PR, so you do not need to open a new one.
 `
 
 		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "sign your commits"); err != nil {
+			return err
+		}
+
+		if err := addLabel(gh, repo, &prHook.Number, "dco/no"); err != nil {
+			return err
+		}
+
+	} else {
+		if err := addLabel(gh, repo, &prHook.Number, "dco/yes"); err != nil {
 			return err
 		}
 	}

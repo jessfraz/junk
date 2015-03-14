@@ -94,7 +94,7 @@ func isDocsOnly(set *patch.Set) bool {
 	return true
 }
 
-func addLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels []string) error {
+func addLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels ...string) error {
 	issue := octokat.Issue{
 		Number: issueNum,
 	}
@@ -102,7 +102,7 @@ func addLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels []stri
 	return gh.ApplyLabel(repo, &issue, labels)
 }
 
-func removeLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels []string) error {
+func removeLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels ...string) error {
 	issue := octokat.Issue{
 		Number: issueNum,
 	}
