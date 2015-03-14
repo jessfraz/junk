@@ -27,6 +27,19 @@ var (
 	version bool
 )
 
+var labelmap map[string]string = map[string]string{
+	"#help-wanted": "status/help-wanted",
+	"#helpwanted":  "status/help-wanted",
+	"#help":        "status/help-wanted",
+	"#dibs":        "status/claimed",
+	"#claimed":     "status/claimed",
+	"#mine":        "status/claimed",
+	"#docs-help":   "status/docs-help",
+	"#docs-needed": "status/docs-help",
+	"#docshelp":    "status/docs-help",
+	"#docsreview":  "status/docs-help",
+}
+
 func init() {
 	// parse flags
 	flag.BoolVar(&version, "version", false, "print version and exit")
@@ -64,7 +77,31 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 }
 
 func (h *Handler) handleIssue(issueHook *octokat.IssueHook) error {
+
+	if issueHook.IsComment() {
+		for token, label := range labelmap {
+			if strings.Contains(issueHook.issue.comment.body, token) {
+				if err := addLabel(getGH(), getRepo(), &issueHook.Number, label); err != nil {
+					return err
+				}
+			}
+		}
+
+	}
 	return nil
+}
+
+func getRepo() octokat.Repo {
+	return octokat.Repo{
+		Name:     pr.Base.Repo.Name,
+		UserName: pr.Base.Repo.Owner.Login,
+	}
+}
+
+func getGH() *octokat.Client {
+	gh := octokat.NewClient()
+	gh = gh.WithToken(h.GHToken)
+	return gh
 }
 
 func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
@@ -83,12 +120,8 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	}
 
 	// initialize github client
-	gh := octokat.NewClient()
-	gh = gh.WithToken(h.GHToken)
-	repo := octokat.Repo{
-		Name:     pr.Base.Repo.Name,
-		UserName: pr.Base.Repo.Owner.Login,
-	}
+	gh := getGH()
+	repo := getRepo()
 
 	// we only want apply labels
 	// to opened pull requests
