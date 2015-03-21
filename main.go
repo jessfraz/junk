@@ -42,8 +42,6 @@ var labelmap map[string]string = map[string]string{
 	"#docshelp":          "status/docs-help",
 	"#docsreview":        "status/docs-help",
 	"#docsneeded":        "status/docs-help",
-	"#min":               "status/more-info-needed",
-	"#m-i-n":             "status/more-info-needed",
 	"#moreinfo":          "status/more-info-needed",
 	"#more-info":         "status/more-info-needed",
 	"#need-info":         "status/more-info-needed",
@@ -211,11 +209,11 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	isProposal := strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal")
 	switch {
 	case isProposal:
-		labels = []string{"1-design-review"}
+		labels = []string{"needs-design-review"}
 	case isDocsOnly(patchSet):
-		labels = []string{"3-docs-review"}
+		labels = []string{"needs-docs-review"}
 	default:
-		labels = []string{"0-triage"}
+		labels = []string{"needs-triage"}
 	}
 
 	// sleep before we apply the labels to try and stop waffle from removing them
