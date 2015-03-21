@@ -1,5 +1,8 @@
 # GH Patch Parser
 
+[![Circle
+CI](https://circleci.com/gh/jfrazelle/gh-patch-parser.svg?style=svg)](https://circleci.com/gh/jfrazelle/gh-patch-parser)
+
 GH Patch Parser to auto label incoming patches, triggered from nsq messages.
 
 ```console

@@ -155,28 +155,30 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 }
 
 func (h *Handler) handleIssue(issueHook *octokat.IssueHook) error {
+	if !issueHook.IsComment() {
+		// we only want comments
+		return nil
+	}
 
-	if issueHook.IsComment() {
-		for token, label := range labelmap {
-			if strings.Contains(issueHook.issue.comment.body, token) {
-				if err := addLabel(getGH(), getRepo(), &issueHook.Number, label); err != nil {
-					return err
-				}
+	for token, label := range labelmap {
+		if strings.Contains(issueHook.Comment.Body, token) {
+			if err := addLabel(h.getGH(), getRepo(issueHook.Repo), issueHook.Issue.Number, label); err != nil {
+				return err
 			}
 		}
-
 	}
+
 	return nil
 }
 
-func getRepo() octokat.Repo {
+func getRepo(repo *octokat.Repository) octokat.Repo {
 	return octokat.Repo{
-		Name:     pr.Base.Repo.Name,
-		UserName: pr.Base.Repo.Owner.Login,
+		Name:     repo.Name,
+		UserName: repo.Owner.Login,
 	}
 }
 
-func getGH() *octokat.Client {
+func (h *Handler) getGH() *octokat.Client {
 	gh := octokat.NewClient()
 	gh = gh.WithToken(h.GHToken)
 	return gh
@@ -198,8 +200,8 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	}
 
 	// initialize github client
-	gh := getGH()
-	repo := getRepo()
+	gh := h.getGH()
+	repo := getRepo(prHook.Repo)
 
 	// we only want apply labels
 	// to opened pull requests
