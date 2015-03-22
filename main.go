@@ -81,6 +81,7 @@ var labelmap map[string]string = map[string]string{
 	"+kind/question":     "kind/question",
 	"+kind/regression":   "kind/regression",
 	"+kind/feature":      "kind/feature",
+	"+kind/video":        "kind/video",
 	"+ kind/proposal":    "kind/proposal",
 	"+ kind/enhancement": "kind/enhancement",
 	"+ kind/bug":         "kind/bug",
@@ -92,6 +93,7 @@ var labelmap map[string]string = map[string]string{
 	"+ kind/question":    "kind/question",
 	"+ kind/regression":  "kind/regression",
 	"+ kind/feature":     "kind/feature",
+	"+ kind/video":       "kind/video",
 	"+proposal":          "kind/proposal",
 	"+enhancement":       "kind/enhancement",
 	"+bug":               "kind/bug",
@@ -103,6 +105,7 @@ var labelmap map[string]string = map[string]string{
 	"+question":          "kind/question",
 	"+regression":        "kind/regression",
 	"+feature":           "kind/feature",
+	"+video":             "kind/video",
 	"+ proposal":         "kind/proposal",
 	"+ enhancement":      "kind/enhancement",
 	"+ bug":              "kind/bug",
@@ -114,6 +117,7 @@ var labelmap map[string]string = map[string]string{
 	"+ question":         "kind/question",
 	"+ regression":       "kind/regression",
 	"+ feature":          "kind/feature",
+	"+ video":            "kind/video",
 }
 
 func init() {
