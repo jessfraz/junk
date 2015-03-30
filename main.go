@@ -27,99 +27,6 @@ var (
 	version bool
 )
 
-var labelmap map[string]string = map[string]string{
-	"#help-wanted":       "status/help-wanted",
-	"#helpwanted":        "status/help-wanted",
-	"#helpneeded":        "status/help-wanted",
-	"#help-needed":       "status/help-wanted",
-	"#needhelp":          "status/help-wanted",
-	"#help":              "status/help-wanted",
-	"#dibs":              "status/claimed",
-	"#claimed":           "status/claimed",
-	"#mine":              "status/claimed",
-	"#docs-help":         "status/docs-help",
-	"#docs-needed":       "status/docs-help",
-	"#docshelp":          "status/docs-help",
-	"#docsreview":        "status/docs-help",
-	"#docsneeded":        "status/docs-help",
-	"#moreinfo":          "status/more-info-needed",
-	"#more-info":         "status/more-info-needed",
-	"#need-info":         "status/more-info-needed",
-	"#needinfo":          "status/more-info-needed",
-	"+exp/novice":        "exp/novice",
-	"+exp/beginner":      "exp/beginner",
-	"+exp/proficient":    "exp/proficient",
-	"+exp/expert":        "exp/expert",
-	"+exp/master":        "exp/master",
-	"+exp/mastery":       "exp/master",
-	"+ exp/novice":       "exp/novice",
-	"+ exp/beginner":     "exp/beginner",
-	"+ exp/proficient":   "exp/proficient",
-	"+ exp/expert":       "exp/expert",
-	"+ exp/master":       "exp/master",
-	"+ exp/mastery":      "exp/master",
-	"+novice":            "exp/novice",
-	"+beginner":          "exp/beginner",
-	"+proficient":        "exp/proficient",
-	"+expert":            "exp/expert",
-	"+master":            "exp/master",
-	"+mastery":           "exp/master",
-	"+ novice":           "exp/novice",
-	"+ beginner":         "exp/beginner",
-	"+ proficient":       "exp/proficient",
-	"+ expert":           "exp/expert",
-	"+ master":           "exp/master",
-	"+ mastery":          "exp/master",
-	"+kind/proposal":     "kind/proposal",
-	"+kind/enhancement":  "kind/enhancement",
-	"+kind/bug":          "kind/bug",
-	"+kind/cleanup":      "kind/cleanup",
-	"+kind/graphics":     "kind/graphics",
-	"+kind/writing":      "kind/writing",
-	"+kind/docs":         "kind/writing",
-	"+kind/security":     "kind/security",
-	"+kind/question":     "kind/question",
-	"+kind/regression":   "kind/regression",
-	"+kind/feature":      "kind/feature",
-	"+kind/video":        "kind/video",
-	"+ kind/proposal":    "kind/proposal",
-	"+ kind/enhancement": "kind/enhancement",
-	"+ kind/bug":         "kind/bug",
-	"+ kind/cleanup":     "kind/cleanup",
-	"+ kind/graphics":    "kind/graphics",
-	"+ kind/writing":     "kind/writing",
-	"+ kind/docs":        "kind/writing",
-	"+ kind/security":    "kind/security",
-	"+ kind/question":    "kind/question",
-	"+ kind/regression":  "kind/regression",
-	"+ kind/feature":     "kind/feature",
-	"+ kind/video":       "kind/video",
-	"+proposal":          "kind/proposal",
-	"+enhancement":       "kind/enhancement",
-	"+bug":               "kind/bug",
-	"+cleanup":           "kind/cleanup",
-	"+graphics":          "kind/graphics",
-	"+writing":           "kind/writing",
-	"+docs":              "kind/writing",
-	"+security":          "kind/security",
-	"+question":          "kind/question",
-	"+regression":        "kind/regression",
-	"+feature":           "kind/feature",
-	"+video":             "kind/video",
-	"+ proposal":         "kind/proposal",
-	"+ enhancement":      "kind/enhancement",
-	"+ bug":              "kind/bug",
-	"+ cleanup":          "kind/cleanup",
-	"+ graphics":         "kind/graphics",
-	"+ writing":          "kind/writing",
-	"+ docs":             "kind/writing",
-	"+ security":         "kind/security",
-	"+ question":         "kind/question",
-	"+ regression":       "kind/regression",
-	"+ feature":          "kind/feature",
-	"+ video":            "kind/video",
-}
-
 func init() {
 	// parse flags
 	flag.BoolVar(&version, "version", false, "print version and exit")
@@ -142,34 +49,9 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		return h.handlePullRequest(prHook)
 	}
 
-	// there was an error
-	// so it wasn't a pull request hook
-	// lets see if its an issue hook
-	issueHook, err := octokat.ParseIssueHook(m.Body)
-	if err == nil {
-		return h.handleIssue(issueHook)
-	}
-
 	// if there was an error it means
 	// it wasnt an Issue or Pull Request Hook
 	// so we don't care about it
-	return nil
-}
-
-func (h *Handler) handleIssue(issueHook *octokat.IssueHook) error {
-	if !issueHook.IsComment() {
-		// we only want comments
-		return nil
-	}
-
-	for token, label := range labelmap {
-		if strings.Contains(issueHook.Comment.Body, token) {
-			if err := addLabel(h.getGH(), getRepo(issueHook.Repo), issueHook.Issue.Number, label); err != nil {
-				return err
-			}
-		}
-	}
-
 	return nil
 }
 
