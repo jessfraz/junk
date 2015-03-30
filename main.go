@@ -75,9 +75,11 @@ func (h *Handler) handleIssue(issueHook *octokat.IssueHook) error {
 		return nil
 	}
 
+	gh := h.getGH()
 	for token, label := range labelmap {
-		if strings.Contains(issueHook.Comment.Body, token) {
-			if err := addLabel(h.getGH(), getRepo(issueHook.Repo), issueHook.Issue.Number, label); err != nil {
+		// if comment matches predefined actions AND author is not bot
+		if strings.Contains(issueHook.Comment.Body, token) && gh.Login != issueHook.Sender.Login {
+			if err := addLabel(gh, getRepo(issueHook.Repo), issueHook.Issue.Number, label); err != nil {
 				return err
 			}
 		}
