@@ -27,6 +27,12 @@ var (
 	version bool
 )
 
+var labelmap map[string]string = map[string]string{
+	"#dibs":    "status/claimed",
+	"#claimed": "status/claimed",
+	"#mine":    "status/claimed",
+}
+
 func init() {
 	// parse flags
 	flag.BoolVar(&version, "version", false, "print version and exit")
@@ -49,9 +55,34 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		return h.handlePullRequest(prHook)
 	}
 
+	// there was an error
+	// so it wasn't a pull request hook
+	// lets see if its an issue hook
+	issueHook, err := octokat.ParseIssueHook(m.Body)
+	if err == nil {
+		return h.handleIssue(issueHook)
+	}
+
 	// if there was an error it means
 	// it wasnt an Issue or Pull Request Hook
 	// so we don't care about it
+	return nil
+}
+
+func (h *Handler) handleIssue(issueHook *octokat.IssueHook) error {
+	if !issueHook.IsComment() {
+		// we only want comments
+		return nil
+	}
+
+	for token, label := range labelmap {
+		if strings.Contains(issueHook.Comment.Body, token) {
+			if err := addLabel(h.getGH(), getRepo(issueHook.Repo), issueHook.Issue.Number, label); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
