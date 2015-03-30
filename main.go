@@ -128,11 +128,11 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	isProposal := strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal")
 	switch {
 	case isProposal:
-		labels = []string{"status/1-design-review"}
+		labels = []string{"status/1-needs-design-review"}
 	case isDocsOnly(patchSet):
-		labels = []string{"status/3-docs-review"}
+		labels = []string{"status/3-needs-docs-review"}
 	default:
-		labels = []string{"status/0-triage"}
+		labels = []string{"status/0-needs-triage"}
 	}
 
 	// sleep before we apply the labels to try and stop waffle from removing them
