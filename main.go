@@ -7,7 +7,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/bitly/go-nsq"
@@ -119,71 +118,6 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	// initialize github client
 	gh := h.getGH()
 	repo := getRepo(prHook.Repo)
-
-	// we only want apply labels
-	// to opened pull requests
-	var labels []string
-
-	// check if it's a proposal
-	isProposal := strings.Contains(strings.ToLower(prHook.PullRequest.Title), "proposal")
-	switch {
-	case isProposal:
-		labels = []string{"status/1-needs-design-review"}
-	case isDocsOnly(patchSet):
-		labels = []string{"status/3-needs-docs-review"}
-	default:
-		labels = []string{"status/0-needs-triage"}
-	}
-
-	// sleep before we apply the labels to try and stop waffle from removing them
-	// this is gross i know
-	time.Sleep(30 * time.Second)
-
-	// add labels if there are any
-	if len(labels) > 0 {
-		log.Debugf("Adding labels %#v to pr %d", labels, prHook.Number)
-
-		if err := addLabel(gh, repo, prHook.Number, labels...); err != nil {
-			return err
-		}
-
-		log.Infof("Added labels %#v to pr %d", labels, prHook.Number)
-	}
-
-	// check if all the commits are signed
-	if !commitsAreSigned(gh, repo, pr) {
-		// add comment about having to sign commits
-		comment := `Can you please sign your commits following these rules:
-
-https://github.com/docker/docker/blob/master/CONTRIBUTING.md#sign-your-work
-
-The easiest way to do this is to amend the last commit:
-
-~~~console
-`
-		comment += fmt.Sprintf("$ git clone -b %q %s %s\n", pr.Head.Ref, pr.Head.Repo.SSHURL, "somewhere")
-		comment += fmt.Sprintf("$ cd %s\n", "somewhere")
-		if pr.Commits > 1 {
-			comment += fmt.Sprintf("$ git rebase -i HEAD~%d\n", pr.Commits)
-			comment += "editor opens\nchange each 'pick' to 'edit'\nsave the file and quit\n"
-		}
-		comment += "$ git commit --amend -s --no-edit\n"
-		if pr.Commits > 1 {
-			comment += "$ git rebase --continue # and repeat the amend for each commit\n"
-		}
-		comment += "$ git push -f\n"
-		comment += `~~~
-This will update the existing PR, so you do not need to open a new one.
-`
-
-		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "sign your commits"); err != nil {
-			return err
-		}
-
-		if err := addLabel(gh, repo, prHook.Number, "dco/no"); err != nil {
-			return err
-		}
-	}
 
 	// checkout the repository in a temp dir
 	temp, err := ioutil.TempDir("", fmt.Sprintf("pr-%d", prHook.Number))
