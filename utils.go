@@ -1,19 +1,12 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
-	"regexp"
-	"strconv"
 	"strings"
 	"syscall"
-
-	"code.google.com/p/go.codereview/patch"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/bitly/go-nsq"
@@ -66,34 +59,6 @@ func ProcessQueue(handler nsq.Handler, opts QueueOpts) error {
 	return nil
 }
 
-// get the patch set
-func getPatchSet(diffurl string) (set *patch.Set, err error) {
-	req, err := http.Get(diffurl)
-	if err != nil {
-		return set, err
-	}
-	defer req.Body.Close()
-
-	diff, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		return set, err
-	}
-
-	return patch.Parse(diff)
-}
-
-// check if docs-only PR
-func isDocsOnly(set *patch.Set) bool {
-	for _, fileset := range set.File {
-		if !strings.HasSuffix(fileset.Dst, ".md") && !strings.HasPrefix(fileset.Dst, "docs/") {
-			log.Debugf("%s is not a docs change", fileset.Dst)
-			return false
-		}
-	}
-
-	return true
-}
-
 func addLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels ...string) error {
 	issue := octokat.Issue{
 		Number: issueNum,
@@ -140,105 +105,29 @@ func addComment(gh *octokat.Client, repo octokat.Repo, prNum, comment, commentTy
 	return nil
 }
 
-func isSigned(patchUrl string) bool {
-	log.Debugf("patchUrl is %s", patchUrl)
-	req, err := http.Get(patchUrl)
-	if err != nil {
-		log.Warn(err)
-		return true
-	}
-	defer req.Body.Close()
-
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		log.Warn(err)
-		return true
-	}
-
-	regex, err := regexp.Compile("^(Docker-DCO-1.1-)?Signed-off-by: ([^<]+) <([^<>@]+@[^<>]+)>( \\(github: ([a-zA-Z0-9][a-zA-Z0-9-]+)\\))?$")
-	if err != nil {
-		log.Warn(err)
-		return true
-	}
-
-	set, err := patch.Parse(body)
-	if err != nil {
-		log.Warn(err)
-		return true
-	}
-	for _, line := range strings.Split(set.Header, "\n") {
-		if strings.HasPrefix(line, "Docker-DCO") || strings.HasPrefix(line, "Signed-off-by") {
-			if regex.MatchString(line) {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-// check if all the commits are signed
-func commitsAreSigned(gh *octokat.Client, repo octokat.Repo, pr *octokat.PullRequest) bool {
-	commits, err := gh.Commits(repo, strconv.Itoa(pr.Number), &octokat.Options{})
-	if err != nil {
-		log.Warn(err)
-		return true
-	}
-
-	for _, commit := range commits {
-		if isSigned(commit.HtmlURL + ".patch") {
-			log.Debugf("The commit %s for PR %d IS signed", commit.Sha, pr.Number)
-		} else {
-			log.Warnf("The commit %s for PR %d IS NOT signed", commit.Sha, pr.Number)
-			return false
-		}
-	}
-
-	return true
-}
-
-var MergeError = errors.New("Could not merge PR")
-
-func checkout(temp, repo string, prNum int) error {
+func fetchPullRequest(temp, repo string, prNum int) error {
 	// don't clone the whole repo
 	// it's too slow
-	cmd := exec.Command("git", "clone", repo, temp)
+	cmd := exec.Command("git", "init", "--bare")
+	cmd.Dir = temp
 	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Running command failed: %s, %v", string(output), err)
+	}
+
+	cmd = exec.Command("git", "remote", "add", "origin", repo)
+	cmd.Dir = temp
+	output, err = cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("Running command failed: %s, %v", string(output), err)
 	}
 
 	// fetch the PR
 	cmd = exec.Command("git", "fetch", "origin", fmt.Sprintf("+refs/pull/%d/head:refs/remotes/origin/pr/%d", prNum, prNum))
-	cmd.Dir = temp
 	output, err = cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("Running command failed: %s, %v", string(output), err)
 	}
 
-	// merge the PR
-	cmd = exec.Command("git", "merge", fmt.Sprintf("origin/pr/%d", prNum))
-	cmd.Dir = temp
-	output, err = cmd.CombinedOutput()
-	if err != nil {
-		return MergeError
-	}
-
 	return nil
-}
-
-func checkGofmt(temp string, set *patch.Set) (isGoFmtd bool, files []string) {
-	// check the gofmt for each file that is a .go file
-	// but not in vendor
-	for _, fileset := range set.File {
-		if strings.HasSuffix(fileset.Dst, ".go") && !strings.HasPrefix(fileset.Dst, "vendor/") {
-			// check the gofmt
-			cmd := exec.Command("gofmt", "-s", "-l", fileset.Dst)
-			cmd.Dir = temp
-			if _, err := cmd.CombinedOutput(); err != nil {
-				files = append(files, fileset.Dst)
-			}
-		}
-	}
-	return len(files) <= 0, files
 }
