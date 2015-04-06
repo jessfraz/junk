@@ -31,12 +31,11 @@ func validFormat(repoPath string, prFiles []*octokat.PullRequestFile) (formatted
 				return false, files, err
 			}
 
-			b, err := blob.Bytes()
+			res, err := imports.Process(name, src, nil)
 			if err != nil {
 				return false, files, err
 			}
 
-			res, err := imports.Process(name, b, nil)
 			if !bytes.Equal(src, res) {
 				files = append(files, name)
 				formatted = false
@@ -69,7 +68,7 @@ func validateFormat(gh *octokat.Client, repo octokat.Repo, sha, repoPath string,
 			return err
 		}
 
-		if err := successStatus(gh, repo, sha, "docker/go-style", "Go style format valid"); err != nil {
+		if err := failureStatus(gh, repo, sha, "docker/go-style", "Some files are not properly formatted", "https://code.google.com/p/go-wiki/wiki/CodeReviewComments"); err != nil {
 			return err
 		}
 	}
