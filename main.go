@@ -112,14 +112,18 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	// initialize github client
 	gh := h.getGH()
 	repo := getRepo(prHook.Repo)
+	prId := strconv.Itoa(prHook.Number)
 
-	if !pr.Mergeable {
-		comment := "Looks like we would not be able to merge this PR because of merge conflicts. Please fix them and force push to your branch."
-
-		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "conflicts"); err != nil {
+	if pr.Mergeable {
+		if err := removeComment(gh, repo, prId, "merge conflicts"); err != nil {
 			return err
 		}
-		return nil
+	} else {
+		comment := "Looks like we would not be able to merge this PR because of merge conflicts. Please fix them and force push to your branch."
+
+		if err := addComment(gh, repo, prId, comment, "merge conflicts"); err != nil {
+			return err
+		}
 	}
 
 	// checkout the repository in a temp dir
@@ -133,25 +137,13 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 		return err
 	}
 
-	prId := strconv.Itoa(prHook.Number)
 	prFiles, err := gh.PullRequestFiles(repo, prId, &octokat.Options{})
 	if err != nil {
 		return err
 	}
 
-	// check if the files are gofmt'd
-	if err != nil {
+	if err = validateFormat(gh, repo, pr.Head.Sha, temp, prId, prFiles); err != nil {
 		return err
-	}
-
-	isGoFmtd, files, err := validFormat(temp, prFiles)
-	if !isGoFmtd {
-		comment := fmt.Sprintf("These files are not properly gofmt'd:\n%s\n", strings.Join(files, "\n"))
-		comment += "Please reformat the above files using `gofmt -s -w` and amend to the commit the result."
-
-		if err := addComment(gh, repo, prId, comment, "gofmt"); err != nil {
-			return err
-		}
 	}
 
 	return nil

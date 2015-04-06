@@ -105,6 +105,24 @@ func addComment(gh *octokat.Client, repo octokat.Repo, prNum, comment, commentTy
 	return nil
 }
 
+func removeComment(gh *octokat.Client, repo octokat.Repo, prNum, commentType string) error {
+	// get the comments
+	comments, err := gh.Comments(repo, prNum, &octokat.Options{})
+	if err != nil {
+		return err
+	}
+
+	// check if we already made the comment
+	for _, c := range comments {
+		// if we already made the comment return nil
+		if strings.ToLower(c.User.Login) == "gordontheturtle" && strings.Contains(c.Body, commentType) {
+			return gh.RemoveComment(repo, c.Id)
+		}
+	}
+
+	return nil
+}
+
 func fetchPullRequest(temp, repo string, prNum int) error {
 	// don't clone the whole repo
 	// it's too slow
@@ -130,4 +148,23 @@ func fetchPullRequest(temp, repo string, prNum int) error {
 	}
 
 	return nil
+}
+
+func successStatus(gh *octokat.Client, repo octokat.Repo, sha, context, description string) error {
+	_, err := gh.SetStatus(repo, sha, &octokat.StatusOptions{
+		State:       "success",
+		Context:     context,
+		Description: description,
+	})
+	return err
+}
+
+func failureStatus(gh *octokat.Client, repo octokat.Repo, sha, context, description, targetUrl string) error {
+	_, err := gh.SetStatus(repo, sha, &octokat.StatusOptions{
+		State:       "failure",
+		Context:     context,
+		Description: description,
+		URL:         targetUrl,
+	})
+	return err
 }
