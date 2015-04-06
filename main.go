@@ -109,15 +109,22 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	// get the PR
 	pr := prHook.PullRequest
 
-	// get the patch set
-	patchSet, err := getPatchSet(pr.DiffURL)
-	if err != nil {
-		return err
-	}
-
 	// initialize github client
 	gh := h.getGH()
 	repo := getRepo(prHook.Repo)
+	prId := strconv.Itoa(prHook.Number)
+
+	if pr.Mergeable {
+		if err := removeComment(gh, repo, prId, "merge conflicts"); err != nil {
+			return err
+		}
+	} else {
+		comment := "Looks like we would not be able to merge this PR because of merge conflicts. Please fix them and force push to your branch."
+
+		if err := addComment(gh, repo, prId, comment, "merge conflicts"); err != nil {
+			return err
+		}
+	}
 
 	// checkout the repository in a temp dir
 	temp, err := ioutil.TempDir("", fmt.Sprintf("pr-%d", prHook.Number))
@@ -126,29 +133,17 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	}
 	defer os.RemoveAll(temp)
 
-	if err := checkout(temp, pr.Base.Repo.HTMLURL, prHook.Number); err != nil {
-		// if it is a merge error, comment on the PR
-		if err != MergeError {
-			return err
-		}
-
-		comment := "Looks like we would not be able to merge this PR because of merge conflicts. Please fix them and force push to your branch."
-
-		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "conflicts"); err != nil {
-			return err
-		}
-		return nil
+	if err := fetchPullRequest(temp, pr.Base.Repo.HTMLURL, prHook.Number); err != nil {
+		return err
 	}
 
-	// check if the files are gofmt'd
-	isGoFmtd, files := checkGofmt(temp, patchSet)
-	if !isGoFmtd {
-		comment := fmt.Sprintf("These files are not properly gofmt'd:\n%s\n", strings.Join(files, "\n"))
-		comment += "Please reformat the above files using `gofmt -s -w` and amend to the commit the result."
+	prFiles, err := gh.PullRequestFiles(repo, prId, &octokat.Options{})
+	if err != nil {
+		return err
+	}
 
-		if err := addComment(gh, repo, strconv.Itoa(prHook.Number), comment, "gofmt"); err != nil {
-			return err
-		}
+	if err = validateFormat(gh, repo, pr.Head.Sha, temp, prId, prFiles); err != nil {
+		return err
 	}
 
 	return nil
