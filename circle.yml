@@ -1,6 +1,0 @@
-machine:
-  golang:
-    version: 1.4
-dependencies:
-  override:
-    - go get -u -d -t ./...
