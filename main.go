@@ -45,7 +45,14 @@ func init() {
 }
 
 type Handler struct {
-	GHToken string
+	Client *octokat.Client
+}
+
+func newHandler(ghToken string) *Handler {
+	gh := octokat.NewClient()
+	gh = gh.WithToken(ghToken)
+
+	return &Handler{gh}
 }
 
 func (h *Handler) HandleMessage(m *nsq.Message) error {
@@ -74,7 +81,7 @@ func (h *Handler) handleIssue(issueHook *octokat.IssueHook) error {
 		return nil
 	}
 
-	gh := h.getGH()
+	gh := h.Client
 	for token, label := range labelmap {
 		// if comment matches predefined actions AND author is not bot
 		if strings.Contains(issueHook.Comment.Body, token) && gh.Login != issueHook.Sender.Login {
@@ -88,16 +95,14 @@ func (h *Handler) handleIssue(issueHook *octokat.IssueHook) error {
 }
 
 func getRepo(repo *octokat.Repository) octokat.Repo {
-	return octokat.Repo{
-		Name:     repo.Name,
-		UserName: repo.Owner.Login,
-	}
+	return getRepoWithOwner(repo.Name, repo.Owner.Login)
 }
 
-func (h *Handler) getGH() *octokat.Client {
-	gh := octokat.NewClient()
-	gh = gh.WithToken(h.GHToken)
-	return gh
+func getRepoWithOwner(name, owner string) octokat.Repo {
+	return octokat.Repo{
+		Name:     name,
+		UserName: owner,
+	}
 }
 
 func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
@@ -110,7 +115,7 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	pr := prHook.PullRequest
 
 	// initialize github client
-	gh := h.getGH()
+	gh := h.Client
 	repo := getRepo(prHook.Repo)
 	prId := strconv.Itoa(prHook.Number)
 
@@ -160,7 +165,7 @@ func main() {
 		return
 	}
 
-	bb := &Handler{GHToken: ghtoken}
+	bb := newHandler(ghtoken)
 	if err := ProcessQueue(bb, QueueOptsFromContext(topic, channel, lookupd)); err != nil {
 		log.Fatal(err)
 	}
