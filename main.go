@@ -119,18 +119,6 @@ func (h *Handler) handlePullRequest(prHook *octokat.PullRequestHook) error {
 	repo := getRepo(prHook.Repo)
 	prId := strconv.Itoa(prHook.Number)
 
-	if pr.Mergeable {
-		if err := removeComment(gh, repo, prId, "merge conflicts"); err != nil {
-			return err
-		}
-	} // else {
-	//comment := "Looks like we would not be able to merge this PR because of merge conflicts. Please fix them and force push to your branch."
-
-	//if err := addComment(gh, repo, prId, comment, "merge conflicts"); err != nil {
-	//return err
-	//}
-	//	}
-
 	// checkout the repository in a temp dir
 	temp, err := ioutil.TempDir("", fmt.Sprintf("pr-%d", prHook.Number))
 	if err != nil {
