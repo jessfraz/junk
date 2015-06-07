@@ -64,7 +64,6 @@ func matches(relFilePath string, patterns []string) (bool, error) {
 				log.Errorf("Can't exclude whole path, excluding pattern: %s", exclude)
 				continue
 			}
-			log.Debugf("Skipping excluded path: %s", relFilePath)
 			return true, nil
 		}
 	}

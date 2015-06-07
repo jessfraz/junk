@@ -140,22 +140,86 @@ func getIgnoredFiles() (patterns []string, err error) {
 	return patterns, nil
 }
 
-func getLocalFiles(ignore []string) (files []File, err error) {
+func walkLocalFilesFn(filePath string, info os.FileInfo, err error) error {
+	relFilePath, err := filepath.Rel(home, filePath)
+	if err != nil || (filePath == home && info.IsDir()) {
+		// Error getting relative path OR we are looking
+		// at the root path. Skip in both situations.
+		return nil
+	}
 
-	walkFn := func(filePath string, info os.FileInfo, err error) error {
-		stat, err := os.Stat(filePath)
-		if err != nil {
-			return err
+	if !strings.HasPrefix(relFilePath, ".") {
+		return nil
+	}
+
+	// see if matches ignored files
+	skip, err := matches(relFilePath, ignore)
+	if err != nil {
+		log.Warnf("Error matching %s: %v", relFilePath, err)
+		return err
+	}
+
+	if skip {
+		// only skip dir if it is not also a symlink
+		if info.IsDir() && info.Mode()&os.ModeSymlink == 0 {
+			return filepath.SkipDir
 		}
+		return nil
+	}
 
-		relFilePath, err := filepath.Rel(home, filePath)
-		if err != nil || (filePath == home && stat.IsDir()) {
-			// Error getting relative path OR we are looking
-			// at the root path. Skip in both situations.
+	// get if it is NOT a symlink
+	if info.Mode()&os.ModeSymlink == 0 {
+		if info.IsDir() {
 			return nil
 		}
 
-		if !strings.HasPrefix(relFilePath, ".") {
+		localFiles = append(localFiles, File{
+			Path:     relFilePath,
+			LongPath: filePath,
+			Modtime:  info.ModTime(),
+			Mode:     info.Mode(),
+		})
+
+		return nil
+	}
+
+	// handle the case where we have a symlink
+
+	// get the real file path
+	var linkPath string
+	if linkPath, err = os.Readlink(filePath); err != nil {
+		log.Errorf("Getting symlinked file for %s failed: %v", relFilePath, err)
+		return err
+	}
+
+	// get the real stat of the symlink
+	if info, err = os.Lstat(linkPath); err != nil {
+		return err
+	}
+
+	if !info.IsDir() {
+		// add file symlink to array
+		localFiles = append(localFiles, File{
+			Path:     relFilePath,
+			LongPath: linkPath,
+			Modtime:  info.ModTime(),
+			Mode:     info.Mode(),
+		})
+
+		return nil
+	}
+
+	// if symlink is a dir follow it recursively
+	// get the home relative to the link dir
+	linkhome, _ := filepath.Split(linkPath)
+
+	// create recursive walk function
+	walkRecursiveFn := func(rPath string, i os.FileInfo, err error) error {
+		// get the relative filepath
+		relFilePath, err := filepath.Rel(linkhome, rPath)
+		if err != nil || (rPath == linkPath && i.IsDir()) {
+			// Error getting relative path OR we are looking
+			// at the root path. Skip in both situations.
 			return nil
 		}
 
@@ -167,27 +231,33 @@ func getLocalFiles(ignore []string) (files []File, err error) {
 		}
 
 		if skip {
-			if stat.IsDir() {
+			// only skip dir if it is not also a symlink
+			if i.IsDir() && i.Mode()&os.ModeSymlink == 0 {
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
-		if stat.IsDir() {
+		if i.IsDir() {
 			return nil
 		}
 
-		files = append(files, File{
+		localFiles = append(localFiles, File{
 			Path:     relFilePath,
-			LongPath: filePath,
-			Modtime:  info.ModTime(),
-			Mode:     info.Mode(),
+			LongPath: rPath,
+			Modtime:  i.ModTime(),
+			Mode:     i.Mode(),
 		})
+
 		return nil
 	}
 
-	err = filepath.Walk(home, walkFn)
-	return files, err
+	// walk the symlink path
+	if err := filepath.Walk(linkPath, walkRecursiveFn); err != nil {
+		return fmt.Errorf("Recursive walkLocalFiles failed on path %s for link %s: %v", filePath, linkPath, err)
+	}
+
+	return nil
 }
 
 func getRemoteFiles(bucket *s3.Bucket, bucketpath, marker string, ignore []string) (files []File, err error) {

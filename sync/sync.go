@@ -2,9 +2,11 @@ package sync
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/crowdmob/goamz/aws"
@@ -19,14 +21,16 @@ type Creds struct {
 }
 
 var (
-	home string
+	home       string
+	ignore     []string
+	localFiles []File
 )
 
 func init() {
 	home = os.Getenv("HOME")
 }
 
-func (creds *Creds) Sync() error {
+func (creds *Creds) Sync() (err error) {
 	// auth with aws
 	auth := aws.Auth{
 		AccessKey: creds.Key, SecretKey: creds.Secret,
@@ -38,7 +42,7 @@ func (creds *Creds) Sync() error {
 	bucket := s.Bucket(bucketname)
 
 	// get the files we should ignore
-	ignore, err := getIgnoredFiles()
+	ignore, err = getIgnoredFiles()
 	if err != nil {
 		return err
 	}
@@ -47,7 +51,9 @@ func (creds *Creds) Sync() error {
 	remoteFiles, err := getRemoteFiles(bucket, bucketpath, "", ignore)
 
 	// get the local files
-	localFiles, err := getLocalFiles(ignore)
+	if err = filepath.Walk(home, walkLocalFilesFn); err != nil {
+		return fmt.Errorf("Walking local files failed: %v", err)
+	}
 
 	// compare local to remote
 	for _, localFile := range localFiles {
