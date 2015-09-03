@@ -15,7 +15,6 @@ import (
 	"github.com/crowdmob/goamz/s3"
 	"github.com/jfrazelle/budf/diff"
 	"github.com/jfrazelle/budf/prompt"
-	"github.com/rakyll/magicmime"
 )
 
 type File struct {
@@ -418,20 +417,8 @@ func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File, base string, 
 }
 
 func (localFile File) uploadToS3(bucket *s3.Bucket, s3Filepath string, contents []byte) error {
-	// try to get the mime type
-	mimetype := ""
-	mm, err := magicmime.New(magicmime.MAGIC_MIME_TYPE | magicmime.MAGIC_SYMLINK | magicmime.MAGIC_ERROR)
-	if err != nil {
-		log.Debugf("Magic meme failed for: %v", err)
-	} else {
-		mimetype, err = mm.TypeByFile(localFile.LongPath)
-		if err != nil {
-			log.Debugf("Mime type detection for %s failed: %v", localFile.Path, err)
-		}
-	}
-
 	// push the file to s3
-	if err := bucket.Put(s3Filepath, contents, mimetype, "private", s3.Options{}); err != nil {
+	if err := bucket.Put(s3Filepath, contents, "", "private", s3.Options{}); err != nil {
 		return err
 	}
 	log.Infof("Pushed %s to s3", localFile.Path)
