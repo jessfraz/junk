@@ -6,7 +6,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/coreos/go-etcd/etcd"
-	"github.com/jfrazelle/nginxd/iptables"
+	"github.com/jfrazelle/trojan/iptables"
 )
 
 type port struct {
