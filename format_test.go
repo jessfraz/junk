@@ -119,7 +119,7 @@ func stubStatusRequest(t *testing.T, sha, placeholder string) {
 
 func stubPullRequestFiles(name string) []*octokat.PullRequestFile {
 	return []*octokat.PullRequestFile{
-		&octokat.PullRequestFile{
+		{
 			FileName: name,
 			Sha:      "e2e8ed82baa31d5d1624f3b79dc53af8a04cc563",
 		},

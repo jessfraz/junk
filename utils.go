@@ -2,61 +2,22 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
-	"os/signal"
 	"strings"
-	"syscall"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/bitly/go-nsq"
+	"github.com/Sirupsen/logrus"
 	"github.com/crosbymichael/octokat"
 )
 
-type QueueOpts struct {
-	LookupdAddr string
-	Topic       string
-	Channel     string
-	Concurrent  int
-	Signals     []os.Signal
+func getRepo(repo *octokat.Repository) octokat.Repo {
+	return getRepoWithOwner(repo.Name, repo.Owner.Login)
 }
 
-func QueueOptsFromContext(topic, channel, lookupd string) QueueOpts {
-	return QueueOpts{
-		Signals:     []os.Signal{syscall.SIGTERM, syscall.SIGINT},
-		LookupdAddr: lookupd,
-		Topic:       topic,
-		Channel:     channel,
-		Concurrent:  1,
+func getRepoWithOwner(name, owner string) octokat.Repo {
+	return octokat.Repo{
+		Name:     name,
+		UserName: owner,
 	}
-}
-
-func ProcessQueue(handler nsq.Handler, opts QueueOpts) error {
-	if opts.Concurrent == 0 {
-		opts.Concurrent = 1
-	}
-	s := make(chan os.Signal, 64)
-	signal.Notify(s, opts.Signals...)
-
-	consumer, err := nsq.NewConsumer(opts.Topic, opts.Channel, nsq.NewConfig())
-	if err != nil {
-		return err
-	}
-	consumer.AddConcurrentHandlers(handler, opts.Concurrent)
-	if err := consumer.ConnectToNSQLookupd(opts.LookupdAddr); err != nil {
-		return err
-	}
-
-	for {
-		select {
-		case <-consumer.StopChan:
-			return nil
-		case sig := <-s:
-			log.WithField("signal", sig).Debug("received signal")
-			consumer.Stop()
-		}
-	}
-	return nil
 }
 
 func addLabel(gh *octokat.Client, repo octokat.Repo, issueNum int, labels ...string) error {
@@ -91,7 +52,7 @@ func addComment(gh *octokat.Client, repo octokat.Repo, prNum, comment, commentTy
 	for _, c := range comments {
 		// if we already made the comment return nil
 		if strings.ToLower(c.User.Login) == "gordontheturtle" && strings.Contains(c.Body, commentType) {
-			log.Debugf("Already made comment about %q on PR %s", commentType, prNum)
+			logrus.Debugf("Already made comment about %q on PR %s", commentType, prNum)
 			return nil
 		}
 	}
@@ -101,7 +62,7 @@ func addComment(gh *octokat.Client, repo octokat.Repo, prNum, comment, commentTy
 		return err
 	}
 
-	log.Infof("Would have added comment about %q PR %s", commentType, prNum)
+	logrus.Infof("Would have added comment about %q PR %s", commentType, prNum)
 	return nil
 }
 
@@ -159,12 +120,12 @@ func successStatus(gh *octokat.Client, repo octokat.Repo, sha, context, descript
 	return err
 }
 
-func failureStatus(gh *octokat.Client, repo octokat.Repo, sha, context, description, targetUrl string) error {
+func failureStatus(gh *octokat.Client, repo octokat.Repo, sha, context, description, targetURL string) error {
 	_, err := gh.SetStatus(repo, sha, &octokat.StatusOptions{
 		State:       "failure",
 		Context:     context,
 		Description: description,
-		URL:         targetUrl,
+		URL:         targetURL,
 	})
 	return err
 }
