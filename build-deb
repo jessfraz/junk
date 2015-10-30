@@ -1,0 +1,58 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DEST=${DIR}/bundles/build-deb
+REPO=$1
+
+source ${DIR}/.helper
+
+# Print a usage message and exit.
+usage() {
+	cat >&2 <<-EOF
+	To run, I need:
+	- to be passed a git repo to build the deb packages from;
+
+	./build-deb https://github.com/Yubico/yubico-piv-tool-dpkg.git
+	EOF
+	exit 1
+}
+
+REPO=https://github.com/Yubico/yubico-piv-tool-dpkg.git
+
+[ "$REPO" ] || usage
+
+(
+repo_dir=$(get_repo $REPO)
+
+for version in $(targets_from master deb); do
+	from="$(awk 'toupper($1) == "FROM" { print $2; exit }' "${DIR}/.docker/contrib/builder/deb/${version}/Dockerfile")"
+	suite="${version##*-}"
+
+	mkdir -p "$DEST/$version"
+	cat > "$DEST/$version/Dockerfile.build" <<-EOF
+	FROM $from
+	RUN apt-get update && apt-get install -y \
+		build-essential \
+		debhelper \
+		devscripts \
+		equivs \
+		fakeroot \
+		git-buildpackage \
+		pristine-tar \
+		--no-install-recommends
+	COPY .build/${repo_dir} /usr/src/${repo_dir}
+	WORKDIR /usr/src/${repo_dir}
+	RUN apt-get update && mk-build-deps \
+		-irt'apt-get --no-install-recommends -yq' \
+		debian/control
+	RUN git-buildpackage --git-builder='dpkg-buildpackage -uc -us'
+	EOF
+	tempImage="docker-temp/build-deb:$version"
+	( set -x && docker build -t "$tempImage" -f "$DEST/$version/Dockerfile.build" . )
+	docker run --rm "$tempImage" bash -c 'cd .. && tar -c *_*' | tar -xvC "$DEST/$version"
+	docker rmi "$tempImage"
+done
+
+cleanup
+)
