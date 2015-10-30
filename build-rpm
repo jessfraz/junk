@@ -18,8 +18,6 @@ usage() {
 	exit 1
 }
 
-REPO=http://pkgs.fedoraproject.org/git/yubico-piv-tool.git
-
 [ "$REPO" ] || usage
 
 (

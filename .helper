@@ -9,7 +9,7 @@ targets_from() {
 	(
 	cd ${DIR}/.docker
 	git fetch -q https://github.com/docker/docker.git "$1"
-	git ls-tree -r --name-only origin/master "contrib/builder/$2" | grep '/Dockerfile$' | grep -v 'opensuse' | sed -r 's!^contrib/builder/'$2'/|-debootstrap|/Dockerfile$!!g'
+	git ls-tree -r --name-only origin/master "contrib/builder/$2" | grep '/Dockerfile$' | grep -v 'opensuse' | grep -v 'oraclelinux' | sed -r 's!^contrib/builder/'$2'/|-debootstrap|/Dockerfile$!!g'
 	)
 }
 

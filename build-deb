@@ -18,8 +18,6 @@ usage() {
 	exit 1
 }
 
-REPO=https://github.com/Yubico/yubico-piv-tool-dpkg.git
-
 [ "$REPO" ] || usage
 
 (
