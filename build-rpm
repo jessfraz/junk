@@ -2,7 +2,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DEST=${DIR}/bundles/build-deb
+DEST=${DIR}/bundles/build-rpm
 REPO=$1
 
 source ${DIR}/.helper
