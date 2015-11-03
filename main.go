@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	// VERSION is the binary version
+	// VERSION is the binary version.
 	VERSION = "v0.1.0"
 )
 
@@ -50,11 +50,11 @@ func checkout(temp, repo, sha string) error {
 	return nil
 }
 
-// Handler is the message processing interface for the consumer to nsq
+// Handler is the message processing interface for the consumer to nsq.
 type Handler struct{}
 
-// HandleMessage reads the nsq message body and parses it as a github webhook
-// checks out the source for the repository & executes the given script in the source tree
+// HandleMessage reads the nsq message body and parses it as a github webhook,
+// checks out the source for the repository & executes the given script in the source tree.
 func (h *Handler) HandleMessage(m *nsq.Message) error {
 	hook, err := octokat.ParseHook(m.Body)
 	if err != nil {
@@ -95,7 +95,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 	return nil
 }
 
-// QueueOpts are the options for the nsq queue
+// QueueOpts are the options for the nsq queue.
 type QueueOpts struct {
 	LookupdAddr string
 	Topic       string
@@ -104,7 +104,7 @@ type QueueOpts struct {
 	Signals     []os.Signal
 }
 
-// QueueOptsFromContext returns a QueueOpts object from the given settings
+// QueueOptsFromContext returns a QueueOpts object from the given settings.
 func QueueOptsFromContext(topic, channel, lookupd string) QueueOpts {
 	return QueueOpts{
 		Signals:     []os.Signal{syscall.SIGTERM, syscall.SIGINT},
@@ -115,7 +115,7 @@ func QueueOptsFromContext(topic, channel, lookupd string) QueueOpts {
 	}
 }
 
-// ProcessQueue sets up the handler to process the nsq queue with the given options
+// ProcessQueue sets up the handler to process the nsq queue with the given options.
 func ProcessQueue(handler nsq.Handler, opts QueueOpts) error {
 	if opts.Concurrent == 0 {
 		opts.Concurrent = 1
