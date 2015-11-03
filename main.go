@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	// BANNER is what is printed for help/info output
+	// BANNER is what is printed for help/info output.
 	BANNER = `       _     _       _ _
 __   _(_) __| | __ _| (_) __ _
 \ \ / / |/ _` + "`" + ` |/ _` + "`" + ` | | |/ _` + "`" + ` |
@@ -31,7 +31,7 @@ __   _(_) __| | __ _| (_) __ _
  Version: %s
 
 `
-	// VERSION is the binary version
+	// VERSION is the binary version.
 	VERSION = "v0.1.0"
 
 	cloudflareAPI = "https://www.cloudflare.com/api_json.html"
@@ -63,7 +63,7 @@ type scoreResponse struct {
 }
 
 // getScore runs as a goroutine and accepts IP address on in
-// requests the threat score and parses the response into an ipData
+// requests the threat score and parses the response into an ipData.
 func getScore(in chan net.IP, out chan exitData, wg *sync.WaitGroup, email, key string) {
 	for ip := range in {
 		d := exitData{IP: ip.String()}
