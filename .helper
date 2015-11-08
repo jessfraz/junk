@@ -21,6 +21,7 @@ get_repo() {
 	repo_dir="${repo##*:}"
 	repo_dir="${repo##*\/}"
 	repo_dir="${repo_dir%%.git*}"
+	repo_dir="${repo_dir%%-rpm*}"
 
 	# clone the repo if we have not already
 	if [[ ! -d "${DIR}/.build/${repo_dir}" ]]; then

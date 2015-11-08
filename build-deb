@@ -33,6 +33,7 @@ for version in $(targets_from master deb); do
 	fi
 
 	mkdir -p "$DEST/$version"
+	kernel=$(uname -r)
 	cat > "$DEST/$version/Dockerfile.build" <<-EOF
 	FROM $from
 	RUN apt-get update && apt-get install -y \
@@ -42,6 +43,7 @@ for version in $(targets_from master deb); do
 		equivs \
 		fakeroot \
 		git-buildpackage \
+		libstxxl-dev \
 		pristine-tar \
 		--no-install-recommends
 	COPY .build/${repo_dir} /usr/src/${repo_dir}
