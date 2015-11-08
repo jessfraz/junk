@@ -43,7 +43,7 @@ for version in $(targets_from master deb); do
 		equivs \
 		fakeroot \
 		git-buildpackage \
-		libstxxl-dev \
+		linux-headers-* \
 		pristine-tar \
 		--no-install-recommends
 	COPY .build/${repo_dir} /usr/src/${repo_dir}
