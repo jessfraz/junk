@@ -11,9 +11,9 @@ source ${DIR}/.helper
 usage() {
 	cat >&2 <<-EOF
 	To run, I need:
-	- to be passed a git repo to build the deb packages from;
+	- to be passed a git repo to build the rpm packages from;
 
-	./build-deb http://pkgs.fedoraproject.org/git/yubico-piv-tool.git
+	./build-rpm http://pkgs.fedoraproject.org/git/yubico-piv-tool.git
 	EOF
 	exit 1
 }
