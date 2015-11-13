@@ -29,7 +29,7 @@ usage() {
 	To run, I need:
 	- to be passed the name of the rpm package to release;
 
-	./release-rpm yubico-piv-tool
+	./release-rpm yubico-piv-tool experimental
 	EOF
 	exit 1
 }
@@ -40,7 +40,7 @@ usage() {
 distros=( fedora centos )
 
 # set the release
-release=$1
+release=$2
 if [[ -z "$component" ]]; then
 	release="main"
 fi

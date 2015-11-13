@@ -5,10 +5,10 @@ build-rpms:
 	./build-rpm $(repo)
 
 release-debs:
-	./release-deb $(pkg)
+	./release-deb $(pkg) $(component)
 
 release-rpms:
-	./release-rpm $(pkg)
+	./release-rpm $(pkg) $(component)
 
 clean:
 	rm -rf .build
