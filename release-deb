@@ -62,7 +62,7 @@ for version in $(targets_from master deb); do
 	# add the deb for each component for the distro version into the pool
 	pool_dir="$APTDIR/pool/$component/${PKG:0:1}/${PKG}"
 	mkdir -p "$pool_dir"
-	cp "${DEBFILE[@]}" "${$pool_dir}/"
+	cp "${DEBFILE[@]}" "${pool_dir}/"
 
 	# update the filelist for this codename/component
 	find "$APTDIR/pool/$component" \
