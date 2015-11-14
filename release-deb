@@ -49,7 +49,7 @@ fi
 for version in $(targets_from master deb); do
 	codename="${version//debootstrap-}"
 
-	DEBFILE=( "bundles/build-deb/$version/$PKG"*.deb )
+	DEBFILE=( "bundles/build-deb/$version/"*.deb )
 
 	# if we have a $GPG_PASSPHRASE we may as well
 	# dpkg-sign before copying the deb into the pool
@@ -59,9 +59,12 @@ for version in $(targets_from master deb); do
 	fi
 
 	# add the deb for each component for the distro version into the pool
-	pool_dir="$APTDIR/pool/$component/${PKG:0:1}/${PKG}"
-	mkdir -p "$pool_dir"
-	cp "${DEBFILE[@]}" "${pool_dir}/"
+	for deb in "${DEBFILE[@]}"; do
+		debname=$(basename "$deb")
+		pool_dir="$APTDIR/pool/$component/${debname:0:1}/${PKG}"
+		mkdir -p "$pool_dir"
+		cp "${deb}" "${pool_dir}/"
+	done
 
 	# update the filelist for this codename/component
 	find "$APTDIR/pool/$component" \
