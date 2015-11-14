@@ -45,3 +45,5 @@ Icon
 .Trashes
 
 floppercon
+floppercon.tar*
+tmp/

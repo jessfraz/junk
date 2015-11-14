@@ -1,4 +1,4 @@
-.PHONY: certs docker
+.PHONY: certs docker gzip xz
 
 all: floppercon
 
@@ -11,5 +11,13 @@ floppercon: *.go
 docker: floppercon
 	docker build --rm --force-rm -t jess/floppercon .
 
+gzip: docker
+	./export.sh gzip
+
+xz: docker
+	./export.sh xz
+
 clean:
 	rm -f floppercon
+	rm -rf tmp
+	rm -rf floppercon.tar*
