@@ -26,6 +26,8 @@ VERSION=1.1.2
 tilde='~' # ouch Bash 4.2 vs 4.3, you keel me
 debVersion="${VERSION//-/$tilde}" # using \~ or '~' here works in 4.3, but not 4.2; just ~ causes $HOME to be inserted, hence the $tilde
 debDate="$(date --rfc-2822)"
+debSource="$(awk -F ': ' '$1 == "Source" { print $2; exit }' .build/${repo_dir}/debian/control)"
+debMaintainer="$(awk -F ': ' '$1 == "Maintainer" { print $2; exit }' .build/${repo_dir}/debian/control)"
 
 for version in $(targets_from master deb); do
 	from="$(awk 'toupper($1) == "FROM" { print $2; exit }' "${DIR}/.docker/contrib/builder/deb/${version}/Dockerfile")"
@@ -54,9 +56,8 @@ for version in $(targets_from master deb); do
 	RUN apt-get update && mk-build-deps \
 		-irt'apt-get --no-install-recommends -yq' \
 		debian/control
-	RUN export debSource="$(awk -F ': ' '$1 == "Source" { print $2; exit }' debian/control)" && \
-		export debMaintainer="$(awk -F ': ' '$1 == "Maintainer" { print $2; exit }' debian/control)" && \
-		{ echo '$debSource (${debVersion}-0~${suite}) $suite; urgency=low'; echo; echo '  * Version: $VERSION'; echo; echo " -- $debMaintainer  $debDate"; } > debian/changelog && cat >&2 debian/changelog
+	RUN { echo '$debSource (${debVersion}-0~${suite}) $suite; urgency=low'; echo; echo '  * Version: $VERSION'; echo; echo " -- $debMaintainer  $debDate"; } > debian/changelog && cat >&2 debian/changelog
+	RUN rm -rf debian/source
 	RUN dpkg-buildpackage -uc -us
 	EOF
 	tempImage="docker-temp/build-deb:$version"
