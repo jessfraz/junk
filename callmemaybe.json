@@ -6,7 +6,7 @@
     "syscalls": [
         {
             "name": "setuid",
-            "action": "SCMP_ACT_TRACE"
+            "action": "SCMP_ACT_ERRNO"
         },
         {
             "name": "unlink",
