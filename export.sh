@@ -4,7 +4,7 @@ set -e
 (
 compression=$1
 tmpdir=$(pwd)/tmp
-docker export $(docker create jess/floppercon) > floppercon.tar
+docker save jess/floppercon > floppercon.tar
 mkdir -p ${tmpdir}
 tar xvf floppercon.tar -C ${tmpdir}
 cd ${tmpdir}
