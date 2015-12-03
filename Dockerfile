@@ -1,13 +1,34 @@
-FROM debian:jessie
+FROM alpine
 MAINTAINER Jessica Frazelle <jess@docker.com>
 
-RUN apt-get update && apt-get install -y \
+ENV PATH /go/bin:/usr/local/go/bin:$PATH
+ENV GOPATH /go
+
+RUN	apk update && apk add \
+	ca-certificates \
+	git \
 	make \
 	python \
-	--no-install-recommends
+	&& rm -rf /var/cache/apk/*
 
-ADD https://jesss.s3.amazonaws.com/binaries/nsqexec /usr/local/bin/nsqexec
+COPY . /go/src/github.com/jfrazelle/nsqexec
 
-RUN chmod +x /usr/local/bin/nsqexec
+RUN buildDeps=' \
+		go \
+		gcc \
+		libc-dev \
+		libgcc \
+	' \
+	set -x \
+	&& apk update \
+	&& apk add $buildDeps \
+	&& cd /go/src/github.com/jfrazelle/nsqexec \
+	&& go get -d -v github.com/jfrazelle/nsqexec \
+	&& go build -o /usr/bin/nsqexec . \
+	&& apk del $buildDeps \
+	&& rm -rf /var/cache/apk/* \
+	&& rm -rf /go \
+	&& echo "Build complete."
 
-ENTRYPOINT [ "/usr/local/bin/nsqexec" ]
+
+ENTRYPOINT [ "nsqexec" ]
