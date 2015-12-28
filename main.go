@@ -162,7 +162,8 @@ func main() {
 	gh = gh.WithToken(ghtoken)
 
 	// process the queue
-	if err := ProcessQueue(&Handler{gh}, QueueOptsFromContext(topic, channel, lookupd)); err != nil {
+	h := &Handler{gh}
+	if err := ProcessQueue(h, QueueOptsFromContext(topic, channel, lookupd)); err != nil {
 		logrus.Fatal(err)
 	}
 }
