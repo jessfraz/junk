@@ -91,21 +91,21 @@ func fetchPullRequest(temp, repo string, prNum int) error {
 	cmd.Dir = temp
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("Running command failed: %s, %v", string(output), err)
+		return fmt.Errorf("Running command failed %q: %s, %v", strings.Join(cmd.Args, " "), string(output), err)
 	}
 
 	cmd = exec.Command("git", "remote", "add", "origin", repo)
 	cmd.Dir = temp
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("Running command failed: %s, %v", string(output), err)
+		return fmt.Errorf("Running command failed %q: %s, %v", strings.Join(cmd.Args, " "), string(output), err)
 	}
 
 	// fetch the PR
 	cmd = exec.Command("git", "fetch", "origin", fmt.Sprintf("+refs/pull/%d/head:refs/remotes/origin/pr/%d", prNum, prNum))
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("Running command failed: %s, %v", string(output), err)
+		return fmt.Errorf("Running command failed %q: %s, %v", strings.Join(cmd.Args, " "), string(output), err)
 	}
 
 	return nil
