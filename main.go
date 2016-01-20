@@ -43,7 +43,12 @@ func main() {
 		},
 	}
 	app.Commands = []cli.Command{
+		deleteCommand,
+		listCommand,
+		logsCommand,
 		serverCommand,
+		startCommand,
+		statusCommand,
 	}
 	app.Run(os.Args)
 }

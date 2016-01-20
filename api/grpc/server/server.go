@@ -41,6 +41,6 @@ func (s *apiServer) State(ctx context.Context, r *types.StateRequest) (*types.St
 	return &types.StateResponse{}, nil
 }
 
-func (s *apiServer) Events(r *types.EventsRequest, stream types.API_EventsServer) error {
+func (s *apiServer) Logs(r *types.LogsRequest, stream types.API_LogsServer) error {
 	return nil
 }
