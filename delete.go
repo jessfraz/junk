@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/jfrazelle/hulk/api/grpc/types"
+	"golang.org/x/net/context"
 )
 
 var deleteCommand = cli.Command{
@@ -14,10 +16,24 @@ var deleteCommand = cli.Command{
 			Usage: "Job ID",
 		},
 	},
-	Action: func(context *cli.Context) {
-		if context.Int("id") <= 0 {
+	Action: func(ctx *cli.Context) {
+		id := uint32(ctx.Int("id"))
+		if id <= 0 {
+			cli.ShowSubcommandHelp(ctx)
 			logrus.Fatalf("Pass a job ID.")
 		}
-		logrus.Infof("Job ID: %d", context.Int("id"))
+
+		logrus.Infof("Job ID: %d", id)
+
+		c, err := getClient(ctx)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		_, err = c.DeleteJob(context.Background(), &types.DeleteJobRequest{
+			Id: id,
+		})
+		if err != nil {
+			logrus.Fatalf("DeleteJob request for id %d failed: %v", id, err)
+		}
 	},
 }

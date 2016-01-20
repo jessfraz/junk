@@ -1,8 +1,13 @@
 package main
 
 import (
+	"fmt"
+
+	"golang.org/x/net/context"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/jfrazelle/hulk/api/grpc/types"
 )
 
 var logsCommand = cli.Command{
@@ -14,10 +19,31 @@ var logsCommand = cli.Command{
 			Usage: "Job ID",
 		},
 	},
-	Action: func(context *cli.Context) {
-		if context.Int("id") <= 0 {
+	Action: func(ctx *cli.Context) {
+		id := uint32(ctx.Int("id"))
+		if id <= 0 {
+			cli.ShowSubcommandHelp(ctx)
 			logrus.Fatalf("Pass a job ID.")
 		}
-		logrus.Infof("Job ID: %d", context.Int("id"))
+
+		logrus.Infof("Job ID: %d", id)
+
+		c, err := getClient(ctx)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		logs, err := c.Logs(context.Background(), &types.LogsRequest{
+			Id: id,
+		})
+		if err != nil {
+			logrus.Fatalf("Logs request for id %d failed: %v", id, err)
+		}
+		for {
+			l, err := logs.Recv()
+			if err != nil {
+				logrus.Fatalf("Receiving logs for id %d failed: %v", id, err)
+			}
+			fmt.Println(l.Log)
+		}
 	},
 }

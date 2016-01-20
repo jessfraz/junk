@@ -21,7 +21,7 @@ message StartJobResponse {
 }
 
 message DeleteJobRequest {
-    string id = 1; // ID of job
+    uint32 id = 1; // ID of job
 }
 
 message DeleteJobResponse {
@@ -31,10 +31,11 @@ message ListJobsRequest {
 }
 
 message Job {
-    string name = 1; // Name of job
-    repeated string args = 2; // Command arguments for the job
-    string artifacts = 3; // Job artifacts directory
-    string status = 4; // Job status ("running", "finished", etc)
+    uint32 id = 1; // ID of job
+    string name = 2; // Name of job
+    repeated string args = 3; // Command arguments for the job
+    string artifacts = 4; // Job artifacts directory
+    string status = 5; // Job status ("running", "finished", etc)
 }
 
 message ListJobsResponse {
@@ -42,7 +43,7 @@ message ListJobsResponse {
 }
 
 message StateRequest {
-    string id = 1; // ID of job
+    uint32 id = 1; // ID of job
 }
 
 message StateResponse {
@@ -50,7 +51,7 @@ message StateResponse {
 }
 
 message LogsRequest {
-    string id = 1; // ID of job
+    uint32 id = 1; // ID of job
 }
 
 message Log {

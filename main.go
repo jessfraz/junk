@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/Sirupsen/logrus"
@@ -30,13 +31,21 @@ func main() {
 	app.Author = "@jfrazelle"
 	app.Email = "no-reply@butts.com"
 	app.Usage = "Ultimate job/build queue runner and scheduler."
-	app.Before = func(context *cli.Context) error {
-		if context.GlobalBool("debug") {
+	app.Before = func(ctx *cli.Context) error {
+		if ctx.GlobalBool("debug") {
 			logrus.SetLevel(logrus.DebugLevel)
+		}
+		if ctx.GlobalString("addr") == "" {
+			return fmt.Errorf("Address for GRPC API to listen cannot be empty")
 		}
 		return nil
 	}
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "addr, a",
+			Value: "/run/hulk/hulk.sock",
+			Usage: "Address on which GRPC API will listen",
+		},
 		cli.BoolFlag{
 			Name:  "debug, d",
 			Usage: "run in debug mode",

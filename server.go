@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -17,11 +18,6 @@ var serverCommand = cli.Command{
 	Usage: "Start hulk server",
 	Flags: []cli.Flag{
 		cli.StringFlag{
-			Name:  "addr, a",
-			Value: "/run/hulk/hulk.sock",
-			Usage: "Address on which GRPC API will listen",
-		},
-		cli.StringFlag{
 			Name:  "artifacts-dir",
 			Value: "/var/lib/hulk",
 			Usage: "Artifacts directory for saving the artifacts from the jobs",
@@ -32,11 +28,11 @@ var serverCommand = cli.Command{
 			Usage: "State directory",
 		},
 	},
-	Action: func(context *cli.Context) {
+	Action: func(ctx *cli.Context) {
 		if err := startServer(
-			context.String("addr"),
-			context.String("state-dir"),
-			context.String("artifacts-dir"),
+			ctx.GlobalString("addr"),
+			ctx.String("state-dir"),
+			ctx.String("artifacts-dir"),
 		); err != nil {
 			logrus.Fatal(err)
 		}
@@ -55,4 +51,19 @@ func startServer(address, artifactsDir, stateDir string) error {
 	types.RegisterAPIServer(s, server.NewServer(artifactsDir, stateDir))
 	logrus.Debugf("GRPC API listen on %s", address)
 	return s.Serve(l)
+}
+
+func getClient(ctx *cli.Context) (types.APIClient, error) {
+	address := ctx.GlobalString("addr")
+	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
+	dialOpts = append(dialOpts,
+		grpc.WithDialer(func(addr string, timeout time.Duration) (net.Conn, error) {
+			return net.DialTimeout("unix", addr, timeout)
+		},
+		))
+	conn, err := grpc.Dial(address, dialOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("creating connection to %s failed: %v", address, err)
+	}
+	return types.NewAPIClient(conn), nil
 }

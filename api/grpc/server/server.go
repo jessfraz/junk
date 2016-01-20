@@ -1,8 +1,6 @@
 package server
 
 import (
-	"errors"
-
 	"github.com/jfrazelle/hulk/api/grpc/types"
 	"golang.org/x/net/context"
 )
@@ -27,9 +25,6 @@ func (s *apiServer) StartJob(ctx context.Context, c *types.StartJobRequest) (*ty
 }
 
 func (s *apiServer) DeleteJob(ctx context.Context, r *types.DeleteJobRequest) (*types.DeleteJobResponse, error) {
-	if r.Id == "" {
-		return nil, errors.New("job id cannot be empty")
-	}
 	return &types.DeleteJobResponse{}, nil
 }
 
