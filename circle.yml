@@ -1,0 +1,10 @@
+dependencies:
+  post:
+    # install golint
+    - go get github.com/golang/lint/golint
+
+test:
+  pre:
+    - go vet ./... | grep -v '.pb.go:' | tee /dev/stderr
+    - test -z "$(golint ./... | grep -v '.pb.go:' | tee /dev/stderr)"
+    - test -z "$(gofmt -s -l . | grep -v '.pb.go:' | tee /dev/stderr)"

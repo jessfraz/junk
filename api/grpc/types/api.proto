@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package types;
+
+service API {
+	rpc StartJob(StartJobRequest) returns (StartJobResponse) {}
+	rpc DeleteJob(DeleteJobRequest) returns (DeleteJobResponse) {}
+	rpc ListJobs(ListJobsRequest) returns (ListJobsResponse) {}
+	rpc State(StateRequest) returns (StateResponse) {}
+	rpc Events(EventsRequest) returns (stream Event) {}
+}
+
+message StartJobRequest {
+	string name = 1; // name of job
+	repeated string args = 2; // command arguments for the job
+    string artifacts = 3; // where the artifact from the job will be
+}
+
+message StartJobResponse {
+    uint32 id = 1; // ID of job
+}
+
+message DeleteJobRequest {
+	string id = 1; // ID of job
+}
+
+message DeleteJobResponse {
+}
+
+message ListJobsRequest {
+}
+
+message Job {
+	string name = 1; // Name of job
+	repeated string args = 2; // Command arguments for the job
+    string artifacts = 3; // Job artifacts directory
+	string status = 4; // Job status ("running", "finished", etc)
+}
+
+message ListJobsResponse {
+	repeated Job jobs = 1; // List of jobs
+}
+
+message StateRequest {
+	string id = 1; // ID of job
+}
+
+message StateResponse {
+	string status = 1; // Job status ("running", "finished", etc)
+}
+
+message EventsRequest {
+	string id = 1; // ID of job
+}
+
+message Event {
+	string log = 1;
+}
