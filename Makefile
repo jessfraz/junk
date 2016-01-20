@@ -3,10 +3,10 @@ PREFIX?=$(shell pwd)
 BUILDTAGS=
 DOCKER_IMAGE=hulk-dev
 
-.PHONY: clean all fmt vet lint build test install static protoc dbuild shell
+.PHONY: clean all fmt vet lint build test install static protoc dbuild dtestbuild drun shell
 .DEFAULT: default
 
-all: clean build static fmt lint test vet
+all: build static fmt lint test vet
 
 build:
 	@echo "+ $@"
@@ -14,12 +14,19 @@ build:
 
 dbuild:
 	@echo "+ $@"
+	@docker build --rm --force-rm -t jess/hulk -f Dockerfile .
+
+drun: dbuild
+	@echo "+ $@"
+	docker run --rm -it -v $(CURDIR)/bundles/state:/run/hulk -v $(CURDIR)/bundles/artifacts:/var/lib/hulk jess/hulk -d server
+
+dtestbuild:
+	@echo "+ $@"
 	@docker build --rm --force-rm -t hulk-dev -f Dockerfile.test .
 
-shell: dbuild
+shell: dtestbuild
 	@echo "+ $@"
 	@docker run --rm -it -v $(CURDIR):/go/src/github.com/jfrazelle/hulk hulk-dev bash
-
 
 static:
 	@echo "+ $@"
@@ -46,7 +53,7 @@ vet:
 
 clean:
 	@echo "+ $@"
-	@rm -rf hulk
+	@rm -rf hulk bundles
 
 install:
 	@echo "+ $@"

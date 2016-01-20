@@ -38,9 +38,6 @@ var startCommand = cli.Command{
 			logrus.Fatalf("Pass a job name and command.")
 		}
 
-		logrus.Infof("Job name: %s", name)
-		logrus.Infof("Job args: %#v", args)
-
 		c, err := getClient(ctx)
 		if err != nil {
 			logrus.Fatal(err)

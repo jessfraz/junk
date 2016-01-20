@@ -14,8 +14,9 @@ import (
 )
 
 var serverCommand = cli.Command{
-	Name:  "server",
-	Usage: "Start hulk server",
+	Name:    "server",
+	Aliases: []string{"daemon"},
+	Usage:   "Start hulk server",
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "artifacts-dir",
@@ -31,8 +32,8 @@ var serverCommand = cli.Command{
 	Action: func(ctx *cli.Context) {
 		if err := startServer(
 			ctx.GlobalString("addr"),
-			ctx.String("state-dir"),
 			ctx.String("artifacts-dir"),
+			ctx.String("state-dir"),
 		); err != nil {
 			logrus.Fatal(err)
 		}
@@ -43,13 +44,21 @@ func startServer(address, artifactsDir, stateDir string) error {
 	if err := os.RemoveAll(address); err != nil {
 		return fmt.Errorf("attempt to remove %s failed: %v", address, err)
 	}
+
 	l, err := net.Listen("unix", address)
 	if err != nil {
 		return fmt.Errorf("starting listener at %s failed: %v", address, err)
 	}
+
 	s := grpc.NewServer()
-	types.RegisterAPIServer(s, server.NewServer(artifactsDir, stateDir))
+	svr, err := server.NewServer(artifactsDir, stateDir)
+	if err != nil {
+		return fmt.Errorf("Creating new server failed: %v", err)
+	}
+
+	types.RegisterAPIServer(s, svr)
 	logrus.Debugf("GRPC API listen on %s", address)
+
 	return s.Serve(l)
 }
 

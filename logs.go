@@ -26,8 +26,6 @@ var logsCommand = cli.Command{
 			logrus.Fatalf("Pass a job ID.")
 		}
 
-		logrus.Infof("Job ID: %d", id)
-
 		c, err := getClient(ctx)
 		if err != nil {
 			logrus.Fatal(err)

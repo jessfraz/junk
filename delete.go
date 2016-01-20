@@ -8,8 +8,9 @@ import (
 )
 
 var deleteCommand = cli.Command{
-	Name:  "delete",
-	Usage: "Delete a job",
+	Name:    "delete",
+	Aliases: []string{"rm"},
+	Usage:   "Delete a job",
 	Flags: []cli.Flag{
 		cli.IntFlag{
 			Name:  "id",
@@ -22,8 +23,6 @@ var deleteCommand = cli.Command{
 			cli.ShowSubcommandHelp(ctx)
 			logrus.Fatalf("Pass a job ID.")
 		}
-
-		logrus.Infof("Job ID: %d", id)
 
 		c, err := getClient(ctx)
 		if err != nil {

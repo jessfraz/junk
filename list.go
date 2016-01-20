@@ -14,9 +14,10 @@ import (
 )
 
 var listCommand = cli.Command{
-	Name:  "list",
-	Usage: "List jobs",
-	Flags: []cli.Flag{},
+	Name:    "list",
+	Aliases: []string{"ls"},
+	Usage:   "List jobs",
+	Flags:   []cli.Flag{},
 	Action: func(ctx *cli.Context) {
 		c, err := getClient(ctx)
 		if err != nil {
@@ -30,7 +31,7 @@ var listCommand = cli.Command{
 		w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
 		fmt.Fprint(w, "ID\tNAME\tCMD\tSTATUS\tARTIFACTS\n")
 		for _, c := range resp.Jobs {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", c.Id, c.Name, strings.Join(c.Args, " "), c.Status, c.Artifacts)
+			fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\n", c.Id, c.Name, strings.Join(c.Args, " "), c.Status, c.Artifacts)
 		}
 		w.Flush()
 	},
