@@ -10,6 +10,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
+	"github.com/hpcloud/tail"
 	"github.com/jfrazelle/hulk/api/grpc/types"
 	"golang.org/x/net/context"
 )
@@ -35,6 +36,7 @@ var (
 	jobFailed    State = []byte("failed")
 	jobRunning   State = []byte("running")
 	jobStarted   State = []byte("started")
+	noState      State = []byte{}
 )
 
 // NewServer returns grpc server instance
@@ -137,6 +139,9 @@ func (s *apiServer) StartJob(ctx context.Context, c *types.StartJobRequest) (*ty
 
 	// start the command
 	if err := j.cmd.Start(); err != nil {
+		if err := s.updateState(job.Id, jobFailed); err != nil {
+			logrus.Warn(err)
+		}
 		return nil, fmt.Errorf("Starting cmd [%s] failed: %v", j.cmdStr, err)
 	}
 	if err := s.updateState(job.Id, jobStarted); err != nil {
@@ -169,6 +174,12 @@ func (s *apiServer) DeleteJob(ctx context.Context, r *types.DeleteJobRequest) (*
 	artifacts := filepath.Join(s.ArtifactsDir, string(jobIDByte(r.Id)))
 	if err := os.RemoveAll(artifacts); err != nil {
 		return nil, fmt.Errorf("attempt to remove %s failed: %v", artifacts, err)
+	}
+
+	// delete the state directory for the job, if any
+	state := filepath.Join(s.StateDir, string(jobIDByte(r.Id)))
+	if err := os.RemoveAll(state); err != nil {
+		return nil, fmt.Errorf("attempt to remove %s failed: %v", state, err)
 	}
 
 	if err := s.DB.Update(func(tx *bolt.Tx) error {
@@ -219,21 +230,73 @@ func (s *apiServer) ListJobs(ctx context.Context, r *types.ListJobsRequest) (*ty
 	return &types.ListJobsResponse{Jobs: jobs}, nil
 }
 
-func (s *apiServer) State(ctx context.Context, r *types.StateRequest) (*types.StateResponse, error) {
-	var state []byte
+func (s *apiServer) getState(id uint32) (State, error) {
+	var status []byte
 	if err := s.DB.View(func(tx *bolt.Tx) error {
-		state = tx.Bucket(jobsDBBucket).Get(jobStateByte(r.Id))
+		status = tx.Bucket(jobsDBBucket).Get(jobStateByte(id))
 
 		return nil
 	}); err != nil {
-		return nil, fmt.Errorf("Getting jobs from db failed: %v", err)
+		return nil, fmt.Errorf("Getting state from db for id %d failed: %v", id, err)
 	}
+
+	var state State
+	switch string(status) {
+	case "created":
+		state = jobCreated
+	case "completed":
+		state = jobCompleted
+	case "failed":
+		state = jobFailed
+	case "running":
+		state = jobRunning
+	case "started":
+		state = jobStarted
+	default:
+		state = noState
+	}
+
+	return state, nil
+}
+
+func (s *apiServer) State(ctx context.Context, r *types.StateRequest) (*types.StateResponse, error) {
+	state, err := s.getState(r.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: check if we even returned anything, probably means there is no id
 	return &types.StateResponse{
 		Status: string(state),
 	}, nil
 }
 
 func (s *apiServer) Logs(r *types.LogsRequest, stream types.API_LogsServer) error {
+	state, err := s.getState(r.Id)
+	if err != nil {
+		return err
+	}
+
+	// if the job has completed or failed then we cannot follow
+	follow := r.Follow
+	if string(state) == string(jobFailed) || string(state) == string(jobCompleted) {
+		follow = false
+	}
+
+	stdout := filepath.Join(s.StateDir, string(jobIDByte(r.Id)), "stdout")
+	t, err := tail.TailFile(stdout, tail.Config{
+		Follow:    follow,
+		MustExist: true,
+	})
+	if err != nil {
+		return fmt.Errorf("Tail file %s failed: %v", stdout, err)
+	}
+
+	for line := range t.Lines {
+		if err := stream.Send(&types.Log{Log: line.Text}); err != nil {
+			return fmt.Errorf("Sending log to stream failed: %v", err)
+		}
+	}
 
 	return nil
 }

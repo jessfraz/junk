@@ -30,9 +30,13 @@ func createJob(id uint32, stateDir string, c []string) (*jobRunner, error) {
 	cmd := exec.Command(c[0], args...)
 
 	jobdir := filepath.Join(stateDir, strconv.Itoa(int(id)))
-	if err := os.MkdirAll(jobdir, 0666); err != nil {
-		return nil, fmt.Errorf("attempt to create state directory %s failed: %v", jobdir, err)
+	workdir := filepath.Join(jobdir, "_work")
+	if err := os.MkdirAll(workdir, 0666); err != nil {
+		return nil, fmt.Errorf("Create state directory %s failed: %v", workdir, err)
 	}
+
+	// move into the working directory
+	cmd.Dir = workdir
 
 	job := &jobRunner{
 		id:         id,

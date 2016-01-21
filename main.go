@@ -16,7 +16,7 @@ const (
 | | | | |_| | |   <
 |_| |_|\__,_|_|_|\_\
 
- Ultimate job/build queue runner and scheduler.
+ Ultimate job/build runner -OR- bash execution as a service.
  Version: %s
 
 `

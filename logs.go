@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 
 	"golang.org/x/net/context"
 
@@ -18,6 +19,10 @@ var logsCommand = cli.Command{
 			Name:  "id",
 			Usage: "Job ID",
 		},
+		cli.BoolFlag{
+			Name:  "follow, f",
+			Usage: "Follow log output",
+		},
 	},
 	Action: func(ctx *cli.Context) {
 		id := uint32(ctx.Int("id"))
@@ -31,7 +36,8 @@ var logsCommand = cli.Command{
 			logrus.Fatal(err)
 		}
 		logs, err := c.Logs(context.Background(), &types.LogsRequest{
-			Id: id,
+			Id:     id,
+			Follow: ctx.Bool("follow"),
 		})
 		if err != nil {
 			logrus.Fatalf("Logs request for id %d failed: %v", id, err)
@@ -39,6 +45,9 @@ var logsCommand = cli.Command{
 		for {
 			l, err := logs.Recv()
 			if err != nil {
+				if err == io.EOF {
+					break
+				}
 				logrus.Fatalf("Receiving logs for id %d failed: %v", id, err)
 			}
 			fmt.Println(l.Log)

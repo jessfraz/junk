@@ -52,6 +52,7 @@ message StateResponse {
 
 message LogsRequest {
     uint32 id = 1; // ID of job
+    bool follow = 2; // Should follow logs
 }
 
 message Log {
