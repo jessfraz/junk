@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"net/smtp"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -25,6 +26,13 @@ type apiServer struct {
 	ArtifactsDir string
 	StateDir     string
 	DB           *bolt.DB
+	SMTPInfo     smtpInfo
+}
+
+type smtpInfo struct {
+	Server string
+	Sender string
+	Auth   smtp.Auth
 }
 
 // State defines the statuses of a job.
@@ -40,7 +48,7 @@ var (
 )
 
 // NewServer returns grpc server instance
-func NewServer(artifactsDir, stateDir string) (types.APIServer, error) {
+func NewServer(artifactsDir, stateDir, smtpServer, smtpSender, smtpUsername, smtpPassword string) (types.APIServer, error) {
 	if err := os.MkdirAll(stateDir, 0666); err != nil {
 		return nil, fmt.Errorf("attempt to create state directory %s failed: %v", stateDir, err)
 	}
@@ -67,10 +75,24 @@ func NewServer(artifactsDir, stateDir string) (types.APIServer, error) {
 		return nil, err
 	}
 
+	auth := smtp.PlainAuth(
+		"",
+		smtpUsername,
+		smtpPassword,
+		strings.SplitN(smtpServer, ":", 2)[0],
+	)
+
+	smtpInfo := smtpInfo{
+		Server: smtpServer,
+		Sender: smtpSender,
+		Auth:   auth,
+	}
+
 	return &apiServer{
 		ArtifactsDir: artifactsDir,
 		StateDir:     stateDir,
 		DB:           db,
+		SMTPInfo:     smtpInfo,
 	}, nil
 }
 
@@ -94,9 +116,10 @@ func (s *apiServer) updateState(id uint32, state State) error {
 
 func (s *apiServer) StartJob(ctx context.Context, c *types.StartJobRequest) (*types.StartJobResponse, error) {
 	job := types.Job{
-		Name:      c.Name,
-		Args:      c.Args,
-		Artifacts: c.Artifacts,
+		Name:           c.Name,
+		Args:           c.Args,
+		Artifacts:      c.Artifacts,
+		EmailRecipient: c.EmailRecipient,
 	}
 
 	addJob := func(tx *bolt.Tx) error {
@@ -155,8 +178,17 @@ func (s *apiServer) StartJob(ctx context.Context, c *types.StartJobRequest) (*ty
 			logrus.Error(err)
 			state = jobFailed
 		}
+		job.Status = string(state)
 		if err := s.updateState(job.Id, state); err != nil {
 			logrus.Error(err)
+		}
+
+		// send an email with the logs
+		if job.EmailRecipient != "" {
+			// get the logs
+			if err := s.sendEmail(job); err != nil {
+				logrus.Errorf("Sending email to %s for job name %s failed: %v", job.EmailRecipient, job.Name, err)
+			}
 		}
 	}()
 

@@ -18,7 +18,7 @@ dbuild:
 
 drun: dbuild
 	@echo "+ $@"
-	docker run --rm -it -v $(CURDIR)/bundles/state:/run/hulk -v $(CURDIR)/bundles/artifacts:/var/lib/hulk jess/hulk -d server
+	docker run --rm -it -v $(CURDIR)/bundles/state:/run/hulk -v $(CURDIR)/bundles/artifacts:/var/lib/hulk jess/hulk -d server --smtp-server="smtp.mandrillapp.com:587" --smtp-sender="hulk@dockerproject.org" --smtp-username="${GMAIL}" --smtp-pass="${HULK_MADRILL_APIKEY}"
 
 dtestbuild:
 	@echo "+ $@"

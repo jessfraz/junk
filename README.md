@@ -33,3 +33,7 @@ $ hulk rm --id 12
 
 **TODO:**
 - way to filter in list
+- artifact moving on success
+- designate whether to email on error or on success
+- scheduler
+- build steps

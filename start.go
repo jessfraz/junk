@@ -12,8 +12,9 @@ import (
 )
 
 var startCommand = cli.Command{
-	Name:  "start",
-	Usage: "Start a job",
+	Name:    "start",
+	Aliases: []string{"run"},
+	Usage:   "Start a job",
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "name",
@@ -26,6 +27,10 @@ var startCommand = cli.Command{
 		cli.StringFlag{
 			Name:  "cmd, c",
 			Usage: "Command to run",
+		},
+		cli.StringFlag{
+			Name:  "email",
+			Usage: "Email address to send job results",
 		},
 	},
 	Action: func(ctx *cli.Context) {
@@ -43,9 +48,10 @@ var startCommand = cli.Command{
 			logrus.Fatal(err)
 		}
 		resp, err := c.StartJob(context.Background(), &types.StartJobRequest{
-			Name:      name,
-			Args:      args,
-			Artifacts: artifacts,
+			Name:           name,
+			Args:           args,
+			Artifacts:      artifacts,
+			EmailRecipient: ctx.String("email"),
 		})
 		if err != nil {
 			logrus.Fatalf("StartJob request for name %s failed: %v", name, err)

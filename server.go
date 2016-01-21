@@ -28,19 +28,39 @@ var serverCommand = cli.Command{
 			Value: "/run/hulk",
 			Usage: "State directory",
 		},
+		cli.StringFlag{
+			Name:  "smtp-server",
+			Usage: "SMTP server for email notifications",
+		},
+		cli.StringFlag{
+			Name:  "smtp-sender",
+			Usage: "SMTP default sender email address for email notifications",
+		},
+		cli.StringFlag{
+			Name:  "smtp-username",
+			Usage: "SMTP server username",
+		},
+		cli.StringFlag{
+			Name:  "smtp-pass",
+			Usage: "SMTP server password",
+		},
 	},
 	Action: func(ctx *cli.Context) {
 		if err := startServer(
 			ctx.GlobalString("addr"),
 			ctx.String("artifacts-dir"),
 			ctx.String("state-dir"),
+			ctx.String("smtp-server"),
+			ctx.String("smtp-sender"),
+			ctx.String("smtp-username"),
+			ctx.String("smtp-pass"),
 		); err != nil {
 			logrus.Fatal(err)
 		}
 	},
 }
 
-func startServer(address, artifactsDir, stateDir string) error {
+func startServer(address, artifactsDir, stateDir, smtpServer, smtpSender, smtpUsername, smtpPassword string) error {
 	if err := os.RemoveAll(address); err != nil {
 		return fmt.Errorf("attempt to remove %s failed: %v", address, err)
 	}
@@ -51,7 +71,7 @@ func startServer(address, artifactsDir, stateDir string) error {
 	}
 
 	s := grpc.NewServer()
-	svr, err := server.NewServer(artifactsDir, stateDir)
+	svr, err := server.NewServer(artifactsDir, stateDir, smtpServer, smtpSender, smtpUsername, smtpPassword)
 	if err != nil {
 		return fmt.Errorf("Creating new server failed: %v", err)
 	}
