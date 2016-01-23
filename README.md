@@ -5,7 +5,10 @@ Ultimate job/build runner -OR- bash execution as a service.
 
 ```console
 # start the server
-$ hulk server -d
+$ hulk -d server 
+
+# start the server with a specific socket
+$ hulk -d -a /hulk.sock server 
 
 # list jobs
 $ hulk ls
