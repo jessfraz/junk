@@ -1,0 +1,57 @@
+# reg
+
+[![Circle CI](https://circleci.com/gh/jfrazelle/reg.svg?style=svg)](https://circleci.com/gh/jfrazelle/reg)
+
+Docker registry v2 client.
+
+**Auth**
+
+`reg` will automatically try to parse your docker config credentials, but if
+not saved there you can pass through flags directly.
+
+**List Repositories and Tags**
+
+```console
+$ ./reg
+Repositories for registry.jess.co
+REPO                  TAGS
+ab                    latest
+android-tools         latest
+apt-file              latest
+atom                  latest
+audacity              latest
+awscli                latest
+beeswithmachineguns   latest
+buttslock             latest
+camlistore            latest
+cathode               latest
+cf-reset-cache        latest
+cheese                latest
+chrome                beta, latest, stable
+...
+```
+
+**Usage**
+
+```console
+$ reg --help
+ _ __ ___  __ _
+| '__/ _ \/ _` |
+| | |  __/ (_| |
+|_|  \___|\__, |
+          |___/
+
+ Docker registry v2 client.
+ Version: v0.1.0
+
+  -d	run in debug mode
+  -p string
+    	Password for the registry
+  -r string
+    	Url to the private registry (ex. https://registry.jess.co)
+  -u string
+    	Username for the registry
+  -v	print version and exit (shorthand)
+  -version
+    	print version and exit
+```
