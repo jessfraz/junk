@@ -1,6 +1,6 @@
 # reg
 
-[![Circle CI](https://circleci.com/gh/jfrazelle/reg.svg?style=svg)](https://circleci.com/gh/jfrazelle/reg)
+[![Travis CI](https://travis-ci.org/jfrazelle/reg.svg?branch=master)](https://travis-ci.org/jfrazelle/reg)
 
 Docker registry v2 client.
 
