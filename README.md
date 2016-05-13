@@ -1,7 +1,6 @@
 # GH Patch Parser
 
-[![Circle
-CI](https://circleci.com/gh/jfrazelle/gh-patch-parser.svg?style=svg)](https://circleci.com/gh/jfrazelle/gh-patch-parser)
+[![Travis CI](https://travis-ci.org/jfrazelle/gh-patch-parser.svg?branch=master)](https://travis-ci.org/jfrazelle/gh-patch-parser)
 
 GH Patch Parser to auto label incoming patches, triggered from nsq messages.
 
