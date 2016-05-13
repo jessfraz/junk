@@ -1,6 +1,6 @@
 # floppercon
 
-[![Circle CI](https://circleci.com/gh/jfrazelle/floppercon.svg?style=svg)](https://circleci.com/gh/jfrazelle/floppercon)
+[![Travis CI](https://travis-ci.org/jfrazelle/floppercon.svg?branch=master)](https://travis-ci.org/jfrazelle/floppercon)
 
 Search twitter tweets for a hashtag
 
