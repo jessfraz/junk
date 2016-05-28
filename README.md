@@ -55,3 +55,12 @@ $ reg --help
   -version
     	print version and exit
 ```
+
+**Known Issues**
+
+`reg` does not work with
+* unauthenticated registries
+* http basic auth
+* output image history
+ 
+For more advanced registry usage please use [`docker-ls`](https://github.com/mayflower/docker-ls)
