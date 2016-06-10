@@ -4,6 +4,8 @@
 
 Docker registry v2 client.
 
+> **NOTE:** There is a way better version of this @  [`docker-ls`](https://github.com/mayflower/docker-ls)
+
 **Auth**
 
 `reg` will automatically try to parse your docker config credentials, but if
