@@ -749,6 +749,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/smartystreets/assertions",
+			"repository": "https://github.com/smartystreets/assertions",
+			"vcs": "git",
+			"revision": "2063fd1cc7c975db70502811a34b06ad034ccdf2",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/smartystreets/goconvey/convey",
 			"repository": "https://github.com/smartystreets/goconvey",
 			"vcs": "git",
