@@ -7,8 +7,8 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/codegangsta/cli"
 	"github.com/jfrazelle/junk/hulk/api/grpc/types"
+	"github.com/urfave/cli"
 )
 
 var logsCommand = cli.Command{
