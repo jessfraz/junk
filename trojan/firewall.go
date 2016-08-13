@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/coreos/go-etcd/etcd"
-	"github.com/jfrazelle/trojan/iptables"
+	"github.com/docker/libnetwork/iptables"
 )
 
 type port struct {
@@ -37,7 +37,7 @@ func getCurrentFirewall(e *etcd.Client) (ips []string, ports []port, err error) 
 }
 
 func setIPRules(e *etcd.Client) error {
-	var chain string = "INPUT"
+	chain := "INPUT"
 
 	ips, ports, err := getCurrentFirewall(e)
 	if err != nil {
@@ -48,7 +48,7 @@ func setIPRules(e *etcd.Client) error {
 	if _, err := iptables.Raw("-F", chain); err != nil {
 		return fmt.Errorf("Flusing iptables chain %q failed: %v", chain, err)
 	}
-	log.Debugf("Flushed iptables chain %q", chain)
+	logrus.Debugf("Flushed iptables chain %q", chain)
 
 	// apply new rules
 	for _, p := range ports {
@@ -57,7 +57,7 @@ func setIPRules(e *etcd.Client) error {
 		}
 	}
 
-	log.Infof("Updated rules in iptables chain %q", chain)
+	logrus.Infof("Updated rules in iptables chain %q", chain)
 	return nil
 }
 
@@ -80,10 +80,10 @@ func applyPortRules(ips []string, port int, proto string) error {
 
 func firewallLoop(e *etcd.Client, update chan *etcd.Response) {
 	for resp := range update {
-		log.Infof("Processing updated rules for %s", resp.Node.Key)
+		logrus.Infof("Processing updated rules for %s", resp.Node.Key)
 
 		if err := setIPRules(e); err != nil {
-			log.Warnf("Updating IP rules failed: %v", err)
+			logrus.Warnf("Updating IP rules failed: %v", err)
 		}
 	}
 }

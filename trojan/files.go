@@ -140,7 +140,7 @@ http {
 	# text/html is always compressed by HttpGzipModule
 
     #{InsertSSLHere}
-	
+
 	# Additional Configs
 	include /etc/nginx/conf.d/*.conf;
 }`
@@ -153,7 +153,7 @@ http {
 	ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!CAMELLIA;
 	ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
 	ssl_prefer_server_ciphers on;
-	
+
 	ssl_certificate     {PATH_TO_SERVER_CRT};
   	ssl_certificate_key {PATH_TO_SERVER_KEY};
 `

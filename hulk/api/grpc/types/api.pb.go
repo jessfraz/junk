@@ -39,7 +39,9 @@ var _ = math.Inf
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
-const _ = proto.ProtoPackageIsVersion1
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type StartJobRequest struct {
 	Name           string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
@@ -172,6 +174,10 @@ func init() {
 var _ context.Context
 var _ grpc.ClientConn
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion3
+
 // Client API for API service
 
 type APIClient interface {
@@ -272,52 +278,76 @@ func RegisterAPIServer(s *grpc.Server, srv APIServer) {
 	s.RegisterService(&_API_serviceDesc, srv)
 }
 
-func _API_StartJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _API_StartJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StartJobRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(APIServer).StartJob(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(APIServer).StartJob(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/types.API/StartJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).StartJob(ctx, req.(*StartJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _API_DeleteJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _API_DeleteJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteJobRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(APIServer).DeleteJob(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(APIServer).DeleteJob(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/types.API/DeleteJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).DeleteJob(ctx, req.(*DeleteJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _API_ListJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _API_ListJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListJobsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(APIServer).ListJobs(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(APIServer).ListJobs(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/types.API/ListJobs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).ListJobs(ctx, req.(*ListJobsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _API_State_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _API_State_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(APIServer).State(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(APIServer).State(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/types.API/State",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).State(ctx, req.(*StateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _API_Logs_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -369,7 +399,10 @@ var _API_serviceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
+	Metadata: fileDescriptor0,
 }
+
+func init() { proto.RegisterFile("api.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
 	// 408 bytes of a gzipped FileDescriptorProto

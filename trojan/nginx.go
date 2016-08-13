@@ -9,13 +9,13 @@ import (
 	"strconv"
 	"strings"
 
-	"code.google.com/p/go-uuid/uuid"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/coreos/go-etcd/etcd"
+	"github.com/satori/go.uuid"
 )
 
 type route struct {
-	Ip         string `json:"ip"`
+	IP         string `json:"ip"`
 	Port       int    `json:"port"`
 	ServerName string `json:"server_name"`
 	SSL        bool   `json:"ssl"`
@@ -47,18 +47,18 @@ func setRoutes(e *etcd.Client) error {
 
 	for _, r := range routes {
 		// check if we need to add the ip to ips
-		if r.Ip != "0.0.0.0" && r.Ip != "127.0.0.1" {
+		if r.IP != "0.0.0.0" && r.IP != "127.0.0.1" {
 			// iterate through the current ips to see if we have this one
 			ipfound := false
 			for _, ip := range ips {
-				if ip == r.Ip {
+				if ip == r.IP {
 					ipfound = true
 					break
 				}
 			}
 			if !ipfound {
 				// append it to ips
-				ips = append(ips, r.Ip)
+				ips = append(ips, r.IP)
 				ipsChanged = true
 			}
 		}
@@ -82,7 +82,7 @@ func setRoutes(e *etcd.Client) error {
 		}
 
 		// create a uid for upstream
-		uid := uuid.New()
+		uid := uuid.NewV4()
 
 		// create the .conf file
 		content := template
@@ -90,8 +90,8 @@ func setRoutes(e *etcd.Client) error {
 			content = sslTemplate
 		}
 		content = strings.Replace(content, "{SERVERNAME}", r.ServerName, -1)
-		content = strings.Replace(content, "{NAME}", uid, -1)
-		content = strings.Replace(content, "{IP}", r.Ip, -1)
+		content = strings.Replace(content, "{NAME}", uid.String(), -1)
+		content = strings.Replace(content, "{IP}", r.IP, -1)
 		content = strings.Replace(content, "{PORT}", strconv.Itoa(r.Port), -1)
 		if r.Auth {
 			auth := `auth_basic "Restricted";
@@ -167,10 +167,10 @@ func initializeNginx(e *etcd.Client) error {
 
 func nginxLoop(e *etcd.Client, update chan *etcd.Response) {
 	for resp := range update {
-		log.Infof("Processing updated conf for %s", resp.Node.Key)
+		logrus.Infof("Processing updated conf for %s", resp.Node.Key)
 
 		if err := setRoutes(e); err != nil {
-			log.Warnf("Setting routes failed: %v", err)
+			logrus.Warnf("Setting routes failed: %v", err)
 		}
 	}
 }

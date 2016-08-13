@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/coreos/go-etcd/etcd"
 )
 
 const (
+	// VERSION is the binary version.
 	VERSION = "v0.1.0"
 )
 
@@ -37,7 +38,7 @@ func init() {
 func main() {
 	// set log level
 	if debug {
-		log.SetLevel(log.DebugLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 	}
 
 	if version {
@@ -49,7 +50,7 @@ func main() {
 	if machine == "" {
 		machine = "http://0.0.0.0:4001"
 	}
-	log.Infof("Connecting to %s", machine)
+	logrus.Infof("Connecting to %s", machine)
 
 	// initialize etcd client
 	e := etcd.NewClient([]string{machine})
@@ -58,14 +59,14 @@ func main() {
 	// typical/default is eth0
 	resp, err := e.Get("/firewall/interface", false, false)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 
 	if resp.Node.Value == "" {
-		log.Debug("/firewall/interface returned empty contents, using %q", iface)
+		logrus.Debug("/firewall/interface returned empty contents, using %q", iface)
 
 		if _, err = e.Set("/firewall/interface", iface, 0); err != nil {
-			log.Fatal(err)
+			logrus.Fatal(err)
 		}
 	} else {
 		iface = resp.Node.Value
@@ -73,14 +74,14 @@ func main() {
 
 	// initialize values for firewall ip rules
 	if err := setIPRules(e); err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 
 	// watch for changes to the firewall
 	updateFirewall := make(chan *etcd.Response)
 	go firewallLoop(e, updateFirewall)
 	if _, err := e.Watch("/firewall", 0, true, updateFirewall, nil); err != nil {
-		log.Error(err)
+		logrus.Error(err)
 	}
 
 	// watch for changes to nginx

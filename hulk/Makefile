@@ -22,7 +22,7 @@ drun: dbuild
 
 dtestbuild:
 	@echo "+ $@"
-	@docker build --rm --force-rm -t hulk-dev -f Dockerfile.test .
+	@docker build --rm --force-rm -t hulk-dev -f Dockerfile.dev .
 
 shell: dtestbuild
 	@echo "+ $@"
