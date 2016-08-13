@@ -101,9 +101,9 @@ func main() {
 
 	// print header
 	fmt.Fprintln(w, "SignatureAlgorithm\tPublicKeyAlgorithm\tVersion\tIssuer\tSubject")
-	for _, cert := range cacerts {
-		fmt.Fprintf(w, "%s\t%s\t%s\n", key, m[key].Title, m[key].Artist)
-	}
+	/*for _, cert := range cacerts {
+		 fmt.Fprintf(w, "%s\t%s\t%s\n", key, m[key].Title, m[key].Artist)
+	}*/
 }
 
 func usageAndExit(message string, exitCode int) {
