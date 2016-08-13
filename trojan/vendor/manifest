@@ -1,0 +1,81 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/Sirupsen/logrus",
+			"repository": "https://github.com/Sirupsen/logrus",
+			"vcs": "git",
+			"revision": "a283a10442df8dc09befd873fab202bf8a253d6a",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/coreos/go-etcd/etcd",
+			"repository": "https://github.com/coreos/go-etcd",
+			"vcs": "git",
+			"revision": "003851be7bb0694fe3cc457a49529a19388ee7cf",
+			"branch": "master",
+			"path": "/etcd",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/docker/libnetwork/iptables",
+			"repository": "https://github.com/docker/libnetwork",
+			"vcs": "git",
+			"revision": "24f64a6f9e9cade70e3904df291fb321584b1b4e",
+			"branch": "master",
+			"path": "/iptables",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/godbus/dbus",
+			"repository": "https://github.com/godbus/dbus",
+			"vcs": "git",
+			"revision": "7a8c533d28e8162671a81090af5b9f78b74e2d26",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/satori/go.uuid",
+			"repository": "https://github.com/satori/go.uuid",
+			"vcs": "git",
+			"revision": "0aa62d5ddceb50dbcb909d790b5345affd3669b6",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/ugorji/go/codec",
+			"repository": "https://github.com/ugorji/go",
+			"vcs": "git",
+			"revision": "4a1cb5252a6951f715a85d0e4be334c2a2dbf2a2",
+			"branch": "master",
+			"path": "/codec",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/sys/unix",
+			"repository": "https://go.googlesource.com/sys",
+			"vcs": "git",
+			"revision": "a646d33e2ee3172a661fc09bca23bb4889a41bc8",
+			"branch": "master",
+			"path": "/unix",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/airbrake/gobrake.v2",
+			"repository": "https://gopkg.in/airbrake/gobrake.v2",
+			"vcs": "git",
+			"revision": "31c8ff1fb8b79a6947e6565e9a6df535f98a6b94",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/gemnasium/logrus-airbrake-hook.v2",
+			"repository": "https://gopkg.in/gemnasium/logrus-airbrake-hook.v2",
+			"vcs": "git",
+			"revision": "31e6fd4bd5a98d8ee7673d24bc54ec73c31810dd",
+			"branch": "master",
+			"notests": true
+		}
+	]
+}
