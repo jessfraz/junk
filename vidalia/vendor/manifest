@@ -1,0 +1,25 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/Sirupsen/logrus",
+			"repository": "https://github.com/Sirupsen/logrus",
+			"revision": "418b41d23a1bf978c06faea5313ba194650ac088",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/mattbaird/elastigo/api",
+			"repository": "https://github.com/mattbaird/elastigo",
+			"revision": "0c98885a2b2575c99882263dfc4bf6aae9079a63",
+			"branch": "HEAD",
+			"path": "/api"
+		},
+		{
+			"importpath": "github.com/mattbaird/elastigo/core",
+			"repository": "https://github.com/mattbaird/elastigo",
+			"revision": "0c98885a2b2575c99882263dfc4bf6aae9079a63",
+			"branch": "HEAD",
+			"path": "/core"
+		}
+	]
+}
