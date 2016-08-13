@@ -9,11 +9,12 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/mitchellh/colorstring"
 )
 
 const (
+	// VERSION is the binary version.
 	VERSION = "v0.1.0"
 )
 
@@ -34,7 +35,7 @@ func init() {
 	flag.Parse()
 }
 
-type Error struct {
+type atdError struct {
 	String      string   `xml:"string"`
 	Description string   `xml:"description"`
 	Precontext  string   `xml:"precontext"`
@@ -42,15 +43,15 @@ type Error struct {
 	Type        string   `xml:"type"`
 }
 
-type Result struct {
-	XMLName xml.Name `xml:"results"`
-	Errors  []*Error `xml:"error"`
+type response struct {
+	XMLName xml.Name    `xml:"results"`
+	Errors  []*atdError `xml:"error"`
 }
 
 func main() {
 	// set log level
 	if debug {
-		log.SetLevel(log.DebugLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 	}
 
 	if version {
@@ -65,30 +66,30 @@ func main() {
 	}
 
 	if data == "" {
-		log.Fatal("You must pass some data with the -data flag.")
+		logrus.Fatal("You must pass some data with the -data flag.")
 		return
 	}
 
 	if uri == "" {
-		log.Fatal("You must pass a uri for the after the deadline api with -uri.")
+		logrus.Fatal("You must pass a uri for the after the deadline api with -uri.")
 		return
 	}
 
 	resp, err := http.PostForm(uri+"/checkDocument", url.Values{"data": {data}})
 	if err != nil {
-		log.Fatalf("Posting to uri %q with data %q failed: %v", uri, data, err)
+		logrus.Fatalf("Posting to uri %q with data %q failed: %v", uri, data, err)
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Got status code %d from response: %#v", resp.StatusCode, resp)
+		logrus.Fatalf("Got status code %d from response: %#v", resp.StatusCode, resp)
 		return
 	}
 
-	var result Result
+	var result response
 	dec := xml.NewDecoder(resp.Body)
 	if err = dec.Decode(&result); err != nil {
-		log.Fatalf("Decoding response as xml failed: %v", err)
+		logrus.Fatalf("Decoding response as xml failed: %v", err)
 		return
 	}
 
