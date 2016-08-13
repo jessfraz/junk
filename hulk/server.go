@@ -8,8 +8,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
-	"github.com/jfrazelle/hulk/api/grpc/server"
-	"github.com/jfrazelle/hulk/api/grpc/types"
+	"github.com/jfrazelle/junk/hulk/api/grpc/server"
+	"github.com/jfrazelle/junk/hulk/api/grpc/types"
 	"google.golang.org/grpc"
 )
 

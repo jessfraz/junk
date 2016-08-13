@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/jfrazelle/hulk/api/grpc/types"
+	"github.com/jfrazelle/junk/hulk/api/grpc/types"
 )
 
 const (

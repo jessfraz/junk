@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
-	"github.com/jfrazelle/hulk/api/grpc/types"
+	"github.com/jfrazelle/junk/hulk/api/grpc/types"
 	"golang.org/x/net/context"
 )
 
