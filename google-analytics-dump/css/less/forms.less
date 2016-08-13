@@ -1,0 +1,161 @@
+.dropdown,
+.dropdown div,
+.dropdown li,
+.dropdown div::after{
+    .transition(all 150ms ease-in-out);
+}
+
+.dropdown .selected::after,
+.dropdown.scrollable div::after{
+    .pointer-events(none);
+}
+
+
+.dropdown {
+    position: relative;
+    width: 210px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background: #fff;
+    .border-radius(3px);
+    .user-select(none);
+    display: inline-block;
+    vertical-align: bottom;
+    div {
+        position: absolute;
+        height: 0;
+        left: -1px;
+        right: -1px;
+        top: 100%;
+        margin-top: -1px;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-top: 1px solid #eee;
+        .border-radius(0 0 3px 3px);
+        overflow: hidden;
+        opacity: 0;
+    }
+    select {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+    }
+    .old {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 0;
+        width: 0;
+        overflow: hidden;
+    }
+    .carat{
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        margin-top: -4px;
+        border: 6px solid transparent;
+        border-top: 8px solid #000;
+    }
+    .selected {
+        &::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+
+            .border-radius(0 2px 2px 0);
+            .box-shadow(inset -55px 0 25px -20px #fff);
+        }
+    }
+    .selected, li {
+        display: block;
+        font-size: 18px;
+        line-height: 1;
+        color: #000;
+        padding: 9px 12px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-align:left;
+    }
+    ul {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        list-style: none;
+        overflow: hidden;
+        margin:0;
+        padding:0;
+    }
+    li {
+        list-style: none;
+        padding: 8px 12px;
+        &.focus {
+            background: @dropdown-highlight;
+            position: relative;
+            z-index: 3;
+            color: #fff;
+        }
+        &.active {
+            font-weight: 700;
+        }
+    }
+
+
+    &.open {
+        z-index: 2;
+        div {
+            opacity: 1;
+            z-index: 2;
+        }
+        .carat{
+            margin-top: -10px;
+            border-top: 6px solid transparent;
+            border-bottom: 8px solid #000;
+        }
+    }
+    &.scrollable {
+        div::after{
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 50px;
+
+            box-shadow: inset 0 -50px 30px -35px #fff;
+        }
+        &.bottom {
+            div::after {
+                opacity: 0;
+            }
+        }
+        &.open {
+            ul {
+                overflow-y: auto;
+            }
+        }
+    }
+    &.touch {
+        select{
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+        }
+        .old{
+            width: 100%;
+            height: 100%;
+        }
+    }
+    &.disabled {
+        .selected {
+            color: #999;
+        }
+        .carat{
+            border-top-color: #999;
+        }
+    }
+}
