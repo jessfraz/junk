@@ -1,0 +1,20 @@
+[
+    {
+        "type": "message",
+        "user": "casper",
+        "text": "Btw, i am a ghost.",
+        "date": "2015-03-25T22:17:50.000Z"
+    },
+    {
+        "type": "message",
+        "user": "jessfraz",
+        "text": "we have cookies!",
+        "date": "2015-03-25T22:17:44.000Z"
+    },
+    {
+        "type": "message",
+        "user": "casper",
+        "text": "Yo!",
+        "date": "2015-03-25T22:17:38.000Z"
+    }
+]

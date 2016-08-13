@@ -1,0 +1,23 @@
+[
+    {
+        "id": "",
+        "user": "U02F7LZ5G",
+        "ts": "1415233015.000338",
+        "text": "See you tomorrow!",
+        "type": "message"
+    },
+    {
+        "id": "",
+        "user": "U02AZ2JAM",
+        "ts": "1415233026.000339",
+        "text": "night",
+        "type": "message"
+    },
+    {
+        "id": "",
+        "user": "U02NE6P41",
+        "ts": "1415246890.000340",
+        "text": "@U02F7LZ5G, @U02AZ2JAM: Awesome work.",
+        "type": "message"
+    }
+]
