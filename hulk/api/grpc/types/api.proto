@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package types;
+
+service API {
+    rpc StartJob(StartJobRequest) returns (StartJobResponse) {}
+    rpc DeleteJob(DeleteJobRequest) returns (DeleteJobResponse) {}
+    rpc ListJobs(ListJobsRequest) returns (ListJobsResponse) {}
+    rpc State(StateRequest) returns (StateResponse) {}
+    rpc Logs(LogsRequest) returns (stream Log) {}
+}
+
+message StartJobRequest {
+    string name = 1; // name of job
+    repeated string args = 2; // command arguments for the job
+    string artifacts = 3; // where the artifact from the job will be
+    string emailRecipient = 4; // Email address to send job result to
+}
+
+message StartJobResponse {
+    uint32 id = 1; // ID of job
+}
+
+message DeleteJobRequest {
+    uint32 id = 1; // ID of job
+}
+
+message DeleteJobResponse {
+}
+
+message ListJobsRequest {
+}
+
+message Job {
+    uint32 id = 1; // ID of job
+    string name = 2; // Name of job
+    repeated string args = 3; // Command arguments for the job
+    string artifacts = 4; // Job artifacts directory
+    string status = 5; // Job status ("running", "finished", etc)
+    string emailRecipient = 6; // Email address to send job result to
+}
+
+message ListJobsResponse {
+    repeated Job jobs = 1; // List of jobs
+}
+
+message StateRequest {
+    uint32 id = 1; // ID of job
+}
+
+message StateResponse {
+    string status = 1; // Job status ("running", "finished", etc)
+}
+
+message LogsRequest {
+    uint32 id = 1; // ID of job
+    bool follow = 2; // Should follow logs
+}
+
+message Log {
+    string log = 1;
+}
