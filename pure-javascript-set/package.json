@@ -1,0 +1,13 @@
+{
+  "name": "tdd-presentation",
+  "description": "Presentation on Jasmine and TDD.",
+  "author": {
+    "name": "Jess Frazelle",
+    "url": "http://frazelledazzell.com/"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "matchdep": "~0.1.1", 
+    "grunt-contrib-watch": "~0.4.3"
+  }
+}
