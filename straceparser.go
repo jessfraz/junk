@@ -29,7 +29,7 @@ type Syscall struct {
 	ElapsedTime string
 }
 
-func Parse(file string) (syscalls []Syscall, err error) {
+func parse(file string) (syscalls []Syscall, err error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
@@ -48,14 +48,14 @@ func Parse(file string) (syscalls []Syscall, err error) {
 
 		// check if we are on the first line and get the PID
 		if position == 0 {
-			pid := ReGetPID.FindString(line)
+			pid := reGetPID.FindString(line)
 			// convert pid to an int
 			strace.PID, _ = strconv.Atoi(pid)
 		}
 
 		// extract signals
 		if strings.HasSuffix(line, "---") {
-			signals := ReExtractSignal.Split(line, -1)
+			signals := reExtractSignal.Split(line, -1)
 			fmt.Printf("signals: %+v", signals)
 		}
 
@@ -73,12 +73,12 @@ func Parse(file string) (syscalls []Syscall, err error) {
 		s.Name = sys[1][0:index]
 
 		// extract the args
-		args := ReExtractArgs.FindString(line)
+		args := reExtractArgs.FindString(line)
 		args = strings.TrimPrefix(strings.TrimSuffix(args, ")"), "(")
 		s.Args = strings.Split(args, ",")
 
 		// extract the return value
-		s.ReturnValue = strings.TrimSpace(ReExtractReturnValue.FindString(line))
+		s.ReturnValue = strings.TrimSpace(reExtractReturnValue.FindString(line))
 
 		syscalls = append(syscalls, s)
 
@@ -109,7 +109,7 @@ func main() {
 		logrus.Fatalf("No such file or directory: %q", filename)
 	}
 
-	syscalls, err := Parse(filename)
+	syscalls, err := parse(filename)
 	if err != nil {
 		logrus.Fatal(err)
 	}
