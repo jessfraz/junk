@@ -8,11 +8,12 @@ import (
 	"path"
 	"path/filepath"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/crowdmob/goamz/aws"
 	"github.com/crowdmob/goamz/s3"
 )
 
+// Creds are the credentials for communicating with s3.
 type Creds struct {
 	Key    string
 	Secret string
@@ -23,13 +24,14 @@ type Creds struct {
 var (
 	home       string
 	ignore     []string
-	localFiles []File
+	localFiles []file
 )
 
 func init() {
 	home = os.Getenv("HOME")
 }
 
+// Sync runs the s3 sync with the passed credentials.
 func (creds *Creds) Sync() (err error) {
 	// auth with aws
 	auth := aws.Auth{
@@ -65,7 +67,7 @@ func (creds *Creds) Sync() (err error) {
 				found = true
 				// compare the two files
 				if err := localFile.compare(bucket, remoteFile); err != nil {
-					log.Warn(err)
+					logrus.Warn(err)
 				}
 
 				// delete item from remote
@@ -80,21 +82,21 @@ func (creds *Creds) Sync() (err error) {
 		if !found {
 			// if we didn't find the file remotely
 			// upload it to s3
-			log.Debugf("We didn't find %q on s3, so we are uploading it.", localFile.Path)
+			logrus.Debugf("We didn't find %q on s3, so we are uploading it.", localFile.Path)
 			contents, err := ioutil.ReadFile(localFile.LongPath)
 			if err != nil {
-				log.Warnf("Reading %q failed: %v", localFile.Path, err)
+				logrus.Warnf("Reading %q failed: %v", localFile.Path, err)
 			}
 
 			if err = localFile.uploadToS3(bucket, path.Join(bucketpath, localFile.Path), contents); err != nil {
-				log.Warnf("Uploading %q to s3 failed: %v", localFile.Path, err)
+				logrus.Warnf("Uploading %q to s3 failed: %v", localFile.Path, err)
 			}
 		}
 	}
 
 	// print the remote files that weren't found locally
-	filesJson, _ := json.MarshalIndent(remoteFiles, "", " ")
-	log.Infof("Remote Files left over:\n%v\n", string(filesJson))
+	fj, _ := json.MarshalIndent(remoteFiles, "", " ")
+	logrus.Infof("Remote Files left over:\n%v\n", string(fj))
 
 	return nil
 }

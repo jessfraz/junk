@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Ask creates a user prompt and returns the user given string.
 func Ask(prompt string, output string) (val string, err error) {
 	fmt.Printf("%s [%s]: ", prompt, output)
 	reader := bufio.NewReader(os.Stdin)

@@ -11,13 +11,13 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/crowdmob/goamz/s3"
-	"github.com/jfrazelle/budf/diff"
-	"github.com/jfrazelle/budf/prompt"
+	"github.com/jfrazelle/junk/budf/prompt"
+	diff "github.com/sergi/go-diff/diffmatchpatch"
 )
 
-type File struct {
+type file struct {
 	Path     string
 	LongPath string
 	Modtime  time.Time
@@ -26,42 +26,42 @@ type File struct {
 	Mode     os.FileMode
 }
 
-func (localFile *File) compare(bucket *s3.Bucket, remoteFile File) (err error) {
+func (f *file) compare(bucket *s3.Bucket, remoteFile file) (err error) {
 	// if modtime is equal exit
-	if localFile.Modtime.Equal(remoteFile.Modtime) {
-		log.Debugf("Remote and local modtime for %s are the same.", localFile.Path)
+	if f.Modtime.Equal(remoteFile.Modtime) {
+		logrus.Debugf("Remote and local modtime for %s are the same.", f.Path)
 		return nil
 	}
 
 	// if shasums are equal exit
-	if localFile.sumsEqual(remoteFile.Shasum) {
-		log.Debugf("Remote and local shasums for %s are the same.", localFile.Path)
+	if f.sumsEqual(remoteFile.Shasum) {
+		logrus.Debugf("Remote and local shasums for %s are the same.", f.Path)
 		return nil
 	}
 
 	var (
 		recentString  string
 		dfault        string
-		after         = localFile.Modtime.After(remoteFile.Modtime)
-		before        = localFile.Modtime.Before(remoteFile.Modtime)
-		base          = filepath.Base(localFile.Path)
+		after         = f.Modtime.After(remoteFile.Modtime)
+		before        = f.Modtime.Before(remoteFile.Modtime)
+		base          = filepath.Base(f.Path)
 		isBashHistory = (base == ".bash_history")
 	)
 
 	// just concatenate bash history, if thats the file
 	if isBashHistory {
-		log.Debug("File is .bash_history so we are concatenating it.")
-		if err = localFile.showDiff(bucket, remoteFile, base, true); err != nil {
+		logrus.Debug("File is .bash_history so we are concatenating it.")
+		if err = f.showDiff(bucket, remoteFile, base, true); err != nil {
 			return fmt.Errorf("Show diff failed: %v", err)
 		}
 		return nil
 	}
 
 	if after {
-		recentString = fmt.Sprintf("Local %s is more recent than remote.", localFile.Path)
+		recentString = fmt.Sprintf("Local %s is more recent than remote.", f.Path)
 		dfault = "l"
 	} else if before {
-		recentString = fmt.Sprintf("Remote %s is more recent than local.", localFile.Path)
+		recentString = fmt.Sprintf("Remote %s is more recent than local.", f.Path)
 		dfault = "r"
 	}
 
@@ -80,12 +80,12 @@ View and edit diff (d)
 	case "l":
 		// keep the localfile
 		// get the contents of the localfile
-		localFile.Content, err = ioutil.ReadFile(localFile.LongPath)
+		f.Content, err = ioutil.ReadFile(f.LongPath)
 		if err != nil {
-			return fmt.Errorf("Error reading local file %q: %v", localFile.LongPath, err)
+			return fmt.Errorf("Error reading local file %q: %v", f.LongPath, err)
 		}
 		// push to s3
-		if err := localFile.uploadToS3(bucket, remoteFile.LongPath, localFile.Content); err != nil {
+		if err := f.uploadToS3(bucket, remoteFile.LongPath, f.Content); err != nil {
 			return err
 		}
 	case "r":
@@ -96,13 +96,13 @@ View and edit diff (d)
 			return fmt.Errorf("Error getting %q from s3: %v", remoteFile.LongPath, err)
 		}
 		// write it to the localfile
-		if err := ioutil.WriteFile(localFile.LongPath, remoteFile.Content, localFile.Mode); err != nil {
+		if err := ioutil.WriteFile(f.LongPath, remoteFile.Content, f.Mode); err != nil {
 			return err
 		}
-		log.Infof("Updated %s locally", localFile.Path)
+		logrus.Infof("Updated %s locally", f.Path)
 	case "d":
 		// show the diff
-		err = localFile.showDiff(bucket, remoteFile, base, false)
+		err = f.showDiff(bucket, remoteFile, base, false)
 		if err != nil {
 			return fmt.Errorf("Show diff failed: %v", err)
 		}
@@ -154,7 +154,7 @@ func walkLocalFilesFn(filePath string, info os.FileInfo, err error) error {
 	// see if matches ignored files
 	skip, err := matches(relFilePath, ignore)
 	if err != nil {
-		log.Warnf("Error matching %s: %v", relFilePath, err)
+		logrus.Warnf("Error matching %s: %v", relFilePath, err)
 		return err
 	}
 
@@ -172,7 +172,7 @@ func walkLocalFilesFn(filePath string, info os.FileInfo, err error) error {
 			return nil
 		}
 
-		localFiles = append(localFiles, File{
+		localFiles = append(localFiles, file{
 			Path:     relFilePath,
 			LongPath: filePath,
 			Modtime:  info.ModTime(),
@@ -187,7 +187,7 @@ func walkLocalFilesFn(filePath string, info os.FileInfo, err error) error {
 	// get the real file path
 	var linkPath string
 	if linkPath, err = os.Readlink(filePath); err != nil {
-		log.Errorf("Getting symlinked file for %s failed: %v", relFilePath, err)
+		logrus.Errorf("Getting symlinked file for %s failed: %v", relFilePath, err)
 		return err
 	}
 
@@ -198,7 +198,7 @@ func walkLocalFilesFn(filePath string, info os.FileInfo, err error) error {
 
 	if !info.IsDir() {
 		// add file symlink to array
-		localFiles = append(localFiles, File{
+		localFiles = append(localFiles, file{
 			Path:     relFilePath,
 			LongPath: linkPath,
 			Modtime:  info.ModTime(),
@@ -225,7 +225,7 @@ func walkLocalFilesFn(filePath string, info os.FileInfo, err error) error {
 		// see if matches ignored files
 		skip, err := matches(relFilePath, ignore)
 		if err != nil {
-			log.Warnf("Error matching %s: %v", relFilePath, err)
+			logrus.Warnf("Error matching %s: %v", relFilePath, err)
 			return err
 		}
 
@@ -241,7 +241,7 @@ func walkLocalFilesFn(filePath string, info os.FileInfo, err error) error {
 			return nil
 		}
 
-		localFiles = append(localFiles, File{
+		localFiles = append(localFiles, file{
 			Path:     relFilePath,
 			LongPath: rPath,
 			Modtime:  i.ModTime(),
@@ -259,18 +259,18 @@ func walkLocalFilesFn(filePath string, info os.FileInfo, err error) error {
 	return nil
 }
 
-func getRemoteFiles(bucket *s3.Bucket, bucketpath, marker string, ignore []string) (files []File, err error) {
+func getRemoteFiles(bucket *s3.Bucket, bucketpath, marker string, ignore []string) (files []file, err error) {
 	resp, err := bucket.List(bucketpath, "\n", marker, 1000)
 	if err != nil {
 		return files, err
 	}
 	// clean files
-	for _, file := range resp.Contents {
-		if strings.HasSuffix(file.Key, "/") {
+	for _, f := range resp.Contents {
+		if strings.HasSuffix(f.Key, "/") {
 			continue
 		}
 
-		relFilePath, err := filepath.Rel(bucketpath, file.Key)
+		relFilePath, err := filepath.Rel(bucketpath, f.Key)
 		if err != nil {
 			return files, nil
 		}
@@ -281,7 +281,7 @@ func getRemoteFiles(bucket *s3.Bucket, bucketpath, marker string, ignore []strin
 
 		skip, err := matches(relFilePath, ignore)
 		if err != nil {
-			log.Warnf("Error matching %s: %v", relFilePath, err)
+			logrus.Warnf("Error matching %s: %v", relFilePath, err)
 			continue
 		}
 
@@ -290,17 +290,17 @@ func getRemoteFiles(bucket *s3.Bucket, bucketpath, marker string, ignore []strin
 		}
 
 		// parse time
-		modtime, err := time.Parse("2006-01-02T15:04:05.000Z", file.LastModified)
+		modtime, err := time.Parse("2006-01-02T15:04:05.000Z", f.LastModified)
 		if err != nil {
-			log.Warnf("Error parsing time string %q: %v", file.LastModified, err)
+			logrus.Warnf("Error parsing time string %q: %v", f.LastModified, err)
 			continue
 		}
 
-		files = append(files, File{
+		files = append(files, file{
 			Path:     relFilePath,
-			LongPath: file.Key,
+			LongPath: f.Key,
 			Modtime:  modtime,
-			Shasum:   strings.Trim(file.ETag, `"`),
+			Shasum:   strings.Trim(f.ETag, `"`),
 		})
 	}
 
@@ -316,28 +316,28 @@ func getRemoteFiles(bucket *s3.Bucket, bucketpath, marker string, ignore []strin
 	return files, nil
 }
 
-func (file *File) sumsEqual(shasum string) bool {
+func (f *file) sumsEqual(shasum string) bool {
 	// get the shasum of the file
 	var err error
-	file.Shasum, err = hexMd5Sum(file.LongPath)
+	f.Shasum, err = hexMd5Sum(f.LongPath)
 	if err != nil {
-		log.Warnf("Error getting shasum of %s: %v", file.Path, err)
+		logrus.Warnf("Error getting shasum of %s: %v", f.Path, err)
 		// return true because we won't want to sync a file with an error
 		// and its most likely a directory
 		return true
 	}
 
 	// compare shasum to remotefile
-	if file.Shasum != shasum {
-		log.Debugf("Local sum is %s and remote sum is %s for %s", file.Shasum, shasum, file.Path)
+	if f.Shasum != shasum {
+		logrus.Debugf("Local sum is %s and remote sum is %s for %s", f.Shasum, shasum, f.Path)
 		return false
 	}
 
-	log.Debugf("Shasums match for %s", file.Path)
+	logrus.Debugf("Shasums match for %s", f.Path)
 	return true
 }
 
-func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File, base string, concat bool) (err error) {
+func (f file) showDiff(bucket *s3.Bucket, remoteFile file, base string, concat bool) (err error) {
 	// get the contents of the remote file
 	remoteFile.Content, err = bucket.Get(remoteFile.LongPath)
 	if err != nil {
@@ -345,9 +345,9 @@ func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File, base string, 
 	}
 
 	// get the contents of the localfile
-	localFile.Content, err = ioutil.ReadFile(localFile.LongPath)
+	f.Content, err = ioutil.ReadFile(f.LongPath)
 	if err != nil {
-		return fmt.Errorf("Error reading local file %q: %v", localFile.LongPath, err)
+		return fmt.Errorf("Error reading local file %q: %v", f.LongPath, err)
 	}
 
 	tmp, err := ioutil.TempFile("", "tempfile-"+base)
@@ -358,7 +358,7 @@ func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File, base string, 
 
 	// get the diff
 	diffPatch := diff.New()
-	diffs := diffPatch.DiffMain(string(remoteFile.Content), string(localFile.Content), false)
+	diffs := diffPatch.DiffMain(string(remoteFile.Content), string(f.Content), false)
 
 	for _, d := range diffs {
 		var c string
@@ -405,23 +405,23 @@ func (localFile File) showDiff(bucket *s3.Bucket, remoteFile File, base string, 
 		return err
 	}
 	// save the file locally
-	if err := ioutil.WriteFile(localFile.LongPath, contents, localFile.Mode); err != nil {
+	if err := ioutil.WriteFile(f.LongPath, contents, f.Mode); err != nil {
 		return err
 	}
-	log.Infof("Updated %s locally", localFile.Path)
+	logrus.Infof("Updated %s locally", f.Path)
 
 	// upload to s3
-	err = localFile.uploadToS3(bucket, remoteFile.LongPath, contents)
+	err = f.uploadToS3(bucket, remoteFile.LongPath, contents)
 
 	return err
 }
 
-func (localFile File) uploadToS3(bucket *s3.Bucket, s3Filepath string, contents []byte) error {
+func (f file) uploadToS3(bucket *s3.Bucket, s3Filepath string, contents []byte) error {
 	// push the file to s3
 	if err := bucket.Put(s3Filepath, contents, "", "private", s3.Options{}); err != nil {
 		return err
 	}
-	log.Infof("Pushed %s to s3", localFile.Path)
+	logrus.Infof("Pushed %s to s3", f.Path)
 
 	return nil
 }

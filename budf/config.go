@@ -6,8 +6,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/jfrazelle/budf/prompt"
-	"github.com/jfrazelle/budf/sync"
+	"github.com/jfrazelle/junk/budf/prompt"
+	"github.com/jfrazelle/junk/budf/sync"
 )
 
 func config(setup bool) (creds sync.Creds, err error) {
@@ -73,13 +73,13 @@ func config(setup bool) (creds sync.Creds, err error) {
 		}
 
 		// encode the creds
-		credsJson, err := json.Marshal(creds)
+		c, err := json.Marshal(creds)
 		if err != nil {
 			return creds, err
 		}
 
 		// write the file
-		if err := ioutil.WriteFile(configPath, credsJson, 0755); err != nil {
+		if err := ioutil.WriteFile(configPath, c, 0755); err != nil {
 			return creds, err
 		}
 	}

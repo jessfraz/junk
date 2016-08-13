@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 // parse for the parts of the bucket name
@@ -33,9 +33,9 @@ func hexMd5Sum(file string) (string, error) {
 		return "", err
 	}
 
-	running_hash := md5.New()
-	running_hash.Write(data)
-	sum := running_hash.Sum(nil)
+	h := md5.New()
+	h.Write(data)
+	sum := h.Sum(nil)
 
 	return fmt.Sprintf("%x", sum), nil
 }
@@ -49,19 +49,19 @@ func matches(relFilePath string, patterns []string) (bool, error) {
 	for _, exclude := range patterns {
 		matched, err := filepath.Match(exclude, relFilePath)
 		if err != nil {
-			log.Errorf("Error matching: %s (pattern: %s)", relFilePath, exclude)
+			logrus.Errorf("Error matching: %s (pattern: %s)", relFilePath, exclude)
 			return false, err
 		}
 		if !matched {
 			matched, err = filepath.Match(exclude, dir)
 			if err != nil {
-				log.Errorf("Error matching: %s (pattern: %s)", dir, exclude)
+				logrus.Errorf("Error matching: %s (pattern: %s)", dir, exclude)
 				return false, err
 			}
 		}
 		if matched {
 			if filepath.Clean(relFilePath) == "." {
-				log.Errorf("Can't exclude whole path, excluding pattern: %s", exclude)
+				logrus.Errorf("Can't exclude whole path, excluding pattern: %s", exclude)
 				continue
 			}
 			return true, nil

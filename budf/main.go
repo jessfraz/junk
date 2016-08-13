@@ -4,10 +4,11 @@ import (
 	"flag"
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 const (
+	// VERSION is the binary version.
 	VERSION = "v0.1.0"
 )
 
@@ -37,7 +38,7 @@ func init() {
 func main() {
 	// set log level
 	if debug {
-		log.SetLevel(log.DebugLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 	}
 
 	if version {
@@ -48,7 +49,7 @@ func main() {
 	// get the config values
 	creds, err := config(reset)
 	if err != nil {
-		log.Fatalf("Error setting up/ reading credentials: %v", err)
+		logrus.Fatalf("Error setting up/ reading credentials: %v", err)
 	}
 
 	if reset {
@@ -57,8 +58,8 @@ func main() {
 
 	// sync files
 	if err = creds.Sync(); err != nil {
-		log.Fatalf("Syncing files failed: %v", err)
+		logrus.Fatalf("Syncing files failed: %v", err)
 	}
 
-	log.Info("Successfully backed up files! You may now sleep in peace :)")
+	logrus.Info("Successfully backed up files! You may now sleep in peace :)")
 }
