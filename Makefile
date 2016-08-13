@@ -9,7 +9,7 @@ all: build fmt lint test vet
 
 build:
 	@echo "+ $@"
-	@go build -tags "$(BUILDTAGS) cgo" $(go list ./... | grep -v vendor)
+	@go build -tags "$(BUILDTAGS) cgo" ./...
 
 fmt:
 	@echo "+ $@"

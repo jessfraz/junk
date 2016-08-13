@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dotcloud/docker/pkg/units"
-	"github.com/mitchellh/colorstring"
 	"os"
 	"os/exec"
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/docker/go-units"
+	"github.com/mitchellh/colorstring"
 )
 
 func stringTimeToHuman(ts string) (ds string) {
@@ -23,9 +24,9 @@ func stringTimeToHuman(ts string) (ds string) {
 	return units.HumanDuration(d)
 }
 
-func printPrettyJson(v interface{}, printRaw bool) {
-	json_byte, _ := json.MarshalIndent(v, "", "  ")
-	code := string(json_byte)
+func printPrettyJSON(v interface{}, printRaw bool) {
+	b, _ := json.MarshalIndent(v, "", "  ")
+	code := string(b)
 
 	if printRaw {
 		fmt.Println(code)

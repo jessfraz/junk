@@ -1,26 +1,29 @@
 package auth
 
 import (
-	"code.google.com/p/goauth2/oauth"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"code.google.com/p/goauth2/oauth"
 )
 
+// Auth contains the authentication information.
 type Auth struct {
-	CacheDir string
-	Config   *oauth.Config
-	Debug    bool
+	cacheDir string
+	config   *oauth.Config
+	debug    bool
 }
 
-func New(clientId, clientSecret, scope string, debug bool) *Auth {
+// New returns a new Auth object.
+func New(clientID, clientSecret, scope string, debug bool) *Auth {
 	return &Auth{
-		CacheDir: OsUserCacheDir(),
-		Debug:    debug,
-		Config: &oauth.Config{
-			ClientId:     clientId,
+		cacheDir: osUserCacheDir(),
+		debug:    debug,
+		config: &oauth.Config{
+			ClientId:     clientID,
 			ClientSecret: clientSecret,
 			Scope:        scope,
 			AuthURL:      "https://accounts.google.com/o/oauth2/auth",
@@ -29,7 +32,7 @@ func New(clientId, clientSecret, scope string, debug bool) *Auth {
 	}
 }
 
-func OsUserCacheDir() string {
+func osUserCacheDir() string {
 	switch runtime.GOOS {
 	case "darwin":
 		return filepath.Join(os.Getenv("HOME"), "Library", "Caches")
@@ -39,21 +42,22 @@ func OsUserCacheDir() string {
 	return "."
 }
 
-func (auth *Auth) GetOAuthClient() *http.Client {
-	cacheFile := auth.TokenCacheFile()
-	token, err := auth.TokenFromFile(cacheFile)
+// GetOAuthClient return an http.Client for the api to use.
+func (a *Auth) GetOAuthClient() *http.Client {
+	cacheFile := a.tokenCacheFile()
+	token, err := a.tokenFromFile(cacheFile)
 	if err != nil {
-		token = auth.TokenFromWeb()
-		SaveToken(cacheFile, token)
+		token = a.tokenFromWeb()
+		saveToken(cacheFile, token)
 	} else {
-		if auth.Debug {
+		if a.debug {
 			log.Printf("Using cached token %#v from %q", token, cacheFile)
 		}
 	}
 
 	t := &oauth.Transport{
 		Token:     token,
-		Config:    auth.Config,
+		Config:    a.config,
 		Transport: http.DefaultTransport,
 	}
 	return t.Client()

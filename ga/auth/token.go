@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"code.google.com/p/goauth2/oauth"
 	"encoding/gob"
 	"fmt"
 	"hash/fnv"
@@ -13,18 +12,20 @@ import (
 	"os/exec"
 	"path/filepath"
 	"time"
+
+	"code.google.com/p/goauth2/oauth"
 )
 
-func (auth *Auth) TokenCacheFile() string {
+func (a *Auth) tokenCacheFile() string {
 	hash := fnv.New32a()
-	hash.Write([]byte(auth.Config.ClientId))
-	hash.Write([]byte(auth.Config.ClientSecret))
-	hash.Write([]byte(auth.Config.Scope))
+	hash.Write([]byte(a.config.ClientId))
+	hash.Write([]byte(a.config.ClientSecret))
+	hash.Write([]byte(a.config.Scope))
 	fn := fmt.Sprintf("ga-cli-tok%v", hash.Sum32())
-	return filepath.Join(auth.CacheDir, url.QueryEscape(fn))
+	return filepath.Join(a.cacheDir, url.QueryEscape(fn))
 }
 
-func (auth *Auth) TokenFromFile(file string) (*oauth.Token, error) {
+func (a *Auth) tokenFromFile(file string) (*oauth.Token, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
@@ -34,7 +35,7 @@ func (auth *Auth) TokenFromFile(file string) (*oauth.Token, error) {
 	return t, err
 }
 
-func SaveToken(file string, token *oauth.Token) {
+func saveToken(file string, token *oauth.Token) {
 	f, err := os.Create(file)
 	if err != nil {
 		log.Printf("Warning: failed to cache oauth token: %v\n", err)
@@ -44,7 +45,7 @@ func SaveToken(file string, token *oauth.Token) {
 	gob.NewEncoder(f).Encode(token)
 }
 
-func OpenUrl(url string) {
+func openURL(url string) {
 	try := []string{"xdg-open", "google-chrome", "open"}
 	for _, bin := range try {
 		err := exec.Command(bin, url).Run()
@@ -55,7 +56,7 @@ func OpenUrl(url string) {
 	log.Printf("Error opening URL in browser.\n")
 }
 
-func (auth *Auth) TokenFromWeb() *oauth.Token {
+func (a *Auth) tokenFromWeb() *oauth.Token {
 	ch := make(chan string)
 	randState := fmt.Sprintf("st%d", time.Now().UnixNano())
 	ts := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -79,17 +80,17 @@ func (auth *Auth) TokenFromWeb() *oauth.Token {
 	}))
 	defer ts.Close()
 
-	auth.Config.RedirectURL = ts.URL
-	authUrl := auth.Config.AuthCodeURL(randState)
-	go OpenUrl(authUrl)
-	log.Printf("Authorize this app at: %s\n", authUrl)
+	a.config.RedirectURL = ts.URL
+	authURL := a.config.AuthCodeURL(randState)
+	go openURL(authURL)
+	log.Printf("Authorize this app at: %s\n", authURL)
 	code := <-ch
-	if auth.Debug {
+	if a.debug {
 		log.Printf("Got code: %s", code)
 	}
 
 	t := &oauth.Transport{
-		Config:    auth.Config,
+		Config:    a.config,
 		Transport: http.DefaultTransport,
 	}
 	_, err := t.Exchange(code)

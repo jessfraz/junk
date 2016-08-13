@@ -1,0 +1,81 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/BurntSushi/toml",
+			"repository": "https://github.com/BurntSushi/toml",
+			"vcs": "git",
+			"revision": "99064174e013895bbd9b025c31100bd1d9b590ca",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/docker/go-units",
+			"repository": "https://github.com/docker/go-units",
+			"vcs": "git",
+			"revision": "eb879ae3e2b84e2a142af415b679ddeda47ec71c",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/google/google-api-go-client/analytics/v3",
+			"repository": "https://github.com/google/google-api-go-client",
+			"vcs": "git",
+			"revision": "8ae9b02432fd8417fb9359af58f473036b094d20",
+			"branch": "master",
+			"path": "/analytics/v3",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/mitchellh/colorstring",
+			"repository": "https://github.com/mitchellh/colorstring",
+			"vcs": "git",
+			"revision": "8631ce90f28644f54aeedcb3e389a85174e067d1",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/urfave/cli",
+			"repository": "https://github.com/urfave/cli",
+			"vcs": "git",
+			"revision": "168c95418e66e019fe17b8f4f5c45aa62ff80e23",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/net/context",
+			"repository": "https://go.googlesource.com/net",
+			"vcs": "git",
+			"revision": "07b51741c1d6423d4a6abab1c49940ec09cb1aaf",
+			"branch": "master",
+			"path": "/context",
+			"notests": true
+		},
+		{
+			"importpath": "google.golang.org/api/gensupport",
+			"repository": "https://code.googlesource.com/google-api-go-client",
+			"vcs": "git",
+			"revision": "8ae9b02432fd8417fb9359af58f473036b094d20",
+			"branch": "master",
+			"path": "/gensupport",
+			"notests": true
+		},
+		{
+			"importpath": "google.golang.org/api/googleapi",
+			"repository": "https://code.googlesource.com/google-api-go-client",
+			"vcs": "git",
+			"revision": "8ae9b02432fd8417fb9359af58f473036b094d20",
+			"branch": "master",
+			"path": "googleapi",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/yaml.v2",
+			"repository": "https://gopkg.in/yaml.v2",
+			"vcs": "git",
+			"revision": "e4d366fc3c7938e2958e662b4258c7a89e1f0e3e",
+			"branch": "v2",
+			"notests": true
+		}
+	]
+}

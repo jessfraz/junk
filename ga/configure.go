@@ -9,18 +9,18 @@ import (
 	"strings"
 )
 
-func configure(clientId, secret string) (err error) {
-	clientIdPath, secretPath, err := getCredsDir()
+func configure(clientID, secret string) (err error) {
+	clientIDPath, secretPath, err := getCredsDir()
 	if err != nil {
 		return err
 	}
 
-	clientId, secret, err = getCreds(clientId, secret, clientIdPath, secretPath)
+	clientID, secret, err = getCreds(clientID, secret, clientIDPath, secretPath)
 	if err != nil {
 		return err
 	}
 
-	clientId, err = prompt("OAuth Client Id", clientId)
+	clientID, err = prompt("OAuth Client Id", clientID)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func configure(clientId, secret string) (err error) {
 		return err
 	}
 
-	err = writeFile(clientIdPath, clientId)
+	err = writeFile(clientIDPath, clientID)
 	if err != nil {
 		return err
 	}
@@ -42,21 +42,22 @@ func configure(clientId, secret string) (err error) {
 	return nil
 }
 
-func getCreds(clientId, secret, clientIdPath, secretPath string) (_clientId string, _secret string, err error) {
-	if clientIdPath == "" || secretPath == "" {
-		clientIdPath, secretPath, err = getCredsDir()
+func getCreds(clientID, secret, clientIDPath, secretPath string) (string, string, error) {
+	var err error
+	if clientIDPath == "" || secretPath == "" {
+		clientIDPath, secretPath, err = getCredsDir()
 		if err != nil {
-			return clientId, secret, err
+			return clientID, secret, err
 		}
 	}
 
-	clientId = valueOrFile(clientIdPath, clientId)
+	clientID = valueOrFile(clientIDPath, clientID)
 	secret = valueOrFile(secretPath, secret)
 
-	return clientId, secret, nil
+	return clientID, secret, nil
 }
 
-func getCredsDir() (clientIdPath, secretPath string, err error) {
+func getCredsDir() (clientIDPath, secretPath string, err error) {
 	// get home dir
 	// configure details get saved to
 	// ~/.ga-cli/clientid && ~/.ga-cli/secret
@@ -64,7 +65,7 @@ func getCredsDir() (clientIdPath, secretPath string, err error) {
 	gaDirPath := path.Join(home, ".ga-cli")
 	err = os.MkdirAll(gaDirPath, 0777)
 	if err != nil {
-		return clientIdPath, secretPath, fmt.Errorf("Creating %s failed: %s", gaDirPath, err)
+		return clientIDPath, secretPath, fmt.Errorf("Creating %s failed: %s", gaDirPath, err)
 	}
 
 	return path.Join(gaDirPath, "clientid"), path.Join(gaDirPath, "secret"), nil

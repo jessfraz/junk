@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/jfrazelle/ga/analytics"
+
+	analytics "github.com/google/google-api-go-client/analytics/v3"
 )
 
 func getAccounts(s *analytics.Service) (accountItems []*analytics.Account, err error) {
@@ -31,12 +32,12 @@ func getProperties(s *analytics.Service, accounts []*analytics.Account) (propert
 	return properties, nil
 }
 
-func getPropertiesByAccount(s *analytics.Service, accountId string) (properties []*analytics.Webproperty, err error) {
+func getPropertiesByAccount(s *analytics.Service, accountID string) (properties []*analytics.Webproperty, err error) {
 	// get properties
-	propertiesListCall := s.Management.Webproperties.List(accountId)
+	propertiesListCall := s.Management.Webproperties.List(accountID)
 	propertiesList, err := propertiesListCall.Do()
 	if err != nil {
-		return properties, fmt.Errorf("Calling properties list for account (%s) failed: %s", accountId, err)
+		return properties, fmt.Errorf("Calling properties list for account (%s) failed: %s", accountID, err)
 	}
 	return propertiesList.Items, nil
 }
@@ -56,17 +57,17 @@ func getProfiles(s *analytics.Service, properties []*analytics.Webproperty) (pro
 	return profiles, nil
 }
 
-func getPropertyProfiles(s *analytics.Service, propertyId string) (profiles []*analytics.Profile, err error) {
-	profilesListCall := s.Management.Profiles.List("", propertyId)
+func getPropertyProfiles(s *analytics.Service, propertyID string) (profiles []*analytics.Profile, err error) {
+	profilesListCall := s.Management.Profiles.List("", propertyID)
 	profilesList, err := profilesListCall.Do()
 	if err != nil {
-		return profiles, fmt.Errorf("Calling profiles list for account (%s) & property (%s) failed: %s", "", propertyId, err)
+		return profiles, fmt.Errorf("Calling profiles list for account (%s) & property (%s) failed: %s", "", propertyID, err)
 	}
 	return profilesList.Items, nil
 }
 
-func getAccountProfiles(s *analytics.Service, accountId string) (profiles []*analytics.Profile, err error) {
-	properties, err := getPropertiesByAccount(s, accountId)
+func getAccountProfiles(s *analytics.Service, accountID string) (profiles []*analytics.Profile, err error) {
+	properties, err := getPropertiesByAccount(s, accountID)
 	if err != nil {
 		return profiles, err
 	}

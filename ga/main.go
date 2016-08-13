@@ -2,33 +2,37 @@ package main
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
-	"github.com/jfrazelle/ga/analytics"
-	"github.com/jfrazelle/ga/auth"
-	"github.com/mitchellh/colorstring"
 	"os"
 	"strings"
 	"text/tabwriter"
+
+	analytics "github.com/google/google-api-go-client/analytics/v3"
+	"github.com/jfrazelle/junk/ga/auth"
+	"github.com/mitchellh/colorstring"
+	"github.com/urfave/cli"
 )
 
 const (
-	VERSION = "v0.1.0"
-	BANNER  = `  __ _  __ _
+	// BANNER is what is printed for help/info output.
+	BANNER = `  __ _  __ _
  / _` + "`" + ` |/ _` + "`" + ` |
 | (_| | (_| |
  \__, |\__,_|
  |___/
 `
+	// VERSION is the binary version.
+	VERSION = "v0.1.0"
+
 	scope string = "https://www.googleapis.com/auth/analytics.readonly"
 )
 
-func doAuth(clientId, secret string, debug bool) (s *analytics.Service, err error) {
-	clientId, secret, err = getCreds(clientId, secret, "", "")
+func doAuth(clientID, secret string, debug bool) (s *analytics.Service, err error) {
+	clientID, secret, err = getCreds(clientID, secret, "", "")
 	if err != nil {
 		return s, err
 	}
 
-	a := auth.New(clientId, secret, scope, debug)
+	a := auth.New(clientID, secret, scope, debug)
 	c := a.GetOAuthClient()
 
 	s, err = analytics.New(c)
@@ -72,7 +76,7 @@ func main() {
 
 				// if json
 				if c.Bool("json") {
-					printPrettyJson(accounts, c.Bool("raw"))
+					printPrettyJSON(accounts, c.Bool("raw"))
 				} else {
 					// print cols
 					w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
@@ -118,7 +122,7 @@ func main() {
 					}
 					// if json
 					if c.Bool("json") {
-						printPrettyJson(data, c.Bool("raw"))
+						printPrettyJSON(data, c.Bool("raw"))
 					} else {
 						// print cols
 						w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
@@ -161,7 +165,7 @@ func main() {
 
 					// if json
 					if c.Bool("json") {
-						printPrettyJson(profiles, c.Bool("raw"))
+						printPrettyJSON(profiles, c.Bool("raw"))
 					} else {
 						// print cols
 						w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
@@ -207,7 +211,7 @@ func main() {
 
 				// if json
 				if c.Bool("json") {
-					printPrettyJson(properties, c.Bool("raw"))
+					printPrettyJSON(properties, c.Bool("raw"))
 				} else {
 					// print cols
 					w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
