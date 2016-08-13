@@ -669,7 +669,7 @@
 			"importpath": "github.com/golang/protobuf/proto",
 			"repository": "https://github.com/golang/protobuf",
 			"vcs": "git",
-			"revision": "7cc19b78d562895b13596ddce7aafb59dd789318",
+			"revision": "2c1988e8c18d14b142c0b472624f71647cf39adb",
 			"branch": "master",
 			"path": "/proto",
 			"notests": true
