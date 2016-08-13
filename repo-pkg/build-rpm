@@ -1,0 +1,82 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DEST=${DIR}/bundles/build-rpm
+REPO=$1
+
+source ${DIR}/.helper
+
+# Print a usage message and exit.
+usage() {
+	cat >&2 <<-EOF
+	To run, I need:
+	- to be passed a git repo to build the rpm packages from;
+
+	./build-rpm http://pkgs.fedoraproject.org/git/yubico-piv-tool.git
+	EOF
+	exit 1
+}
+
+[ "$REPO" ] || usage
+
+(
+repo_dir=$(get_repo $REPO)
+
+for version in $(targets_from master rpm); do
+	from="$(awk 'toupper($1) == "FROM" { print $2; exit }' "${DIR}/.docker/contrib/builder/rpm/${version}/Dockerfile")"
+	suite="${version##*-}"
+
+	installer=yum
+	builddep=yum-builddep
+	builddep_pkg=yum-utils
+	if [[ "$distro" == "fedora" ]] && [[ "$suite" -ge "22" ]]; then
+		installer=dnf
+		builddep="dnf builddep"
+		builddep_pkg=dnf-plugins-core
+	fi
+
+	mkdir -p "$DEST/$version"
+	cat > "$DEST/$version/Dockerfile.build" <<-EOF
+	FROM $from
+	EOF
+	case "$from" in
+		centos:*)
+			# get "Development Tools" packages dependencies
+			echo 'RUN yum groupinstall -y "Development Tools"' >> "$DEST/$version/Dockerfile.build"
+
+			if [[ "$version" == "centos-7" ]]; then
+				echo 'RUN yum -y swap -- remove systemd-container systemd-container-libs -- install systemd systemd-libs' >> "$DEST/$version/Dockerfile.build"
+			fi
+			;;
+		oraclelinux:*)
+			# get "Development Tools" packages and dependencies
+			echo 'RUN yum groupinstall -y "Development Tools"' >> "$DEST/$version/Dockerfile.build"
+			;;
+		*)
+			echo "RUN ${installer} install -y @development-tools fedora-packager" >> "$DEST/$version/Dockerfile.build"
+			;;
+	esac
+	cat >> "$DEST/$version/Dockerfile.build" <<-EOF
+	RUN ${installer} install -y \
+		${builddep_pkg} \
+		rpm-build \
+		spectool \
+		tar
+	COPY .build/${repo_dir} /root/rpmbuild/SPECS
+	RUN mkdir -p /root/rpmbuild/SOURCES \
+		&& echo '%_topdir /root/rpmbuild' > /root/.rpmmacros
+	WORKDIR /root/rpmbuild/SOURCES
+	RUN spectool -g -R ../SPECS/${repo_dir}.spec
+	WORKDIR /root/rpmbuild/SPECS
+	RUN ${builddep} -y ${repo_dir}.spec
+	RUN rpmbuild -ba ${repo_dir}.spec
+	EOF
+	tempImage="docker-temp/build-rpm:$version"
+	( set -x && docker build -t "$tempImage" -f $DEST/$version/Dockerfile.build . )
+	docker run --rm "$tempImage" bash -c 'cd /root/rpmbuild && tar -c *RPMS' | tar -xvC "$DEST/$version"
+	docker rmi "$tempImage"
+done
+
+cleanup
+)

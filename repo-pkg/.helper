@@ -1,0 +1,38 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+targets_from() {
+	if [[ ! -d ${DIR}/.docker ]]; then
+		git clone -q --depth 1 --branch master https://github.com/docker/docker.git ${DIR}/.docker
+	fi
+	(
+	cd ${DIR}/.docker
+	git fetch -q https://github.com/docker/docker.git "$1"
+	git ls-tree -r --name-only origin/master "contrib/builder/$2" | grep '/Dockerfile$' | grep -v 'opensuse' | grep -v 'oraclelinux' | sed -r 's!^contrib/builder/'$2'/|-debootstrap|/Dockerfile$!!g'
+	)
+}
+
+# parse git url for the repo directory
+get_repo() {
+	repo=$1
+
+	# parse git url for the repo directory
+	repo_dir="${repo##*:}"
+	repo_dir="${repo##*\/}"
+	repo_dir="${repo_dir%%.git*}"
+	repo_dir="${repo_dir%%-rpm*}"
+
+	# clone the repo if we have not already
+	if [[ ! -d "${DIR}/.build/${repo_dir}" ]]; then
+		git clone -q "${REPO}" "${DIR}/.build/${repo_dir}"
+	fi
+
+	echo $repo_dir
+}
+
+# cleanup
+cleanup() {
+	rm -rf "${DIR}/.docker"
+	rm -rf "${DIR}/.build"
+}
