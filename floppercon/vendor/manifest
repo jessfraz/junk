@@ -1,0 +1,21 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/kurrik/oauth1a",
+			"repository": "https://github.com/kurrik/oauth1a",
+			"vcs": "git",
+			"revision": "cb1b80e32dd4385099f8d09312e4bcf6bdc993ec",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/kurrik/twittergo",
+			"repository": "https://github.com/kurrik/twittergo",
+			"vcs": "git",
+			"revision": "1152e2e0077dcee2a7e0ea0c4bd1dd72d89d9be2",
+			"branch": "master",
+			"notests": true
+		}
+	]
+}
