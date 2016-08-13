@@ -4,12 +4,23 @@
 		{
 			"importpath": "github.com/Sirupsen/logrus",
 			"repository": "https://github.com/Sirupsen/logrus",
-			"revision": "418b41d23a1bf978c06faea5313ba194650ac088",
-			"branch": "master"
+			"vcs": "git",
+			"revision": "a283a10442df8dc09befd873fab202bf8a253d6a",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/bitly/go-hostpool",
+			"repository": "https://github.com/bitly/go-hostpool",
+			"vcs": "git",
+			"revision": "d0e59c22a56e8dadfed24f74f452cea5a52722d2",
+			"branch": "master",
+			"notests": true
 		},
 		{
 			"importpath": "github.com/mattbaird/elastigo/api",
 			"repository": "https://github.com/mattbaird/elastigo",
+			"vcs": "",
 			"revision": "0c98885a2b2575c99882263dfc4bf6aae9079a63",
 			"branch": "HEAD",
 			"path": "/api"
@@ -17,9 +28,43 @@
 		{
 			"importpath": "github.com/mattbaird/elastigo/core",
 			"repository": "https://github.com/mattbaird/elastigo",
+			"vcs": "",
 			"revision": "0c98885a2b2575c99882263dfc4bf6aae9079a63",
 			"branch": "HEAD",
 			"path": "/core"
+		},
+		{
+			"importpath": "github.com/tobi/airbrake-go",
+			"repository": "https://github.com/tobi/airbrake-go",
+			"vcs": "git",
+			"revision": "a3cdd910a3ffef88a20fbecc10363a520ad61a0a",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/sys/unix",
+			"repository": "https://go.googlesource.com/sys",
+			"vcs": "git",
+			"revision": "a646d33e2ee3172a661fc09bca23bb4889a41bc8",
+			"branch": "master",
+			"path": "/unix",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/airbrake/gobrake.v2",
+			"repository": "https://gopkg.in/airbrake/gobrake.v2",
+			"vcs": "git",
+			"revision": "31c8ff1fb8b79a6947e6565e9a6df535f98a6b94",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/gemnasium/logrus-airbrake-hook.v2",
+			"repository": "https://gopkg.in/gemnasium/logrus-airbrake-hook.v2",
+			"vcs": "git",
+			"revision": "31e6fd4bd5a98d8ee7673d24bc54ec73c31810dd",
+			"branch": "master",
+			"notests": true
 		}
 	]
 }
