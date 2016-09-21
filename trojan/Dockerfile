@@ -1,12 +1,26 @@
-FROM golang:latest
-MAINTAINER Jess Frazelle <jess@docker.com>
+FROM alpine:latest
+MAINTAINER Jessica Frazelle <jess@linux.com>
 
-RUN go get github.com/coreos/go-etcd/etcd && \
-    go get github.com/Sirupsen/logrus && \
-    go get code.google.com/p/go-uuid/uuid
+ENV PATH /go/bin:/usr/local/go/bin:$PATH
+ENV GOPATH /go
 
-ADD . /go/src/github.com/jfrazelle/nginxd
-RUN cd /go/src/github.com/jfrazelle/nginxd && go install . ./...
-ENV PATH $PATH:/go/bin
+RUN	apk add --no-cache \
+	ca-certificates
 
-ENTRYPOINT ["nginxd"]
+COPY . /go/src/github.com/jfrazelle/junk/trojan
+
+RUN set -x \
+	&& apk add --no-cache --virtual .build-deps \
+		go \
+		git \
+		gcc \
+		libc-dev \
+		libgcc \
+	&& cd /go/src/github.com/jfrazelle/junk/trojan \
+	&& go build -o /usr/bin/trojan . \
+	&& apk del .build-deps \
+	&& rm -rf /go \
+	&& echo "Build complete."
+
+
+ENTRYPOINT [ "trojan" ]

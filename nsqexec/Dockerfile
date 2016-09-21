@@ -1,32 +1,24 @@
-FROM alpine
-MAINTAINER Jessica Frazelle <jess@docker.com>
+FROM alpine:latest
+MAINTAINER Jessica Frazelle <jess@linux.com>
 
 ENV PATH /go/bin:/usr/local/go/bin:$PATH
 ENV GOPATH /go
 
-RUN	apk update && apk add \
-	ca-certificates \
-	git \
-	make \
-	python \
-	&& rm -rf /var/cache/apk/*
+RUN	apk add --no-cache \
+	ca-certificates
 
-COPY . /go/src/github.com/jfrazelle/nsqexec
+COPY . /go/src/github.com/jfrazelle/junk/nsqexec
 
-RUN buildDeps=' \
+RUN set -x \
+	&& apk add --no-cache --virtual .build-deps \
 		go \
+		git \
 		gcc \
 		libc-dev \
 		libgcc \
-	' \
-	set -x \
-	&& apk update \
-	&& apk add $buildDeps \
-	&& cd /go/src/github.com/jfrazelle/nsqexec \
-	&& go get -d -v github.com/jfrazelle/nsqexec \
+	&& cd /go/src/github.com/jfrazelle/junk/nsqexec \
 	&& go build -o /usr/bin/nsqexec . \
-	&& apk del $buildDeps \
-	&& rm -rf /var/cache/apk/* \
+	&& apk del .build-deps \
 	&& rm -rf /go \
 	&& echo "Build complete."
 

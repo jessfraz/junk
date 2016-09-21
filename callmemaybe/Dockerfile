@@ -1,7 +1,26 @@
-FROM scratch
+FROM alpine:latest
+MAINTAINER Jessica Frazelle <jess@linux.com>
 
-COPY fixtures /fixtures
+ENV PATH /go/bin:/usr/local/go/bin:$PATH
+ENV GOPATH /go
 
-COPY callmemaybe /callmemaybe
+RUN	apk add --no-cache \
+	ca-certificates
 
-ENTRYPOINT [ "./callmemaybe" ]
+COPY . /go/src/github.com/jfrazelle/junk/callmemaybe
+
+RUN set -x \
+	&& apk add --no-cache --virtual .build-deps \
+		go \
+		git \
+		gcc \
+		libc-dev \
+		libgcc \
+	&& cd /go/src/github.com/jfrazelle/junk/callmemaybe \
+	&& go build -o /usr/bin/callmemaybe . \
+	&& apk del .build-deps \
+	&& rm -rf /go \
+	&& echo "Build complete."
+
+
+ENTRYPOINT [ "callmemaybe" ]
