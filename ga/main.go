@@ -7,7 +7,7 @@ import (
 	"text/tabwriter"
 
 	analytics "github.com/google/google-api-go-client/analytics/v3"
-	"github.com/jfrazelle/junk/ga/auth"
+	"github.com/jessfraz/junk/ga/auth"
 	"github.com/mitchellh/colorstring"
 	"github.com/urfave/cli"
 )
@@ -46,7 +46,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "ga"
 	app.Version = VERSION
-	app.Author = "Jess Frazelle, @frazelledazzell, github.com/jfrazelle"
+	app.Author = "Jess Frazelle, @frazelledazzell, github.com/jessfraz"
 	app.Usage = "Google Analytics via the Command Line"
 	app.EnableBashCompletion = true
 	commonFlags := []cli.Flag{

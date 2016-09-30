@@ -1,6 +1,6 @@
 # floppercon
 
-[![Travis CI](https://travis-ci.org/jfrazelle/floppercon.svg?branch=master)](https://travis-ci.org/jfrazelle/floppercon)
+[![Travis CI](https://travis-ci.org/jessfraz/floppercon.svg?branch=master)](https://travis-ci.org/jessfraz/floppercon)
 
 Search twitter tweets for a hashtag
 

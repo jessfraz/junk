@@ -6,8 +6,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/jfrazelle/junk/budf/prompt"
-	"github.com/jfrazelle/junk/budf/sync"
+	"github.com/jessfraz/junk/budf/prompt"
+	"github.com/jessfraz/junk/budf/sync"
 )
 
 func config(setup bool) (creds sync.Creds, err error) {

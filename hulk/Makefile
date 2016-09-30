@@ -26,7 +26,7 @@ dtestbuild:
 
 shell: dtestbuild
 	@echo "+ $@"
-	@docker run --rm -it -v $(CURDIR):/go/src/github.com/jfrazelle/hulk hulk-dev bash
+	@docker run --rm -it -v $(CURDIR):/go/src/github.com/jessfraz/hulk hulk-dev bash
 
 static:
 	@echo "+ $@"

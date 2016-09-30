@@ -23,7 +23,7 @@ To apply for API access at the Google APIs Console:
 - If your site supports both HTTP and HTTPS, you can enter multiple values, one per line.
 - Click the Create client ID button to complete the process.
 - The Create client ID dialog disappears. The Authorized API Access section now displays your application's OAuth 2.0 credentials.
-- Place these credentials in [js/lib/auth_utils.js](https://github.com/jfrazelle/google-analytics-dump/blob/master/js/lib/auth_utils.js)
+- Place these credentials in [js/lib/auth_utils.js](https://github.com/jessfraz/google-analytics-dump/blob/master/js/lib/auth_utils.js)
 
 ## Build Instructions
 This project uses [Grunt](http://gruntjs.com) to automate build tasks.
@@ -34,7 +34,7 @@ This project uses [Grunt](http://gruntjs.com) to automate build tasks.
 - Run `grunt` to compile, or `grunt server` to start a live development environment.
 
 ## Configurations
-To pull a different set of data change these lines in [js/main.js](https://github.com/jfrazelle/google-analytics-dump/blob/master/js/main.js) to whatever [Dimensions and Metrics](https://developers.google.com/analytics/devguides/reporting/core/dimsmets) you wish to pull.
+To pull a different set of data change these lines in [js/main.js](https://github.com/jessfraz/google-analytics-dump/blob/master/js/main.js) to whatever [Dimensions and Metrics](https://developers.google.com/analytics/devguides/reporting/core/dimsmets) you wish to pull.
 
 ```javascript
 gapi.client.analytics.data.ga.get({
@@ -51,6 +51,6 @@ gapi.client.analytics.data.ga.get({
 
 
 ### Note
-There are ```setTimeouts``` in [js/main.js](https://github.com/jfrazelle/google-analytics-dump/blob/master/js/main.js) in the functions to pull from the API because I was getting **Rate Limiting Errors**. The loops I run through all the accounts, properties, and profiles was so freaking fast. So that's why those are there.
+There are ```setTimeouts``` in [js/main.js](https://github.com/jessfraz/google-analytics-dump/blob/master/js/main.js) in the functions to pull from the API because I was getting **Rate Limiting Errors**. The loops I run through all the accounts, properties, and profiles was so freaking fast. So that's why those are there.
 
-[![Analytics](https://ga-beacon.appspot.com/UA-29404280-16/google-analytics-dump/README.md)](https://github.com/jfrazelle/google-analytics-dump)
+[![Analytics](https://ga-beacon.appspot.com/UA-29404280-16/google-analytics-dump/README.md)](https://github.com/jessfraz/google-analytics-dump)

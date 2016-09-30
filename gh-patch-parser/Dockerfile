@@ -7,7 +7,7 @@ ENV GOPATH /go
 RUN	apk add --no-cache \
 	ca-certificates
 
-COPY . /go/src/github.com/jfrazelle/junk/gh-patch-parser
+COPY . /go/src/github.com/jessfraz/junk/gh-patch-parser
 
 RUN set -x \
 	&& apk add --no-cache --virtual .build-deps \
@@ -16,7 +16,7 @@ RUN set -x \
 		gcc \
 		libc-dev \
 		libgcc \
-	&& cd /go/src/github.com/jfrazelle/junk/gh-patch-parser \
+	&& cd /go/src/github.com/jessfraz/junk/gh-patch-parser \
 	&& go build -o /usr/bin/gh-patch-parser . \
 	&& apk del .build-deps \
 	&& rm -rf /go \

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/jfrazelle/junk/hulk/api/grpc/server"
-	"github.com/jfrazelle/junk/hulk/api/grpc/types"
+	"github.com/jessfraz/junk/hulk/api/grpc/server"
+	"github.com/jessfraz/junk/hulk/api/grpc/types"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 )

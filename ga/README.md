@@ -28,7 +28,7 @@ To apply for API access at the Google APIs Console:
 #### Via Go
 
 ```bash
-$ go get github.com/jfrazelle/ga
+$ go get github.com/jessfraz/ga
 ```
 
 #### Binaries
@@ -82,4 +82,4 @@ Shows a list of commands or help for one command
 
 
 
-[![Analytics](https://ga-beacon.appspot.com/UA-29404280-16/ga/README.md)](https://github.com/jfrazelle/ga)
+[![Analytics](https://ga-beacon.appspot.com/UA-29404280-16/ga/README.md)](https://github.com/jessfraz/ga)

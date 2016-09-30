@@ -28,7 +28,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "hulk"
 	app.Version = VERSION
-	app.Author = "@jfrazelle"
+	app.Author = "@jessfraz"
 	app.Email = "no-reply@butts.com"
 	app.Usage = "Ultimate job/build queue runner and scheduler."
 	app.Before = func(ctx *cli.Context) error {

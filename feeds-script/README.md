@@ -150,4 +150,4 @@ $.ajax({
 });;
 ```
 
-[![Analytics](https://ga-beacon.appspot.com/UA-29404280-16/feeds-script/README.md)](https://github.com/jfrazelle/feeds-script)
+[![Analytics](https://ga-beacon.appspot.com/UA-29404280-16/feeds-script/README.md)](https://github.com/jessfraz/feeds-script)

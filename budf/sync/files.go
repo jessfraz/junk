@@ -13,7 +13,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/crowdmob/goamz/s3"
-	"github.com/jfrazelle/junk/budf/prompt"
+	"github.com/jessfraz/junk/budf/prompt"
 	diff "github.com/sergi/go-diff/diffmatchpatch"
 )
 

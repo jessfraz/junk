@@ -1,6 +1,6 @@
 # junk
 
-[![Build Status](https://travis-ci.org/jfrazelle/junk.svg?branch=master)](https://travis-ci.org/jfrazelle/junk)
+[![Build Status](https://travis-ci.org/jessfraz/junk.svg?branch=master)](https://travis-ci.org/jessfraz/junk)
 
 A place for everything without a home.
 

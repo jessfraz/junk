@@ -42,5 +42,5 @@ RUN go get github.com/golang/protobuf/proto \
 	&& go get github.com/golang/lint/golint
 
 # Upload source
-COPY . /go/src/github.com/jfrazelle/hulk
-WORKDIR /go/src/github.com/jfrazelle/hulk
+COPY . /go/src/github.com/jessfraz/hulk
+WORKDIR /go/src/github.com/jessfraz/hulk
