@@ -12,7 +12,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
 	"github.com/hpcloud/tail"
-	"github.com/jfrazelle/junk/hulk/api/grpc/types"
+	"github.com/jessfraz/junk/hulk/api/grpc/types"
 	"golang.org/x/net/context"
 )
 
