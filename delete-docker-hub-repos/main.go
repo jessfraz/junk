@@ -111,7 +111,7 @@ func login(username, password string) (string, error) {
 	return result.Token, nil
 }
 
-func getRepos(username string, url string) ([]repo, error) {
+func getRepos(username, url string) ([]repo, error) {
 	resp, err := request("GET", url, nil, "")
 	if err != nil {
 		return nil, err
