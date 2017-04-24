@@ -11,4 +11,4 @@ serve: build
 
 GCLOUD_BUCKET:=misc.j3ss.co
 publish:
-	gsutil -m cp -r -a public-read public/* gs://$(GCLOUD_BUCKET)/decks/$(shell basename $(CURDIR))/
+	gsutil -m -h Cache-Control:private cp -r -a public-read public/* gs://$(GCLOUD_BUCKET)/decks/$(shell basename $(CURDIR))/
