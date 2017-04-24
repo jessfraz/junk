@@ -1,0 +1,7 @@
+{
+  "name": "life-of-a-large-scale-open-source-project",
+  "version": "0.0.0",
+  "dependencies": {
+    "prism": "gh-pages"
+  }
+}

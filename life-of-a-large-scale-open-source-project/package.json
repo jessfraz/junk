@@ -1,0 +1,48 @@
+{
+  "name": "life-of-a-large-scale-open-source-project",
+  "version": "4.0.0",
+  "author": {
+    "name": "Jess Frazelle <no-reply@butts.com>"
+  },
+  "dependencies": {
+    "bespoke-theme-nebula": "^1.0.1"
+  },
+  "devDependencies": {
+    "bespoke": "^1.0.0",
+    "bespoke-backdrop": "^1.0.0",
+    "bespoke-bullets": "^1.0.0",
+    "bespoke-forms": "^1.0.0",
+    "bespoke-hash": "^1.0.0",
+    "bespoke-keys": "^1.0.0",
+    "bespoke-progress": "^1.0.0",
+    "bespoke-scale": "^1.0.0",
+    "bespoke-theme-cube": "^2.0.0",
+    "bespoke-touch": "^1.0.0",
+    "bower": "^1.7.9",
+    "debowerify": "^0.7.1",
+    "del": "^1.1.1",
+    "gh-pages": "^0.2.0",
+    "gulp": "^3.8.1",
+    "gulp-autoprefixer": "0.0.7",
+    "gulp-browserify": "^0.5.0",
+    "gulp-connect": "^2.0.5",
+    "gulp-csso": "^0.2.9",
+    "gulp-jade": "^0.6.0",
+    "gulp-plumber": "^0.6.3",
+    "gulp-rename": "^1.2.0",
+    "gulp-stylus": "^1.0.2",
+    "gulp-uglify": "^0.3.1",
+    "gulp-util": "^2.2.17",
+    "insert-css": "^0.2.0",
+    "opn": "^0.1.2",
+    "through": "^2.3.4"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "postinstall": "bower install",
+    "start": "gulp serve"
+  },
+  "license": "MIT"
+}
