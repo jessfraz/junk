@@ -21,17 +21,11 @@ html
     .lip-of-a-volcano {
       background-image: url('images/lip-of-a-volcano.gif')
     }
-    .alice {
-      background-image: url('images/alice.gif')
-    }
     .hackers {
       background-image: url('images/hackers.gif')
     }
     .hacktheplanet {
       background-image: url('images/hacktheplanet.gif')
-    }
-    .acidburn {
-      background-image: url('images/acidburn.gif')
     }
     .war {
       background-image: url('images/war.gif')
@@ -45,16 +39,37 @@ html
     .mrrobot {
       background-image: url('images/mrrobot.gif')
     }
+    .minions {
+      background-image: url('images/minions.gif')
+    }
+    .time {
+      background-image: url('images/time.gif')
+    }
+    .ladder {
+      background-image: url('images/ladder.gif')
+    }
+    .lucy {
+      background-image: url('images/lucy.gif')
+    }
+    .no {
+      background-image: url('images/no.gif')
+    }
+    .forever {
+      background-image: url('images/forever.gif')
+    }
+    .money {
+      background-image: url('images/money.gif')
+    }
 
   body
 
     article
 
       section
-        h3 The Life of a
+        h4 The Life of a
         h2 Large Scale
-        h3 Open Source Project
-        h4
+        h4 Open Source Project
+        p.headroom
           a(href='https://twitter.com/jessfraz') @jessfraz
         p  OSCON 2017
 
@@ -62,27 +77,32 @@ html
         h1 I am Jess
 
       section
-        h3 I have contributed to many open source projects including
-        h4 Docker, Go, Kubernetes, Runc, and the Linux Kernel
+        p.headroom I have contributed to many
+        p open source projects including
+        h4 Docker, Go, Kubernetes,
+        h4 Runc, & the Linux Kernel
 
-        p The opinions expressed in this talk are solely my own
-        h5 (and all maintainers :P)
+        p.headroom The opinions expressed in this talk are solely my own
+        p
+          i (and all maintainers :P)
 
       section
         h1 Outline
 
         ul
           li.hide
-          li Getting and Retaining Contributors
+          li Getting & Retaining Contributors
           li Scaling Maintainers
           li Dealing with Vulnerabilities
           li Handling Company vs. Project Conflicts
 
       section
-        h1 Getting and Retaining Contributors
+        h1 Getting & Retaining Contributors
 
       section
-        h2 Create help-wanted labels.
+        h2 Create
+        h3 help-wanted
+        h2 labels.
 
       section
         h3 Be aware of any
@@ -90,22 +110,23 @@ html
         h3 decision making dynamics.
 
       section
-        h2 Define contributions
-        h2 outside of code.
+        h2 Define
+        h3 contributions
+        p outside of code.
 
-      section
+      section(data-bespoke-backdrop='minions')
         h2 Value
         h3 positive reinforcement
         p to help people become
         h3 repeat contributors.
 
-      section
-        h2 Be respectful of
+      section(data-bespoke-backdrop='time')
+        h3 Be respectful of
         h2 contributors time.
 
-      section
-        h4 Clearly define processes
-        h4 for people officially becoming
+      section(data-bespoke-backdrop='ladder')
+        h3 Clearly define processes
+        h3 for people officially becoming
         h2 contributors
         h4 and
         h2 maintainers.
@@ -114,7 +135,7 @@ html
         h1 Scaling Maintainers
 
       section(data-bespoke-backdrop='ihaveopinionsaboutthings')
-        h3 Create
+        h4 Create
         h2 explicit guidelines
         h3 for acceptable patches & release cutoffs.
 
@@ -125,7 +146,7 @@ html
         h4 and
         h2 maintainers.
 
-      section
+      section(data-bespoke-backdrop='lucy')
         h2 Encourage
         h3 frequent contributors
         h4 to take on more
@@ -140,21 +161,18 @@ html
         h1 Dealing with Vulnerabilities
 
       section
-        h2 If your project
-        h2 is being used,
-        h2 it will have
-        h2 vulnerabilities
-        h2 discovered,
-        h3 the key is how you deal with them.
+        p If your project is being used, it will have
+        h4 vulnerabilities discovered,
+        p the key is how you deal with them.
 
       section(data-bespoke-backdrop='hackers')
         h2 Define a process.
 
-      section(data-bespoke-backdrop='acidburn')
+      section
         h2 Make the process public.
 
       section
-        h2 Handling everyones needs.
+        h2 Handling everyone's needs.
 
         ul
           li.hide
@@ -166,34 +184,34 @@ html
 
       section(data-bespoke-backdrop='mrrobot')
         h2 Do not compromise
-        h2 on disclosure dates
-        h2 so someone can give
-        h2 a talk at blackhat.
+        h3 on disclosure dates
+        h4 so someone can give a talk at blackhat.
 
       section(data-bespoke-backdrop='elliot')
-        h2 Clearly define the maximum
-        h2 time frame for fixing a bug.
+        h3 Clearly define the
+        h2 maximum time frame
+        h3 for fixing a bug.
 
       section(data-bespoke-backdrop='chaos')
-        h2 Make sure the process
-        h2 accounts for
-        h2 when things go wrong.
-        p (vendors breaking embargo)
+        h2 Make sure
+        h3 the process accounts for
+        h4 when things go wrong.
+        p.headroom (ex. vendors breaking embargo)
 
       section(data-bespoke-backdrop='lip-of-a-volcano')
         p Shameless plug to @brandonphilips and I's talk at Kubecon
         p on the Kubernetes Security Release Process:
-        h4
+        h4.headroom
           a(href='https://www.youtube.com/watch?v=sNjylW8FV9A') Dance Madly on the Edge of a Volcano
 
       section
         h1 Handling Company vs. Project Conflicts
 
       section(data-bespoke-backdrop='boxing')
-        p What happens to
-        h3 fiery passion
-        p when it is fueled by
-        p a paycheck from a company?
+        h3 What happens to
+        h2 fiery passion
+        h3 when it is fueled by
+        h4 a paycheck from a company?
 
       section
         h2 Hire from the community.
@@ -202,30 +220,34 @@ html
         h2 Maintainership
         h2 must be earned.
 
-      section
-        h3 Allow saying
+      section(data-bespoke-backdrop='no')
+        h4 Allow saying
         h2 NO.
 
+      section(data-bespoke-backdrop='forever')
+        h2 LGTM
+        h4 lasts forever.
+
       section
         h2 LGTM
-        h3 lasts forever.
+        h4 is tied to
+        h4 the individual
+        h4 who said it.
+
+      section(data-bespoke-backdrop='money')
+        h3 Love your corporate overlords
+        h2 for funding you!
 
       section
-        h2 LGTM
-        h3 is tied to the individual who said it.
-
-      section
-        h3 Love
-        p your corporate overlords
-        p for funding you!
-
-      section
-        p Collaboration and compromise
+        h2 Collaboration
+        h3 and
+        h2 compromise
         h3 is key.
 
       section
         h2 Thank You
         h3 Jess Frazelle
-        h4 @jessfraz
+        p.headroom
+          a(href='https://twitter.com/jessfraz') @jessfraz
 
     script(src='build/build.js')
