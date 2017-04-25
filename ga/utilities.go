@@ -34,7 +34,7 @@ func printPrettyJSON(v interface{}, printRaw bool) {
 		// look for Pygments to highlight code
 		var pygmentsBin = "pygmentize"
 		if _, err := exec.LookPath(pygmentsBin); err != nil {
-			printWarning(errors.New("Could not find `Pygments` installed on your system. To pretty print the json please pip install `Pygments` and make sure it is in your path."))
+			printWarning(errors.New("Could not find `Pygments` installed on your system. To pretty print the json please pip install `Pygments` and make sure it is in your path"))
 			fmt.Println(code)
 			return
 		}

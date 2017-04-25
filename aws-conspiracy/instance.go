@@ -122,7 +122,7 @@ func runInstance(ec2conn *ec2.EC2, keyName, securityGroupID, sourceAMI, instance
 	}
 
 	if len(imageResp.Images) != 1 {
-		return "", "", fmt.Errorf("The source AMI '%s' could not be found.", sourceAMI)
+		return "", "", fmt.Errorf("The source AMI '%s' could not be found", sourceAMI)
 	}
 
 	runOpts := &ec2.RunInstancesInput{
