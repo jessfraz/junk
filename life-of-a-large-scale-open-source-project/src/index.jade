@@ -8,6 +8,44 @@ html
     link(rel='stylesheet', type='text/css', href='https://fonts.googleapis.com/css?family=Merriweather|Palanquin+Dark')
     link(rel='stylesheet', type='text/css', href='build/build.css')
 
+  style.
+    .boxing {
+      background-image: url('images/boxing.jpg')
+    }
+    .fine {
+      background-image: url('images/fine.gif')
+    }
+    .ihaveopinionsaboutthings {
+      background-image: url('images/ihaveopinionsaboutthings.gif')
+    }
+    .lip-of-a-volcano {
+      background-image: url('images/lip-of-a-volcano.gif')
+    }
+    .alice {
+      background-image: url('images/alice.gif')
+    }
+    .hackers {
+      background-image: url('images/hackers.gif')
+    }
+    .hacktheplanet {
+      background-image: url('images/hacktheplanet.gif')
+    }
+    .acidburn {
+      background-image: url('images/acidburn.gif')
+    }
+    .war {
+      background-image: url('images/war.gif')
+    }
+    .elliot {
+      background-image: url('images/elliot.gif')
+    }
+    .chaos {
+      background-image: url('images/chaos.gif')
+    }
+    .mrrobot {
+      background-image: url('images/mrrobot.gif')
+    }
+
   body
 
     article
@@ -46,7 +84,7 @@ html
       section
         h1 Scaling Maintainers
 
-      section
+      section(data-bespoke-backdrop='ihaveopinionsaboutthings')
         h3 Create
         h2 explicit guidelines
         h3 for acceptable patches & release cutoffs.
@@ -55,9 +93,56 @@ html
         h1 Dealing with Vulnerabilities
 
       section
-        h1 Handling Company vs. Project Conflicts
+        h2 If your project
+        h2 is being used,
+        h2 it will have
+        h2 vulnerabilities
+        h2 discovered,
+        h3 the key is how you deal with them.
+
+      section(data-bespoke-backdrop='hackers')
+        h2 Define a process.
+
+      section(data-bespoke-backdrop='acidburn')
+        h2 Make the process public.
 
       section
+        h2 Handling everyones needs.
+
+        ul
+          li.hide
+          li Users want software without bugs.
+          li Users want to upgrade without breaking the world.
+          li Users want to know when to upgrade.
+          li Researchers/Bug reporters want updates on what is happening.
+          li Project wants to continue to instill trust.
+
+      section(data-bespoke-backdrop='mrrobot')
+        h2 Do not compromise
+        h2 on disclosure dates
+        h2 so someone can give
+        h2 a talk at blackhat.
+
+      section(data-bespoke-backdrop='elliot')
+        h2 Clearly define the maximum
+        h2 time frame for fixing a bug.
+
+      section(data-bespoke-backdrop='chaos')
+        h2 Make sure the process
+        h2 accounts for
+        h2 when things go wrong.
+        p (vendors breaking embargo)
+
+      section(data-bespoke-backdrop='lip-of-a-volcano')
+        p Shameless plug to @brandonphilips and I's talk at Kubecon
+        p on the Kubernetes Security Release Process:
+        h4
+          a(href='https://www.youtube.com/watch?v=sNjylW8FV9A') Dance Madly on the Edge of a Volcano
+
+      section
+        h1 Handling Company vs. Project Conflicts
+
+      section(data-bespoke-backdrop='boxing')
         p What happens to
         h3 fiery passion
         p when it is fueled by
@@ -67,7 +152,7 @@ html
         h2 Hire from the community.
 
       section
-        h2 Maintainership for a project
+        h2 Maintainership
         h2 must be earned.
 
       section
