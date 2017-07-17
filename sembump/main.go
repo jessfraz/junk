@@ -61,7 +61,7 @@ func main() {
 	case "major":
 		v.Major++
 	default:
-		logrus.Fatal("kind %s is not valid", kind)
+		logrus.Fatalf("kind %s is not valid", kind)
 	}
 
 	version = v.String()
@@ -76,7 +76,7 @@ func main() {
 func usageAndExit(exitCode int, message string, args ...interface{}) {
 	if message != "" {
 		fmt.Fprintf(os.Stderr, message, args...)
-		fmt.Fprintln(os.Stderr, "\n")
+		fmt.Fprint(os.Stderr, "\n\n")
 	}
 	flag.Usage()
 	fmt.Fprintln(os.Stderr, "")

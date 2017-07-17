@@ -96,7 +96,7 @@ type message struct {
 	Date      time.Time `json:"date"`
 	CreatedAt int64     `json:"created_at"`
 	Name      string    `json:"name"`
-	UserID    string    `json:user_id`
+	UserID    string    `json:"user_id"`
 	Text      string    `json:"text"`
 }
 
