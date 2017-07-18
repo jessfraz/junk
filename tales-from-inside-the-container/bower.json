@@ -1,0 +1,7 @@
+{
+  "name": "tales-from-inside-the-container",
+  "version": "0.0.0",
+  "dependencies": {
+    "prism": "gh-pages"
+  }
+}
