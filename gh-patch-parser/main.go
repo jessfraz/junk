@@ -91,11 +91,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		return err
 	}
 
-	if err = validateFormat(gh, repo, pr.Head.Sha, temp, prID, prFiles); err != nil {
-		return err
-	}
-
-	return nil
+	return validateFormat(gh, repo, pr.Head.Sha, temp, prID, prFiles)
 }
 
 // QueueOpts are the options for the nsq queue
