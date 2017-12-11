@@ -58,8 +58,11 @@ func main() {
 		v.Patch++
 	case "minor":
 		v.Minor++
+		v.Patch = 0
 	case "major":
 		v.Major++
+		v.Minor = 0
+		v.Patch = 0
 	default:
 		logrus.Fatalf("kind %s is not valid", kind)
 	}
