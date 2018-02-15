@@ -235,7 +235,7 @@ func (m *md2PDF) Convert() (string, error) {
 	m.buf = new(bytes.Buffer)
 
 	// Write document data to the buffer.
-	//fmt.Fprintf(m.buf, ".so tmac.blog\n")
+	fmt.Fprintf(m.buf, ".mso thesis.me\n")
 	fmt.Fprintf(m.buf, ".ds title %s\n", m.doc.Title)
 	fmt.Fprintf(m.buf, ".ds subtitle %s\n", m.doc.Subtitle)
 
