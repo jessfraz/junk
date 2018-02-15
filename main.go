@@ -3,9 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 
-	"github.com/jessfraz/certok/version"
+	"github.com/jessfraz/md2pdf/version"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,7 +21,7 @@ const (
 |_| |_| |_|\__,_|_____| .__/ \__,_|_|
                       |_|
 
- Convert markdown into nice looking pdfs with troff and ghostscript.
+ Convert markdown files into nice looking pdfs with troff and ghostscript.
  Version: %s
  Build: %s
 
@@ -46,7 +49,7 @@ func init() {
 	flag.Parse()
 
 	if vrsn {
-		fmt.Printf("certok version %s, build %s", version.VERSION, version.GITCOMMIT)
+		fmt.Printf("md2pdf version %s, build %s", version.VERSION, version.GITCOMMIT)
 		os.Exit(0)
 	}
 
@@ -62,7 +65,37 @@ func init() {
 }
 
 func main() {
-	fmt.Println("args", args)
+	// Convert all the files passed.
+	for _, file := range args {
+		logrus.Debugf("Reading %s", file)
+
+		b, err := ioutil.ReadFile(file)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		// Create an md2PDF struct with the data.
+		m := md2PDF{
+			data: b,
+			doc: &docData{
+				Title:    "title is here",
+				Subtitle: "subtitle is here",
+				Name:     strings.Split(filepath.Base(file), ".")[0],
+				// TODO: have a better way of getting these values.
+				Draft: true,
+			},
+		}
+
+		// Covert the file.
+		logrus.Debugf("Converting %s to a pdf", file)
+		output, err := m.Convert()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		// Print the resulting output.
+		fmt.Println(output)
+	}
 }
 
 func usageAndExit(message string, exitCode int) {

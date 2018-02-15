@@ -25,10 +25,5 @@ RUN set -x \
 	&& rm -rf /go \
 	&& echo "Build complete."
 
-FROM scratch
-
-COPY --from=builder /usr/bin/md2pdf /usr/bin/md2pdf
-COPY --from=builder /etc/ssl/certs/ /etc/ssl/certs
-
 ENTRYPOINT [ "md2pdf" ]
 CMD [ "--help" ]
