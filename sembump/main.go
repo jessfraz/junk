@@ -1,5 +1,7 @@
 package main
 
+//
+
 import (
 	"flag"
 	"fmt"
@@ -17,12 +19,14 @@ const (
 var (
 	kind  string
 	kinds = []string{"major", "minor", "patch"}
+	pre   bool
 )
 
 func init() {
 	// parse flags
 	flag.StringVar(&kind, "kind", defaultKind, fmt.Sprintf("Kind of version bump [%s]", strings.Join(kinds, " | ")))
 	flag.StringVar(&kind, "k", defaultKind, "Kind of version bump (shorthand)")
+	flag.BoolVar(&pre, "pre", false, "Bump as prerelease version")
 
 	flag.Parse()
 
@@ -53,13 +57,42 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	switch kind {
-	case "patch":
+	switch {
+	case !pre && v.Pre != nil:
+		v.Pre = nil
+	case pre && v.Pre != nil:
+		// -number
+		if len(v.Pre) == 1 && v.Pre[0].IsNum {
+			v.Pre[0].VersionNum++
+			break
+		}
+		// -tag.number
+		if len(v.Pre) == 2 && v.Pre[1].IsNum {
+			v.Pre[1].VersionNum++
+			break
+		}
+		logrus.Fatalf(`can't handle prerelease tags not of the form "-tag.number" or "-number"`)
+	case kind == "patch":
+		if pre {
+			s, _ := semver.NewPRVersion("rc")
+			n, _ := semver.NewPRVersion("1")
+			v.Pre = []semver.PRVersion{s, n}
+		}
 		v.Patch++
-	case "minor":
+	case kind == "minor":
+		if pre {
+			s, _ := semver.NewPRVersion("rc")
+			n, _ := semver.NewPRVersion("1")
+			v.Pre = []semver.PRVersion{s, n}
+		}
 		v.Minor++
 		v.Patch = 0
-	case "major":
+	case kind == "major":
+		if pre {
+			s, _ := semver.NewPRVersion("rc")
+			n, _ := semver.NewPRVersion("1")
+			v.Pre = []semver.PRVersion{s, n}
+		}
 		v.Major++
 		v.Minor = 0
 		v.Patch = 0
