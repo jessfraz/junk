@@ -16,7 +16,7 @@ type repository struct {
 	Name        string `json:"name,omitempty"`
 	FullName    string `json:"full_name,omitempty"`
 	Description string `json:"description,omitempty"`
-	Fork        bool   `json:"fork, omitempty"`
+	Fork        bool   `json:"fork,omitempty"`
 }
 
 func main() {
