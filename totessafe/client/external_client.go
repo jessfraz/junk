@@ -1,9 +1,10 @@
-package reflector
+package client
 
 import (
-"fmt"
-"github.com/kubicorn/kubicorn/pkg/logger"
-"google.golang.org/grpc"
+	"fmt"
+
+	"github.com/kubicorn/kubicorn/pkg/logger"
+	"google.golang.org/grpc"
 )
 
 type ExternalReflectorClient struct {
@@ -11,7 +12,6 @@ type ExternalReflectorClient struct {
 	port     int
 	Client   ReflectorExternalClient
 }
-
 
 func NewExternalReflectorClient(hostname string, port int) *ExternalReflectorClient {
 	return &ExternalReflectorClient{
@@ -35,4 +35,3 @@ func (c *ExternalReflectorClient) Connect() error {
 	c.Client = client
 	return nil
 }
-

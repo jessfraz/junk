@@ -1,9 +1,10 @@
-package reflector
+package client
 
 import (
-"fmt"
-"github.com/kubicorn/kubicorn/pkg/logger"
-"google.golang.org/grpc"
+	"fmt"
+
+	"github.com/kubicorn/kubicorn/pkg/logger"
+	"google.golang.org/grpc"
 )
 
 type InternalReflectorClient struct {
@@ -11,7 +12,6 @@ type InternalReflectorClient struct {
 	port     int
 	Client   ReflectorInternalClient
 }
-
 
 func NewInternalReflectorClient(hostname string, port int) *InternalReflectorClient {
 	return &InternalReflectorClient{
@@ -35,4 +35,3 @@ func (c *InternalReflectorClient) Connect() error {
 	c.Client = client
 	return nil
 }
-

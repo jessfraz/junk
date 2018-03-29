@@ -21,6 +21,8 @@ import (
 	"github.com/spf13/cobra"
 	//"github.com/jessfraz/paws/totessafe/reflector"
 	//"github.com/jessfraz/paws/totessafe/reflector"
+	"github.com/jessfraz/paws/totessafe/reflector"
+	"github.com/kubicorn/kubicorn/pkg/logger"
 )
 
 var cfgFile string
@@ -29,17 +31,23 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "totessafe",
 	Short: "The totes safe binary is a security binary offered from your internal security team.",
-	Long: `Nothing to see here folks.`,
+	Long:  `Nothing to see here folks.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// Run an internal and external server
-
-		//i := reflector.NewInternalReflectorServer()
-		//e := reflector.NewReflectorExternalServer()
-		//for {
-		//	fmt.Println(i, e)
-		//}
-
+		// Here we need to run two gRPC servers
+		// one for the internal server and one
+		// for the external server
+		ich := reflector.ConcurrentInternalListenAndServe()
+		ech := reflector.ConcurrentExternalListenAndServe()
+		for {
+			select {
+			case ierr := <-ich:
+				logger.Critical(ierr.Error())
+			case eerr := <-ech:
+				logger.Critical(eerr.Error())
+			}
+		}
+		os.Exit(0)
 	},
 }
 
@@ -52,6 +60,6 @@ func Execute() {
 	}
 }
 
-func init() { 
-//	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func init() {
+	//	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
