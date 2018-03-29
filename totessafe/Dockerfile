@@ -1,0 +1,2 @@
+FROM golang:latest
+CMD [""]

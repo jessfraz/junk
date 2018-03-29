@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "jessfraz.paws";
+option java_outer_classname = "Paws";
+option optimize_for = SPEED;
+
+package reflector;
+
+service ReflectorInternal {
+  rpc Set (PawsBlob) returns (ReturnType);
+}
+
+service ReflectorExternal {
+  rpc Get (RequestType) returns (PawsBlob);
+}
+
+message PawsBlob {
+    string data = 1;
+}
+
+message ReturnType {
+
+}
+
+message RequestType {
+
+}
