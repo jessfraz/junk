@@ -1,4 +1,4 @@
-package reflector
+package client
 
 import (
 	"golang.org/x/net/context"
@@ -11,8 +11,7 @@ type InternalReflectorServer struct {
 }
 
 func NewInternalReflectorServer() *InternalReflectorServer {
-	return &InternalReflectorServer{
-	}
+	return &InternalReflectorServer{}
 }
 
 // Set is used to set new data to a running gRPC service. Set works like an upsert and will update or create
@@ -24,7 +23,6 @@ func (t InternalReflectorServer) Set(ctx context.Context, request *PawsBlob) (*R
 	// TODO Logic with *PawsBlob
 	//
 	//
-
 
 	response := &ReturnType{}
 	return response, nil

@@ -1,4 +1,4 @@
-package reflector
+package client
 
 import (
 	//"github.com/kris-nova/terraformctl/parser"
@@ -13,8 +13,7 @@ type ExternalReflectorServer struct {
 }
 
 func NewReflectorExternalServer() *ExternalReflectorServer {
-	return &ExternalReflectorServer{
-	}
+	return &ExternalReflectorServer{}
 }
 
 // Get is used to retrieve data from a running gRPC service.
@@ -25,7 +24,6 @@ func (t ExternalReflectorServer) Get(ctx context.Context, requestType *RequestTy
 	// TODO Logic with *PawsBlob
 	//
 	//
-
 
 	response := &PawsBlob{}
 	return response, nil

@@ -12,7 +12,7 @@ It has these top-level messages:
 	ReturnType
 	RequestType
 */
-package reflector
+package client
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
