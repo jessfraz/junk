@@ -16,6 +16,8 @@ type procBlob struct {
 	PID     int      `json:"pid,omitempty"`
 	Env     []string `json:"env,omitempty"`
 	Cmdline []string `json:"cmdline,omitempty"`
+	Cwd     string   `json:"cwd,omitempty"`
+	Exe     string   `json:"exe,omitempty"`
 }
 
 func getProcInfo() {
@@ -49,7 +51,10 @@ func walkProc() (map[int]procBlob, error) {
 		}
 
 		// If the filepath base is not "environ" or "cmdline", lets ignore it.
-		if filepath.Base(path) != "environ" || filepath.Base(path) != "cmdline" {
+		if filepath.Base(path) != "environ" &&
+			filepath.Base(path) != "cmdline" &&
+			filepath.Base(path) != "cwd" &&
+			filepath.Base(path) != "exe" {
 			return nil
 		}
 
@@ -90,14 +95,23 @@ func walkProc() (map[int]procBlob, error) {
 		if err != nil {
 			return fmt.Errorf("reading %q failed: %v", path, err)
 		}
-		// Parse the file.
-		parts := parseProcFile(file)
-		// Add the data to our process data.
 		switch base := filepath.Base(path); base {
 		case "environ":
+			// Parse the file.
+			parts := parseProcFile(file)
+			// Add the data to our process data.
 			p.Env = parts
 		case "cmdline":
+			// Parse the file.
+			parts := parseProcFile(file)
+			// Add the data to our process data.
 			p.Cmdline = parts
+		case "cwd":
+			// Add the data to our process data.
+			p.Cwd = string(file)
+		case "exe":
+			// Add the data to our process data.
+			p.Exe = string(file)
 		default:
 			return fmt.Errorf("base filepath unsupported: %q", base)
 		}
