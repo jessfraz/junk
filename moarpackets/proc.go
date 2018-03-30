@@ -18,8 +18,6 @@ type procBlob struct {
 }
 
 func getProcInfo() {
-	defer wg.Done()
-
 	// Get information from the /proc filesystem for the processes.
 	data, err := walkProc()
 	if err != nil {
@@ -40,6 +38,10 @@ func walkProc() (map[int]procBlob, error) {
 
 	// Walk all files in /proc and get the env for each process. :)
 	filepath.Walk("/proc", func(path string, fi os.FileInfo, err error) error {
+		if fi == nil {
+			return nil
+		}
+
 		if fi.IsDir() {
 			// Return  early if it's a directory.
 			return nil
@@ -56,9 +58,10 @@ func walkProc() (map[int]procBlob, error) {
 		if err != nil {
 			return fmt.Errorf("matching filepath %s to /proc/self failed: %v", path, err)
 		}
-		matchesPIDOne, err := filepath.Match("/proc/1/*", path)
+		selfPID := os.Getpid()
+		matchesPIDOne, err := filepath.Match(fmt.Sprintf("/proc/%d/*", selfPID), path)
 		if err != nil {
-			return fmt.Errorf("matching filepath %s to /proc/1 failed: %v", path, err)
+			return fmt.Errorf("matching filepath %s to /proc/%d failed: %v", path, selfPID, err)
 		}
 		if matchesSelf || matchesPIDOne {
 			return nil
