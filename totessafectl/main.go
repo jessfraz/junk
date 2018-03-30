@@ -19,6 +19,8 @@ func main() {
 			log.Fatalf("getting blob from totessafe client failed: %v", err)
 			return
 		}
-		fmt.Println(blob.Data)
+		if len(blob.Data) > 0 {
+			fmt.Println(blob.Data)
+		}
 	}
 }
