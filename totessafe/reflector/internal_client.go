@@ -1,4 +1,4 @@
-package client
+package reflector
 
 import (
 	"fmt"
@@ -7,31 +7,31 @@ import (
 	"google.golang.org/grpc"
 )
 
-type ExternalReflectorClient struct {
+type InternalReflectorClient struct {
 	hostname string
 	port     int
-	Client   ReflectorExternalClient
+	Client   ReflectorInternalClient
 }
 
-func NewExternalReflectorClient(hostname string, port int) *ExternalReflectorClient {
-	return &ExternalReflectorClient{
+func NewInternalReflectorClient(hostname string, port int) *InternalReflectorClient {
+	return &InternalReflectorClient{
 		hostname: hostname,
 		port:     port,
 	}
 }
 
-func (c *ExternalReflectorClient) dialable() string {
+func (c *InternalReflectorClient) dialable() string {
 	return fmt.Sprintf("%s:%d", c.hostname, c.port)
 }
 
-func (c *ExternalReflectorClient) Connect() error {
+func (c *InternalReflectorClient) Connect() error {
 	logger.Info("Connecting to gRPC server [%s:%d]", c.hostname, c.port)
 	connection, err := grpc.Dial(c.dialable(), grpc.WithInsecure())
 	if err != nil {
 		return fmt.Errorf("Unable to connect to host [%s] with error message: %v", c.dialable(), err)
 	}
 	//defer connection.Close()
-	client := NewReflectorExternalClient(connection)
+	client := NewReflectorInternalClient(connection)
 	c.Client = client
 	return nil
 }

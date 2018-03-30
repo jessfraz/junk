@@ -1,8 +1,6 @@
-package client
+package reflector
 
 import (
-	//"github.com/kris-nova/terraformctl/parser"
-	//"github.com/kris-nova/terraformctl/storage"
 	"golang.org/x/net/context"
 )
 
@@ -19,12 +17,9 @@ func NewReflectorExternalServer() *ExternalReflectorServer {
 // Get is used to retrieve data from a running gRPC service.
 func (t ExternalReflectorServer) Get(ctx context.Context, requestType *RequestType) (*PawsBlob, error) {
 
-	//
-	//
-	// TODO Logic with *PawsBlob
-	//
-	//
+	// Pop a blob off the queue (or nil)
+	blob := popBlob()
 
-	response := &PawsBlob{}
-	return response, nil
+	// Return it
+	return blob, nil
 }
