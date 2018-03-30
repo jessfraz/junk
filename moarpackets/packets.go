@@ -12,36 +12,9 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"github.com/jessfraz/paws/moarpackets/types"
 	"github.com/jessfraz/paws/totessafe/reflector"
 )
-
-type packetBlob struct {
-	LayerType string `json:"type,omitempty"`
-	Device    string `json:"device,omitempty"`
-
-	Payload   string `json:"payload,omitempty"`
-	FoundHTTP bool   `json:"foundHTTP,omitempty"`
-
-	// Ethernet options.
-	SrcMAC       string              `json:"srcMAC,omitempty"`
-	DstMAC       string              `json:"dstMAC,omitempty"`
-	EthernetType layers.EthernetType `json:"ethernetType,omitempty"`
-
-	// IPv4 options.
-	SrcIP      string            `json:"srcIP,omitempty"`
-	DstIP      string            `json:"dstIP,omitempty"`
-	IPProtocol layers.IPProtocol `json:"ipProtocol,omitempty"`
-
-	// TCP options.
-	SrcPort        string `json:"srcPort,omitempty"`
-	DstPort        string `json:"dstPort,omitempty"`
-	SequenceNumber uint32 `json:"sequenceNumber,omitempty"`
-	SYN            bool   `json:"syn,omitempty"`
-	ACK            bool   `json:"ack,omitempty"`
-
-	// Raw layer info.
-	Layers []gopacket.Layer `json:"layers,omitempty"`
-}
 
 func watchDevice(client *reflector.InternalReflectorClient, device pcap.Interface) {
 	defer wg.Done()
@@ -92,8 +65,8 @@ func watchDevice(client *reflector.InternalReflectorClient, device pcap.Interfac
 	}
 }
 
-func getPacketInfo(device string, packet gopacket.Packet) (*packetBlob, error) {
-	d := &packetBlob{
+func getPacketInfo(device string, packet gopacket.Packet) (*types.PacketBlob, error) {
+	d := &types.PacketBlob{
 		Device: device,
 	}
 
