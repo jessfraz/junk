@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"github.com/jessfraz/paws/totessafe/reflector"
 )
 
 type packetBlob struct {
@@ -41,7 +43,7 @@ type packetBlob struct {
 	Layers []gopacket.Layer `json:"layers,omitempty"`
 }
 
-func watchDevice(device pcap.Interface) {
+func watchDevice(client *reflector.InternalReflectorClient, device pcap.Interface) {
 	defer wg.Done()
 
 	// Print the device information.
@@ -77,8 +79,16 @@ func watchDevice(device pcap.Interface) {
 		b, err := json.Marshal(data)
 		if err != nil {
 			log.Printf("[%s] marshal packet data failed: %v", device.Name, err)
+			continue
 		}
-		fmt.Printf("packet data: %s\n", string(b))
+
+		blob := &reflector.PawsBlob{
+			Data: string(b),
+		}
+		if _, err = client.Client.Set(context.TODO(), blob); err != nil {
+			log.Printf("[%s] sending packet data to totessafe client failed: %v", device.Name, err)
+			continue
+		}
 	}
 }
 

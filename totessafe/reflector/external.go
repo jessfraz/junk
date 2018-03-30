@@ -12,7 +12,7 @@ import (
 func ConcurrentExternalListenAndServe(externalPort int) chan error {
 	ch := make(chan error)
 	go func() {
-		port := fmt.Sprintf(":%s", strconv.Itoa(externalPort))
+		port := fmt.Sprintf("0.0.0.0:%s", strconv.Itoa(externalPort))
 		listener, err := net.Listen("tcp", port)
 		if err != nil {
 			ch <- fmt.Errorf("Unable to open TCP socket to listen on: %v", err)

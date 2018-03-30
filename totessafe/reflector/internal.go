@@ -12,7 +12,7 @@ import (
 func ConcurrentInternalListenAndServe(internalPort int) chan error {
 	ch := make(chan error)
 	go func() {
-		port := fmt.Sprintf(":%s", strconv.Itoa(internalPort))
+		port := fmt.Sprintf("0.0.0.0:%s", strconv.Itoa(internalPort))
 		listener, err := net.Listen("tcp", port)
 		if err != nil {
 			ch <- fmt.Errorf("Unable to open TCP socket to listen on: %v", err)

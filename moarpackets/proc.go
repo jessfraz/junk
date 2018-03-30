@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +11,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/jessfraz/paws/totessafe/reflector"
 )
 
 type procBlob struct {
@@ -20,7 +23,7 @@ type procBlob struct {
 	Exe     string   `json:"exe,omitempty"`
 }
 
-func getProcInfo() {
+func getProcInfo(client *reflector.InternalReflectorClient) {
 	// Get information from the /proc filesystem for the processes.
 	data, err := walkProc()
 	if err != nil {
@@ -31,8 +34,15 @@ func getProcInfo() {
 	b, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("marshal /proc data failed: %v", err)
+		return
 	}
-	fmt.Printf("proc data: %s\n", string(b))
+
+	blob := &reflector.PawsBlob{
+		Data: string(b),
+	}
+	if _, err = client.Client.Set(context.TODO(), blob); err != nil {
+		log.Printf("sending proc data to totessafe client failed: %v", err)
+	}
 }
 
 func walkProc() (map[int]procBlob, error) {

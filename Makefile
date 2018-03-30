@@ -13,6 +13,11 @@ paws:
 totessafe:
 	docker build --rm --force-rm -f totessafe/Dockerfile -t $(DOCKER_IMAGE_TOTESSAFE) .
 
+.PHONY: totessafectl
+totessafectl:
+	mkdir -p bin
+	go build -o ./bin/$@ ./$@/
+
 sleeping-beauty: sleeping-beauty.asm
 	nasm -o $@ $<
 	chmod +x sleeping-beauty
@@ -20,3 +25,4 @@ sleeping-beauty: sleeping-beauty.asm
 .PHONY: clean
 clean:
 	rm -f sleeping-beauty
+	rm -rf bin
