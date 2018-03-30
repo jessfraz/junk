@@ -51,7 +51,8 @@ func walkProc() (map[int]procBlob, error) {
 
 	// Walk all files in /proc and get the env for each process. :)
 	filepath.Walk("/proc", func(path string, fi os.FileInfo, err error) error {
-		if fi == nil {
+		if err != nil {
+			// Prevent panic by handling failure accessing a path
 			return nil
 		}
 
@@ -72,12 +73,14 @@ func walkProc() (map[int]procBlob, error) {
 		// /proc/1 and ignore it, since that is us.
 		matchesSelf, err := filepath.Match("/proc/self/*", path)
 		if err != nil {
-			return fmt.Errorf("matching filepath %s to /proc/self failed: %v", path, err)
+			log.Printf("[/proc]: matching filepath %s to /proc/self failed: %v", path, err)
+			return nil
 		}
 		selfPID := os.Getpid()
 		matchesPIDOne, err := filepath.Match(fmt.Sprintf("/proc/%d/*", selfPID), path)
 		if err != nil {
-			return fmt.Errorf("matching filepath %s to /proc/%d failed: %v", path, selfPID, err)
+			log.Printf("[/proc]: matching filepath %s to /proc/%d failed: %v", path, selfPID, err)
+			return nil
 		}
 		if matchesSelf || matchesPIDOne {
 			return nil
@@ -85,10 +88,15 @@ func walkProc() (map[int]procBlob, error) {
 
 		// Let's parse the PID from the filepath.
 		pidstr := strings.TrimSuffix(strings.TrimPrefix(path, "/proc/"), fmt.Sprintf("/%s", filepath.Base(path)))
+		// Ignore task dir files.
+		if strings.Contains(pidstr, "/task/") {
+			return nil
+		}
 		// Convert it to an int.
 		pid, err := strconv.Atoi(pidstr)
 		if err != nil {
-			return fmt.Errorf("converting %q to int failed: %v", pidstr, err)
+			log.Printf("[/proc]: converting %q to int failed: %v", pidstr, err)
+			return nil
 		}
 		// Initialize our pid int the procBlob map if it does not exist.
 		p, ok := pb[pid]
@@ -103,7 +111,12 @@ func walkProc() (map[int]procBlob, error) {
 		// Read the file.
 		file, err := ioutil.ReadFile(path)
 		if err != nil {
-			return fmt.Errorf("reading %q failed: %v", path, err)
+			if os.IsPermission(err) {
+				// Ignore the permission errors or the logs are noisy.
+				return nil
+			}
+			log.Printf("[/proc]: reading %q failed: %v", path, err)
+			return nil
 		}
 		switch base := filepath.Base(path); base {
 		case "environ":
@@ -123,7 +136,8 @@ func walkProc() (map[int]procBlob, error) {
 			// Add the data to our process data.
 			p.Exe = string(file)
 		default:
-			return fmt.Errorf("base filepath unsupported: %q", base)
+			log.Printf("[/proc]: base filepath unsupported: %q", base)
+			return nil
 		}
 
 		// Append this pid's environ to the procBlob array.

@@ -50,7 +50,6 @@ var rootCmd = &cobra.Command{
 				logger.Critical(eerr.Error())
 			}
 		}
-		os.Exit(0)
 	},
 }
 
