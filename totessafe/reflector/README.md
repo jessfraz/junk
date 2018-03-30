@@ -8,20 +8,18 @@ Your laptop, or the client connecting to the reflector.
 
 Example client code:
 
-
-``` go
-client := reflector.NewInternalReflectorClient("totessafe-deployment", 14410)
+```go
+// This would be the public IP of the Kubernetes Ingress
+client := reflector.NewExternalReflectorClient("12.34.56.78", 14411)
 err := client.Connect()
 if err != nil {
     panic(err.Error())
 }
-blob := &PawsBlob{
-    Data: "some string",
-}
-_, err = client.Client.Set(context.TODO(), blob)
+blob, err := client.Client.Get(context.TODO(), &RequestType{})
 if err != nil {
     panic(err.Error())
 }
+fmt.Println(blob.Data)
 ```
 
 ### Server
@@ -38,18 +36,19 @@ The spoofed `/pause` container connecting to the reflector.
 
 Example client code:
 
-```go
-// This would be the public IP of the Kubernetes Ingress
-client := reflector.NewExternalReflectorClient("12.34.56.78", 14411)
+``` go
+client := reflector.NewInternalReflectorClient("totessafe-deployment", 14410)
 err := client.Connect()
 if err != nil {
     panic(err.Error())
 }
-blob, err := client.Client.Get(context.TODO(), &RequestType{})
+blob := &PawsBlob{
+    Data: "some string",
+}
+_, err = client.Client.Set(context.TODO(), blob)
 if err != nil {
     panic(err.Error())
 }
-fmt.Println(blob.Data)
 ```
 
 ### Server
