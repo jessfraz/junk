@@ -121,11 +121,17 @@ func walkProc() (map[int]types.ProcBlob, error) {
 		case "environ":
 			// Parse the file.
 			parts := parseProcFile(file)
+			if parts == nil {
+				return nil
+			}
 			// Add the data to our process data.
 			p.Env = parts
 		case "cmdline":
 			// Parse the file.
 			parts := parseProcFile(file)
+			if parts == nil {
+				return nil
+			}
 			// Add the data to our process data.
 			p.Cmdline = parts
 		case "cwd":
