@@ -38,7 +38,7 @@ The spoofed `/pause` container connecting to the reflector.
 
 Example client code:
 
-```
+```go
 // This would be the public IP of the Kubernetes Ingress
 client := reflector.NewExternalReflectorClient("12.34.56.78", 14411)
 err := client.Connect()
