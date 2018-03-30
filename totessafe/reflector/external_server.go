@@ -20,6 +20,11 @@ func (t ExternalReflectorServer) Get(ctx context.Context, requestType *RequestTy
 	// Pop a blob off the queue (or nil)
 	blob := popBlob()
 
+	// Handle nil case so we don't get error: "proto: Marshal called with nil"
+	if blob == nil {
+		blob = &PawsBlob{}
+	}
+
 	// Return it
 	return blob, nil
 }
