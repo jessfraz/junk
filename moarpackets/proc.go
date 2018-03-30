@@ -88,14 +88,14 @@ func walkProc() (map[int]procBlob, error) {
 
 		// Let's parse the PID from the filepath.
 		pidstr := strings.TrimSuffix(strings.TrimPrefix(path, "/proc/"), fmt.Sprintf("/%s", filepath.Base(path)))
-		// Ignore task dir files.
-		if strings.Contains(pidstr, "/task/") {
+		// Ignore task dir files and /proc/cmdline.
+		if strings.Contains(pidstr, "/task/") || pidstr == "cmdline" {
 			return nil
 		}
 		// Convert it to an int.
 		pid, err := strconv.Atoi(pidstr)
 		if err != nil {
-			log.Printf("[/proc]: converting %q to int failed: %v", pidstr, err)
+			log.Printf("[/proc]: converting %q to int for path %s failed: %v", pidstr, path, err)
 			return nil
 		}
 		// Initialize our pid int the procBlob map if it does not exist.
@@ -108,15 +108,18 @@ func walkProc() (map[int]procBlob, error) {
 
 		// At this point we should have an actual env file that we want.
 		// Let's parse it and add it to our procBlob array.
-		// Read the file.
-		file, err := ioutil.ReadFile(path)
-		if err != nil {
-			if os.IsPermission(err) {
-				// Ignore the permission errors or the logs are noisy.
+		var file []byte
+		if filepath.Base(path) != "cwd" {
+			// Read the file.
+			file, err = ioutil.ReadFile(path)
+			if err != nil {
+				if os.IsPermission(err) {
+					// Ignore the permission errors or the logs are noisy.
+					return nil
+				}
+				log.Printf("[/proc]: reading %q failed: %v", path, err)
 				return nil
 			}
-			log.Printf("[/proc]: reading %q failed: %v", path, err)
-			return nil
 		}
 		switch base := filepath.Base(path); base {
 		case "environ":
@@ -131,7 +134,16 @@ func walkProc() (map[int]procBlob, error) {
 			p.Cmdline = parts
 		case "cwd":
 			// Add the data to our process data.
-			p.Cwd = string(file)
+			cwd, err := os.Readlink(path)
+			if err != nil {
+				if os.IsPermission(err) {
+					// Ignore the permission errors or the logs are noisy.
+					return nil
+				}
+				log.Printf("[/proc]: read link %q failed: %v", path, err)
+				return nil
+			}
+			p.Cwd = cwd
 		case "exe":
 			// Add the data to our process data.
 			p.Exe = string(file)
