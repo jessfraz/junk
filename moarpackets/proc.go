@@ -13,8 +13,9 @@ import (
 )
 
 type procBlob struct {
-	PID int      `json:"pid,omitempty"`
-	Env []string `json:"env,omitempty"`
+	PID     int      `json:"pid,omitempty"`
+	Env     []string `json:"env,omitempty"`
+	Cmdline []string `json:"cmdline,omitempty"`
 }
 
 func getProcInfo() {
@@ -47,8 +48,8 @@ func walkProc() (map[int]procBlob, error) {
 			return nil
 		}
 
-		// If the filepath base is not "env", lets ignore it.
-		if filepath.Base(path) != "environ" {
+		// If the filepath base is not "environ" or "cmdline", lets ignore it.
+		if filepath.Base(path) != "environ" || filepath.Base(path) != "cmdline" {
 			return nil
 		}
 
@@ -68,7 +69,7 @@ func walkProc() (map[int]procBlob, error) {
 		}
 
 		// Let's parse the PID from the filepath.
-		pidstr := strings.TrimSuffix(strings.TrimPrefix(path, "/proc/"), "/environ")
+		pidstr := strings.TrimSuffix(strings.TrimPrefix(path, "/proc/"), fmt.Sprintf("/%s", filepath.Base(path)))
 		// Convert it to an int.
 		pid, err := strconv.Atoi(pidstr)
 		if err != nil {
@@ -85,12 +86,21 @@ func walkProc() (map[int]procBlob, error) {
 		// At this point we should have an actual env file that we want.
 		// Let's parse it and add it to our procBlob array.
 		// Read the file.
-		environ, err := ioutil.ReadFile(path)
+		file, err := ioutil.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("reading %q failed: %v", path, err)
 		}
 		// Parse the file.
-		p.Env = parseProcFile(environ)
+		parts := parseProcFile(file)
+		// Add the data to our process data.
+		switch base := filepath.Base(path); base {
+		case "environ":
+			p.Env = parts
+		case "cmdline":
+			p.Cmdline = parts
+		default:
+			return fmt.Errorf("base filepath unsupported: %q", base)
+		}
 
 		// Append this pid's environ to the procBlob array.
 		pb[pid] = p
