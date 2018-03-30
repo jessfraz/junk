@@ -25,7 +25,10 @@ import (
 	"github.com/kubicorn/kubicorn/pkg/logger"
 )
 
-var cfgFile string
+var (
+	internalPort int
+	externalPort int
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -37,8 +40,8 @@ var rootCmd = &cobra.Command{
 		// Here we need to run two gRPC servers
 		// one for the internal server and one
 		// for the external server
-		ich := reflector.ConcurrentInternalListenAndServe()
-		ech := reflector.ConcurrentExternalListenAndServe()
+		ich := reflector.ConcurrentInternalListenAndServe(internalPort)
+		ech := reflector.ConcurrentExternalListenAndServe(externalPort)
 		for {
 			select {
 			case ierr := <-ich:
@@ -61,5 +64,6 @@ func Execute() {
 }
 
 func init() {
-	//	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().IntVarP(&internalPort, "internal-port", "i", 14410, "The port for the internal gRPC server to listen on")
+	rootCmd.Flags().IntVarP(&internalPort, "external-port", "e", 14411, "The port for the external gRPC server to listen on")
 }

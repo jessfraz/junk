@@ -1,4 +1,4 @@
-package client
+package reflector
 
 import (
 	"golang.org/x/net/context"
@@ -18,12 +18,10 @@ func NewInternalReflectorServer() *InternalReflectorServer {
 // as needed.
 func (t InternalReflectorServer) Set(ctx context.Context, request *PawsBlob) (*ReturnType, error) {
 
-	//
-	//
-	// TODO Logic with *PawsBlob
-	//
-	//
+	// Add the blob to the queue
+	addBlob(request)
 
+	// Return nothing
 	response := &ReturnType{}
 	return response, nil
 }
