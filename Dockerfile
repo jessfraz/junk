@@ -9,7 +9,7 @@ RUN apk add --no-cache \
 COPY . /go/src/github.com/jessfraz/paws
 WORKDIR /go/src/github.com/jessfraz/paws
 ENV CGO_ENABLED=1
-RUN go build -installsuffix netgo -ldflags '-w -extldflags -static' -tags 'netgo cgo static_build' -o /usr/bin/moarpackets ./moarpackets/...
+RUN go build -installsuffix netgo -ldflags '-w -extldflags -static' -tags 'netgo cgo static_build' -o /usr/bin/moarpackets ./moarpackets/
 
 FROM alpine:latest AS assembly-base
 RUN apk add --no-cache \
@@ -22,4 +22,4 @@ RUN make sleeping-beauty
 FROM alpine:latest
 COPY --from=go-base /usr/bin/moarpackets /usr/bin/
 COPY --from=assembly-base /usr/src/sleeping-beauty /usr/bin/
-CMD ["moarpackets"]
+ENTRYPOINT ["moarpackets"]
