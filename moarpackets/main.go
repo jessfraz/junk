@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/gopacket/pcap"
+	"github.com/jessfraz/paws/totessafe/reflector"
 )
 
 var (
@@ -31,6 +32,12 @@ func main() {
 		}
 	}()
 
+	// Create our client to totessafe.
+	client := reflector.NewInternalReflectorClient("totessafe.contained.af", 14410)
+	if err := client.Connect(); err != nil {
+		log.Fatalf("creating client to totessafe failed: %v", err)
+	}
+
 	// Process network packets.
 	// Find all devices.
 	devices, err := pcap.FindAllDevs()
@@ -40,15 +47,15 @@ func main() {
 	// Iterate over the devices and watch for packets.
 	for _, device := range devices {
 		wg.Add(1)
-		go watchDevice(device)
+		go watchDevice(client, device)
 	}
 
 	// Get information from the /proc filesystem for the processes.
-	go func(t *time.Ticker) {
+	go func(t *time.Ticker, client *reflector.InternalReflectorClient) {
 		for range t.C {
-			getProcInfo()
+			getProcInfo(client)
 		}
-	}(ticker)
+	}(ticker, client)
 
 	wg.Wait()
 }

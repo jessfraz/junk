@@ -50,7 +50,6 @@ var rootCmd = &cobra.Command{
 				logger.Critical(eerr.Error())
 			}
 		}
-		os.Exit(0)
 	},
 }
 
@@ -65,5 +64,5 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().IntVarP(&internalPort, "internal-port", "i", 14410, "The port for the internal gRPC server to listen on")
-	rootCmd.Flags().IntVarP(&internalPort, "external-port", "e", 14411, "The port for the external gRPC server to listen on")
+	rootCmd.Flags().IntVarP(&externalPort, "external-port", "e", 14411, "The port for the external gRPC server to listen on")
 }

