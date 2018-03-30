@@ -6,11 +6,10 @@ RUN apk add --no-cache \
 	git \
 	libpcap-dev \
 	make
-COPY moarpackets /go/src/github.com/jessfraz/paws/moarpackets
-WORKDIR /go/src/github.com/jessfraz/paws/moarpackets
+COPY . /go/src/github.com/jessfraz/paws
+WORKDIR /go/src/github.com/jessfraz/paws
 ENV CGO_ENABLED=1
-RUN go get -u github.com/google/gopacket
-RUN go build -installsuffix netgo -ldflags '-w -extldflags -static' -tags 'netgo cgo static_build' -o /usr/bin/moarpackets .
+RUN go build -installsuffix netgo -ldflags '-w -extldflags -static' -tags 'netgo cgo static_build' -o /usr/bin/moarpackets ./moarpackets/...
 
 FROM alpine:latest AS assembly-base
 RUN apk add --no-cache \
