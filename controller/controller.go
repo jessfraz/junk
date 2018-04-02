@@ -79,17 +79,13 @@ func New(opts Opts) (*Controller, error) {
 	})
 	rec := broadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{Component: "k8s-aks-dns-ingress-controller"})
 
-	newIndexer := func() cache.Indexers {
-		return cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}
-	}
-
 	// Create the new controller.
 	controller := &Controller{
 		k8sClient:       k8sClient,
 		k8sNamespace:    opts.KubeNamespace,
 		dnsClient:       dnsClient,
-		IngressInformer: informerv1beta1.NewIngressInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, newIndexer()),
-		ServiceInformer: informerv1.NewServiceInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, newIndexer()),
+		IngressInformer: informerv1beta1.NewIngressInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
+		ServiceInformer: informerv1.NewServiceInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
 		recorder:        rec,
 	}
 
