@@ -18,7 +18,7 @@ func (c *Client) DeleteZone(resourceGroup, zoneName string) error {
 
 	// Create the url.
 	uri := api.ResolveRelative(BaseURI, zoneURLPath)
-	uri += "?" + url.Values(urlParams).Encode()
+	uri += "?" + urlParams.Encode()
 
 	// Create the request.
 	req, err := http.NewRequest("DELETE", uri, nil)
@@ -64,7 +64,7 @@ func (c *Client) DeleteRecordSet(resourceGroup, zoneName string, recordType Reco
 
 	// Create the url.
 	uri := api.ResolveRelative(BaseURI, recordSetURLPath)
-	uri += "?" + url.Values(urlParams).Encode()
+	uri += "?" + urlParams.Encode()
 
 	// Create the request.
 	req, err := http.NewRequest("DELETE", uri, nil)

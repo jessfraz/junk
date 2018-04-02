@@ -34,16 +34,12 @@ func NewAuthentication(azureCloud, clientID, clientSecret, subscriptionID, tenan
 	switch azureCloud {
 	case PublicCloud.Name:
 		environment = PublicCloud
-		break
 	case USGovernmentCloud.Name:
 		environment = USGovernmentCloud
-		break
 	case ChinaCloud.Name:
 		environment = ChinaCloud
-		break
 	case GermanCloud.Name:
 		environment = GermanCloud
-		break
 	}
 
 	return &Authentication{

@@ -17,7 +17,9 @@ const (
 	zonesListURLPath                = "subscriptions/{{.subscriptionId}}/providers/Microsoft.Network/dnszones"
 	zonesListByResourceGroupURLPath = "subscriptions/{{.subscriptionId}}/resourceGroups/{{.resourceGroup}}/providers/Microsoft.Network/dnsZones"
 
-	recordSetURLPath = "subscriptions/{{.subscriptionId}}/resourceGroups/{{.resourceGroup}}/providers/Microsoft.Network/dnsZones/{{.zoneName}}/{{.recordType}}/{{.relativeRecordSetName}}"
+	recordSetURLPath            = "subscriptions/{{.subscriptionId}}/resourceGroups/{{.resourceGroup}}/providers/Microsoft.Network/dnsZones/{{.zoneName}}/{{.recordType}}/{{.relativeRecordSetName}}"
+	recordSetsListURLPath       = "subscriptions/{{.subscriptionId}}/resourceGroups/{{.resourceGroup}}/providers/Microsoft.Network/dnsZones/{{.zoneName}}/recordsets"
+	recordSetsListByTypeURLPath = "subscriptions/{{.subscriptionId}}/resourceGroups/{{.resourceGroup}}/providers/Microsoft.Network/dnsZones/{{.zoneName}}/{{.recordType}}"
 )
 
 // Client is a client for interacting with Azure DNS.

@@ -20,7 +20,7 @@ func (c *Client) CreateZone(resourceGroup, zoneName string, zone Zone) (*Zone, e
 
 	// Create the url.
 	uri := api.ResolveRelative(BaseURI, zoneURLPath)
-	uri += "?" + url.Values(urlParams).Encode()
+	uri += "?" + urlParams.Encode()
 
 	// Create the body for the request.
 	b := new(bytes.Buffer)
@@ -76,7 +76,7 @@ func (c *Client) CreateRecordSet(resourceGroup, zoneName string, recordType Reco
 
 	// Create the url.
 	uri := api.ResolveRelative(BaseURI, recordSetURLPath)
-	uri += "?" + url.Values(urlParams).Encode()
+	uri += "?" + urlParams.Encode()
 
 	// Create the body for the request.
 	b := new(bytes.Buffer)

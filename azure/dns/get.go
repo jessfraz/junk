@@ -20,7 +20,7 @@ func (c *Client) GetZone(resourceGroup, zoneName string) (*Zone, *int, error) {
 
 	// Create the url.
 	uri := api.ResolveRelative(BaseURI, zoneURLPath)
-	uri += "?" + url.Values(urlParams).Encode()
+	uri += "?" + urlParams.Encode()
 
 	// Create the request.
 	req, err := http.NewRequest("GET", uri, nil)
@@ -71,7 +71,7 @@ func (c *Client) GetRecordSet(resourceGroup, zoneName string, recordType RecordT
 
 	// Create the url.
 	uri := api.ResolveRelative(BaseURI, recordSetURLPath)
-	uri += "?" + url.Values(urlParams).Encode()
+	uri += "?" + urlParams.Encode()
 
 	// Create the request.
 	req, err := http.NewRequest("GET", uri, nil)
