@@ -17,6 +17,7 @@ type Opts struct {
 	KubeNamespace string
 }
 
+// Controller defines the controller object needed for the ingress controller.
 type Controller struct {
 	dnsClient    *dns.Client
 	k8sClient    *kubernetes.Clientset

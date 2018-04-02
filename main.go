@@ -12,8 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const ()
-
 var (
 	debug bool
 )
