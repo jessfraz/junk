@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/user"
 	"strings"
 	"text/tabwriter"
 
@@ -121,4 +122,17 @@ func resetUsage(fs *flag.FlagSet, name, args, longHelp string) {
 			fmt.Fprintln(os.Stderr, flagBlock.String())
 		}
 	}
+}
+
+func getHomeDir() (string, error) {
+	home := os.Getenv(homeKey)
+	if home != "" {
+		return home, nil
+	}
+
+	u, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return u.HomeDir, nil
 }
