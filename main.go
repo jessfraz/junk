@@ -9,12 +9,17 @@ import (
 	"text/tabwriter"
 
 	"github.com/sirupsen/logrus"
+	"k8s.io/api/core/v1"
 )
 
 const ()
 
 var (
 	debug bool
+
+	kubeconfig    string
+	kubenamespace string
+	azureconfig   string
 )
 
 type command interface {
@@ -58,6 +63,9 @@ func main() {
 			// Build flag set with global flags in there.
 			fs := flag.NewFlagSet(name, flag.ExitOnError)
 			fs.BoolVar(&debug, "d", false, "enable debug logging")
+			fs.StringVar(&kubeconfig, "kubeconfig", "", "Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)")
+			fs.StringVar(&kubenamespace, "namespace", v1.NamespaceAll, "Kubernetes namespace to watch for ingress (default is to watch all namespaces)")
+			fs.StringVar(&azureconfig, "azureconfig", "", "Azure service principal configuration file (eg. path to azure.json)")
 
 			// Register the subcommand flags in there, too.
 			command.Register(fs)
