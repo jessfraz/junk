@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "jessfraz.k8s-aks-dns-ingress";
+option java_outer_classname = "Devops";
+option optimize_for = SPEED;
+
+package devops;
+
+service DNSRecord {
+    rpc Add (DNSRecordRequest) returns (Status);
+    rpc Delete (DNSRecordRequest) returns (Status);
+    rpc Update (DNSRecordRequest) returns (Status);
+}
+
+message DNSRecordRequest {
+    string ip = 1;
+}
+
+message Status {}

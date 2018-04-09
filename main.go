@@ -29,7 +29,8 @@ type command interface {
 func main() {
 	// Build the list of available commands.
 	commands := []command{
-		&runCommand{},
+		&dnsServiceCommand{},
+		&ingressControllerCommand{},
 		&versionCommand{},
 	}
 

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
 	"github.com/sirupsen/logrus"
 	apiv1 "k8s.io/api/core/v1"
 	informerv1 "k8s.io/client-go/informers/core/v1"
@@ -23,17 +22,19 @@ import (
 
 // Opts holds the options for a controller instance.
 type Opts struct {
-	AzureConfig   string
-	KubeConfig    string
-	KubeNamespace string
-	ResyncPeriod  time.Duration
+	AzureConfig    string
+	KubeConfig     string
+	KubeNamespace  string
+	DNSServiceAddr string
+	ResyncPeriod   time.Duration
 }
 
 // Controller defines the controller object needed for the ingress controller.
 type Controller struct {
-	dnsClient    *dns.Client
-	k8sClient    *kubernetes.Clientset
-	k8sNamespace string
+	k8sClient      *kubernetes.Clientset
+	k8sNamespace   string
+	dnsServiceAddr string
+	azAuth         *azure.Authentication
 
 	IngressInformer cache.SharedIndexInformer
 	ServiceInformer cache.SharedIndexInformer
@@ -65,12 +66,6 @@ func New(opts Opts) (*Controller, error) {
 		return nil, err
 	}
 
-	// Create the Azure provider client.
-	dnsClient, err := dns.NewClient(azAuth)
-	if err != nil {
-		return nil, err
-	}
-
 	// Create the event watcher.
 	broadcaster := record.NewBroadcaster()
 	broadcaster.StartLogging(logrus.Infof)
@@ -83,7 +78,8 @@ func New(opts Opts) (*Controller, error) {
 	controller := &Controller{
 		k8sClient:       k8sClient,
 		k8sNamespace:    opts.KubeNamespace,
-		dnsClient:       dnsClient,
+		dnsServiceAddr:  opts.DNSServiceAddr,
+		azAuth:          azAuth,
 		IngressInformer: informerv1beta1.NewIngressInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
 		ServiceInformer: informerv1.NewServiceInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
 		recorder:        rec,
