@@ -1,8 +1,6 @@
-# k8s-aks-dns-ingress
+# HTTP Application Routing Controller for AKS
 
 [![Travis CI](https://travis-ci.org/jessfraz/k8s-aks-dns-ingress.svg?branch=master)](https://travis-ci.org/jessfraz/k8s-aks-dns-ingress)
-
-An ingress controller.
 
 ## Installation
 
