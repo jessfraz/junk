@@ -41,21 +41,21 @@ var (
 )
 
 func init() {
-	var err error
 	// get the home directory
 	home, err := getHomeDir()
 	if err != nil {
 		logrus.Fatalf("getHomeDir failed: %v", err)
 	}
+
 	// Parse flags.
 	flag.StringVar(&azureConfig, "azureconfig", os.Getenv("AZURE_AUTH_LOCATION"), "Azure service principal configuration file (eg. path to azure.json, defaults to the value of 'AZURE_AUTH_LOCATION' env var")
 	flag.StringVar(&kubeConfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)")
 	flag.StringVar(&kubeNamespace, "namespace", v1.NamespaceAll, "Kubernetes namespace to watch for ingress (default is to watch all namespaces)")
 
-	flag.StringVar(&domainNameRoot, "domain", os.Getenv("DOMAIN_NAME_ROOT"), "Root domain name to use for the creating the DNS record sets")
-	flag.StringVar(&resourceGroupName, "resource-group", os.Getenv("AZURE_RESOURCE_GROUP_NAME"), "Azure resource group name")
-	flag.StringVar(&resourceName, "resource", os.Getenv("AZURE_RESOURCE_NAME"), "Azure resource name")
-	flag.StringVar(&region, "region", os.Getenv("AZURE_REGION"), "Azure region")
+	flag.StringVar(&domainNameRoot, "domain", os.Getenv("DOMAIN_NAME_ROOT"), "Root domain name to use for the creating the DNS record sets, defaults to the value of 'DOMAIN_NAME_ROOT' env var")
+	flag.StringVar(&resourceGroupName, "resource-group", os.Getenv("AZURE_RESOURCE_GROUP_NAME"), "Azure resource group name, defaults to the value of 'AZURE_RESOURCE_GROUP' env var")
+	flag.StringVar(&resourceName, "resource", os.Getenv("AZURE_RESOURCE_NAME"), "Azure resource name, defaults to the value of 'AZURE_RESOURCE_NAME' env var")
+	flag.StringVar(&region, "region", os.Getenv("AZURE_REGION"), "Azure region, defaults to the value of 'AZURE_REGION' env var")
 
 	flag.StringVar(&interval, "interval", "30s", "Controller resync period")
 

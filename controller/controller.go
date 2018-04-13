@@ -13,6 +13,7 @@ import (
 	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
 	"github.com/sirupsen/logrus"
 	apiv1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	informerv1 "k8s.io/client-go/informers/core/v1"
 	informerv1beta1 "k8s.io/client-go/informers/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes"
@@ -22,7 +23,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
 // Opts holds the options for a controller instance.
@@ -172,6 +172,7 @@ func (c *Controller) addService(obj interface{}) {
 	// Create the Azure DNS client.
 	client, err := dns.NewClient(c.azAuth)
 	if err != nil {
+		//TODO(jessfraz): bubble up the errors to service events.
 		logrus.Warnf("[service] add: creating dns client failed: %v", err)
 		return
 	}
@@ -189,6 +190,7 @@ func (c *Controller) addService(obj interface{}) {
 		},
 	}
 	if _, err := client.CreateRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName, recordSet); err != nil {
+		//TODO(jessfraz): bubble up the errors to service events.
 		logrus.Warnf("[service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
 		return
 	}
@@ -210,6 +212,7 @@ func (c *Controller) deleteService(obj interface{}) {
 	// Create the Azure DNS client.
 	client, err := dns.NewClient(c.azAuth)
 	if err != nil {
+		//TODO(jessfraz): bubble up the errors to service events.
 		logrus.Warnf("[service] delete: creating dns client failed: %v", err)
 		return
 	}
@@ -218,6 +221,7 @@ func (c *Controller) deleteService(obj interface{}) {
 	// TODO(jessfraz): add service name to record set name.
 	recordSetName := fmt.Sprintf("%s.%s", "", c.domainNameSuffix)
 	if err := client.DeleteRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName); err != nil {
+		//TODO(jessfraz): bubble up the errors to service events.
 		logrus.Warnf("[service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
 		return
 	}

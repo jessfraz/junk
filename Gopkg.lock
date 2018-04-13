@@ -6,8 +6,7 @@
   packages = [
     "autorest",
     "autorest/adal",
-    "autorest/date",
-    "autorest/to"
+    "autorest/date"
   ]
   revision = "9ad9326b278af8fa5cc67c30c0ce9a58cc0862b2"
   version = "v10.6.0"
@@ -366,6 +365,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5bda34724d79ac7e0a5f3d77c94979db4a3e6862ea20a2122ad13ef32bb1a4a8"
+  inputs-digest = "8961a9c7050e6365785c96ab3425a6039a0cc2819098d998b5985eca33f1f155"
   solver-name = "gps-cdcl"
   solver-version = 1
