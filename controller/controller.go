@@ -207,14 +207,16 @@ func (c *Controller) addService(obj interface{}) {
 	recordSetName := fmt.Sprintf("%s.%s", serviceName, c.domainNameSuffix)
 	recordSet := dns.RecordSet{
 		Name: recordSetName,
-		Type: string(dns.CNAME),
+		Type: string(dns.A),
 		RecordSetProperties: dns.RecordSetProperties{
-			CnameRecord: dns.CnameRecord{
-				Cname: service.Spec.LoadBalancerIP,
+			ARecords: []dns.ARecord{
+				{
+					Ipv4Address: service.Spec.LoadBalancerIP,
+				},
 			},
 		},
 	}
-	if _, err := client.CreateRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName, recordSet); err != nil {
+	if _, err := client.CreateRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.A, recordSetName, recordSet); err != nil {
 		logrus.Warnf("[service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
 
 		// Bubble up the error with an event on the object.
@@ -253,7 +255,7 @@ func (c *Controller) deleteService(obj interface{}) {
 
 	// Delete the DNS record set for the service.
 	recordSetName := fmt.Sprintf("%s.%s", serviceName, c.domainNameSuffix)
-	if err := client.DeleteRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName); err != nil {
+	if err := client.DeleteRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.A, recordSetName); err != nil {
 		logrus.Warnf("[service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
 
 		// Bubble up the error with an event on the object.
