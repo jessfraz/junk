@@ -60,7 +60,6 @@ func init() {
 	flag.StringVar(&interval, "interval", "30s", "Controller resync period")
 
 	flag.BoolVar(&vrsn, "version", false, "print version and exit")
-	flag.BoolVar(&vrsn, "v", false, "print version and exit (shorthand)")
 	flag.BoolVar(&debug, "d", false, "run in debug mode")
 
 	flag.Usage = func() {
