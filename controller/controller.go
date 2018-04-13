@@ -13,21 +13,25 @@ import (
 	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
 	"github.com/moby/moby/pkg/namesgenerator"
 	"github.com/sirupsen/logrus"
-	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	informerv1 "k8s.io/client-go/informers/core/v1"
-	informerv1beta1 "k8s.io/client-go/informers/extensions/v1beta1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
+	core "k8s.io/client-go/kubernetes/typed/core/v1"
+	listers "k8s.io/client-go/listers/core/v1"
+	extensionslisters "k8s.io/client-go/listers/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/workqueue"
 )
 
 const (
+	controllerName                         = "http-application-routing-controller"
 	httpApplicationRoutingServiceNameLabel = "http-application-routing.io/servicenamelabel"
 )
 
@@ -54,10 +58,21 @@ type Controller struct {
 	domainNameSuffix  string
 	resourceGroupName string
 
-	IngressInformer cache.SharedIndexInformer
-	ServiceInformer cache.SharedIndexInformer
+	ingressesLister extensionslisters.IngressLister
+	ingressesSynced cache.InformerSynced
+	servicesLister  listers.ServiceLister
+	servicesSynced  cache.InformerSynced
 
-	Recorder record.EventRecorder
+	// workqueue is a rate limited work queue. This is used to queue work to be
+	// processed instead of performing it as soon as a change happens. This
+	// means we can ensure we only process a fixed amount of resources at a
+	// time, and makes it easy to ensure we are never processing the same item
+	// simultaneously in two different workers.
+	workqueue workqueue.RateLimitingInterface
+
+	// recorder is an event recorder for recording Event resources to the
+	// Kubernetes API.
+	recorder record.EventRecorder
 
 	stopCh chan struct{}
 	// stopLock is used to enforce only a single call to Stop is active.
@@ -67,10 +82,22 @@ type Controller struct {
 	shutdown bool
 }
 
+type action string
+
+const (
+	addAction    action = "insert"
+	deleteAction action = "add"
+)
+
+type queueItem struct {
+	action action
+	obj    interface{}
+}
+
 // New creates a new controller object.
 func New(opts Opts) (*Controller, error) {
 	// Validate our controller options.
-	if err := opts.Validate(); err != nil {
+	if err := opts.validate(); err != nil {
 		return nil, err
 	}
 
@@ -99,12 +126,17 @@ func New(opts Opts) (*Controller, error) {
 	domainNameSuffix := fmt.Sprintf("%s.%s.%s", zone, opts.Region, opts.DomainNameRoot)
 
 	// Create the event watcher.
+	logrus.Info("Creating event broadcaster...")
 	broadcaster := record.NewBroadcaster()
 	broadcaster.StartLogging(logrus.Infof)
-	broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
+	broadcaster.StartRecordingToSink(&core.EventSinkImpl{
 		Interface: k8sClient.CoreV1().Events(opts.KubeNamespace),
 	})
-	rec := broadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{Component: "http-application-routing-controller"})
+	recorder := broadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: controllerName})
+
+	// Obtain references to shared index informers for the Ingress and Service types.
+	ingressInformer := informers.NewFilteredSharedInformerFactory(k8sClient, opts.ResyncPeriod, opts.KubeNamespace, nil).Extensions().V1beta1().Ingresses()
+	serviceInformer := informers.NewFilteredSharedInformerFactory(k8sClient, opts.ResyncPeriod, opts.KubeNamespace, nil).Core().V1().Services()
 
 	// Create the new controller.
 	controller := &Controller{
@@ -112,60 +144,77 @@ func New(opts Opts) (*Controller, error) {
 		k8sClient:    k8sClient,
 		k8sNamespace: opts.KubeNamespace,
 
+		ingressesLister: ingressInformer.Lister(),
+		ingressesSynced: ingressInformer.Informer().HasSynced,
+		servicesLister:  serviceInformer.Lister(),
+		servicesSynced:  serviceInformer.Informer().HasSynced,
+
+		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), controllerName),
+
 		domainNameSuffix:  domainNameSuffix,
 		resourceGroupName: opts.ResourceGroupName,
 
-		IngressInformer: informerv1beta1.NewIngressInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
-		ServiceInformer: informerv1.NewServiceInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
-
-		Recorder: rec,
+		recorder: recorder,
 	}
 
-	// Add the ingress event handlers.
-	// TODO(jessfraz): do we even need to watch ingress.
-	controller.IngressInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    controller.addIngress,
-		DeleteFunc: controller.deleteIngress,
+	logrus.Info("Setting up event handlers...")
+
+	// Set up an event handler for when the Ingress resources change.
+	ingressInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    controller.enqueueAdd,
+		DeleteFunc: controller.enqueueDelete,
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
-				controller.addIngress(cur)
+				controller.enqueueAdd(cur)
 			}
 		},
 	})
 
-	// Add the service event handlers.
-	controller.ServiceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: controller.addService,
+	// Set up an event handler for when the Service resources change.
+	serviceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: controller.enqueueAdd,
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
-				controller.addService(cur)
+				controller.enqueueAdd(cur)
 			}
 		},
-		DeleteFunc: controller.deleteService,
+		DeleteFunc: controller.enqueueDelete,
 	})
 
 	return controller, nil
 }
 
-func (c *Controller) addIngress(obj interface{}) {
-	ingress := obj.(*extensions.Ingress)
+// enqueueAdd takes a resource and converts it into a queueItem
+// with the addAction and adds it to the  work queue.
+func (c *Controller) enqueueAdd(obj interface{}) {
+	c.workqueue.AddRateLimited(queueItem{
+		action: addAction,
+		obj:    obj,
+	})
+}
 
+// enqueueDelete takes a resource and converts it into a queueItem
+// with the deleteAction and adds it to the  work queue.
+func (c *Controller) enqueueDelete(obj interface{}) {
+	c.workqueue.AddRateLimited(queueItem{
+		action: deleteAction,
+		obj:    obj,
+	})
+}
+
+func (c *Controller) addIngress(ingress *extensions.Ingress) {
 	logrus.Debugf("[ingress] add: %#v", *ingress)
 }
 
-func (c *Controller) deleteIngress(obj interface{}) {
-	ingress := obj.(*extensions.Ingress)
-
+func (c *Controller) deleteIngress(ingress *extensions.Ingress) {
 	logrus.Debugf("[ingress] delete: %#v", *ingress)
 }
 
-func (c *Controller) addService(obj interface{}) {
-	service := obj.(*apiv1.Service)
-
+func (c *Controller) addService(service *v1.Service) {
 	logrus.Debugf("[service] add: %#v", *service)
 
 	// Check that the service type is a load balancer.
-	if service.Spec.Type != apiv1.ServiceTypeLoadBalancer {
+	if service.Spec.Type != v1.ServiceTypeLoadBalancer {
 		// return early because we don't care about anything but load balancers.
 		return
 	}
@@ -181,7 +230,7 @@ func (c *Controller) addService(obj interface{}) {
 		logrus.Warnf("[service] add: creating dns client failed: %v", err)
 
 		// Bubble up the error with an event on the object.
-		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: creating dns client failed: %v", err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: creating dns client failed: %v", err)
 		return
 	}
 
@@ -198,7 +247,7 @@ func (c *Controller) addService(obj interface{}) {
 		logrus.Warnf("[service] add: updating annotation failed: %v", err)
 
 		// Bubble up the error with an event on the object.
-		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: updating annotation failed: %v", err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: updating annotation failed: %v", err)
 		return
 	}
 
@@ -219,22 +268,20 @@ func (c *Controller) addService(obj interface{}) {
 		logrus.Warnf("[service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
 
 		// Bubble up the error with an event on the object.
-		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
 		return
 	}
 
 	logrus.Infof("[service] add: sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
 	// Add an event on the service.
-	c.Recorder.Eventf(service, apiv1.EventTypeNormal, "ADD", "[http-application-routing] [service] add: sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
+	c.recorder.Eventf(service, v1.EventTypeNormal, "ADD", "[http-application-routing] [service] add: sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
 }
 
-func (c *Controller) deleteService(obj interface{}) {
-	service := obj.(*apiv1.Service)
-
+func (c *Controller) deleteService(service *v1.Service) {
 	logrus.Debugf("[service] delete: %#v", *service)
 
 	// Check that the service type is a load balancer.
-	if service.Spec.Type != apiv1.ServiceTypeLoadBalancer {
+	if service.Spec.Type != v1.ServiceTypeLoadBalancer {
 		// return early because we don't care about anything but load balancers.
 		return
 	}
@@ -245,7 +292,7 @@ func (c *Controller) deleteService(obj interface{}) {
 		logrus.Warnf("[service] delete: creating dns client failed: %v", err)
 
 		// Bubble up the error with an event on the object.
-		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "DELETE", "[http-application-routing] [service] delete: creating dns client failed: %v", err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "DELETE", "[http-application-routing] [service] delete: creating dns client failed: %v", err)
 		return
 	}
 
@@ -258,35 +305,119 @@ func (c *Controller) deleteService(obj interface{}) {
 		logrus.Warnf("[service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
 
 		// Bubble up the error with an event on the object.
-		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "DELETE", "[http-application-routing] [service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "DELETE", "[http-application-routing] [service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
 		return
 	}
 
 	logrus.Infof("[service] delete: sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
 	// Add an event on the service.
-	c.Recorder.Eventf(service, apiv1.EventTypeNormal, "DELETE", "[http-application-routing] [service] delete: sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
+	c.recorder.Eventf(service, v1.EventTypeNormal, "DELETE", "[http-application-routing] [service] delete: sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
 }
 
 // Run starts the controller.
-func (c *Controller) Run() error {
-	logrus.Info("Starting controller")
+func (c *Controller) Run(threadiness int) error {
+	defer c.workqueue.ShutDown()
 
-	// Start the informers.
-	c.start(c.stopCh)
+	logrus.Info("Starting controller...")
 
+	// Wait for the caches to be synced before starting workers.
+	logrus.Info("Waiting for informer caches to sync...")
+	if ok := cache.WaitForCacheSync(c.stopCh, c.ingressesSynced, c.servicesSynced); !ok {
+		return fmt.Errorf("failed to wait for caches to sync")
+	}
+
+	logrus.Info("Starting workers...")
+	// Launch workers to process the resources.
+	for i := 0; i < threadiness; i++ {
+		go wait.Until(c.runWorker, time.Second, c.stopCh)
+	}
+
+	logrus.Info("Started workers...")
 	<-c.stopCh
-	logrus.Info("Shutting down controller")
+	logrus.Info("Shutting down workers...")
+
 	return nil
 }
 
-// Start starts all of the informers for the controller.
-func (c *Controller) start(stopCh chan struct{}) {
-	go c.IngressInformer.Run(stopCh)
-	go c.ServiceInformer.Run(stopCh)
+// runWorker is a long-running function that will continually call the
+// processNextWorkItem function in order to read and process a message on the
+// workqueue.
+func (c *Controller) runWorker() {
+	for c.processNextWorkItem() {
+	}
 }
 
-// Stop stops controller.
-func (c *Controller) Stop() error {
+// processNextWorkItem will read a single work item off the workqueue and
+// attempt to process it, by calling the syncHandler.
+func (c *Controller) processNextWorkItem() bool {
+	obj, shutdown := c.workqueue.Get()
+
+	if shutdown || c.shutdown {
+		return false
+	}
+
+	// We wrap this block in a func so we can defer c.workqueue.Done.
+	err := func(obj interface{}) error {
+		// We call Done here so the workqueue knows we have finished
+		// processing this item. We also must remember to call Forget if we
+		// do not want this work item being re-queued. For example, we do
+		// not call Forget if a transient error occurs, instead the item is
+		// put back on the workqueue and attempted again after a back-off
+		// period.
+		defer c.workqueue.Done(obj)
+
+		// We expect the items in the workqueue to be of the type queueItem.
+		item, ok := obj.(queueItem)
+		if !ok {
+			// As the item in the workqueue is actually invalid, we call
+			// Forget here else we'd go into a loop of attempting to
+			// process a work item that is invalid.
+			c.workqueue.Forget(obj)
+			logrus.Warnf("expected queueItem in workqueue but got %#v", obj)
+			return nil
+		}
+
+		// Try to figure out the object type to pass it to the correct sync handler.
+		switch v := item.obj.(type) {
+		case *extensions.Ingress:
+			if item.action == addAction {
+				c.addIngress(v)
+			} else {
+				c.deleteIngress(v)
+			}
+		case *v1.Service:
+			if item.action == addAction {
+				c.addService(v)
+			} else {
+				c.deleteService(v)
+			}
+		default:
+			// As the item in the workqueue is actually invalid, we call
+			// Forget here else we'd go into a loop of attempting to
+			// process a work item that is invalid.
+			c.workqueue.Forget(obj)
+			logrus.Warnf("queueItem was not of type Ingress or Service: %#v", item.obj)
+			return nil
+		}
+
+		// Finally, if no error occurs we Forget this item so it does not
+		// get queued again until another change happens.
+		c.workqueue.Forget(obj)
+
+		logrus.Infof("Successfully synced object: %#v", obj)
+		return nil
+	}(obj)
+
+	if err != nil {
+		logrus.Warnf("Running workqueue failed: %v", err)
+		return true
+	}
+
+	return true
+}
+
+// Shutdown stops controller.
+func (c *Controller) Shutdown() error {
 	// Stop is invoked from the http endpoint.
 	c.stopLock.Lock()
 	defer c.stopLock.Unlock()
@@ -295,14 +426,15 @@ func (c *Controller) Stop() error {
 	if !c.shutdown {
 		close(c.stopCh)
 		logrus.Info("Shutting down controller queues.")
+		c.workqueue.ShutDown()
 		c.shutdown = true
 	}
 
 	return nil
 }
 
-// Validate returns an error if the options are not valid for the controller.
-func (opts Opts) Validate() error {
+// validate returns an error if the options are not valid for the controller.
+func (opts Opts) validate() error {
 	if len(opts.AzureConfig) <= 0 {
 		return errors.New("Azure config cannot be empty")
 	}
@@ -357,7 +489,7 @@ func getKubeConfig(kubeconfig string) (*rest.Config, error) {
 
 // getName returns the objectMeta.Name if it is set, or the Annotation label.
 // If both are empty it will generate one.
-func getName(metadata metav1.ObjectMeta) string {
+func getName(metadata meta.ObjectMeta) string {
 	// If we have a name return early.
 	if len(metadata.Name) > 0 {
 		return metadata.Name
