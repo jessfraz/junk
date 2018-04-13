@@ -41,10 +41,12 @@ type Opts struct {
 
 // Controller defines the controller object needed for the ingress controller.
 type Controller struct {
-	k8sClient        *kubernetes.Clientset
-	k8sNamespace     string
-	azAuth           *azure.Authentication
-	domainNameSuffix string
+	azAuth       *azure.Authentication
+	k8sClient    *kubernetes.Clientset
+	k8sNamespace string
+
+	domainNameSuffix  string
+	resourceGroupName string
 
 	IngressInformer cache.SharedIndexInformer
 	ServiceInformer cache.SharedIndexInformer
@@ -100,10 +102,12 @@ func New(opts Opts) (*Controller, error) {
 
 	// Create the new controller.
 	controller := &Controller{
-		k8sClient:        k8sClient,
-		k8sNamespace:     opts.KubeNamespace,
-		azAuth:           azAuth,
-		domainNameSuffix: domainNameSuffix,
+		azAuth:       azAuth,
+		k8sClient:    k8sClient,
+		k8sNamespace: opts.KubeNamespace,
+
+		domainNameSuffix:  domainNameSuffix,
+		resourceGroupName: opts.ResourceGroupName,
 
 		IngressInformer: informerv1beta1.NewIngressInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
 		ServiceInformer: informerv1.NewServiceInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
@@ -111,6 +115,7 @@ func New(opts Opts) (*Controller, error) {
 	}
 
 	// Add the ingress event handlers.
+	// TODO(jessfraz): do we even need to watch ingress.
 	controller.IngressInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    controller.addIngress,
 		DeleteFunc: controller.deleteIngress,
@@ -125,6 +130,7 @@ func New(opts Opts) (*Controller, error) {
 	controller.ServiceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.addService,
 		UpdateFunc: func(old, cur interface{}) {
+			// TODO(jessfraz): we should probably cleanup old records if they changed.
 			if !reflect.DeepEqual(old, cur) {
 				controller.addService(cur)
 			}
@@ -163,12 +169,31 @@ func (c *Controller) addService(obj interface{}) {
 		return
 	}
 
-	// Add the DNS record set for the service.
 	// Create the Azure DNS client.
 	client, err := dns.NewClient(c.azAuth)
 	if err != nil {
 		logrus.Warnf("[service] add: creating dns client failed: %v", err)
+		return
 	}
+
+	// Create the DNS record set for the service.
+	// TODO(jessfraz): add service name to record set name.
+	recordSetName := fmt.Sprintf("%s.%s", "", c.domainNameSuffix)
+	recordSet := dns.RecordSet{
+		Name: recordSetName,
+		Type: string(dns.CNAME),
+		RecordSetProperties: dns.RecordSetProperties{
+			CnameRecord: dns.CnameRecord{
+				Cname: service.Spec.LoadBalancerIP,
+			},
+		},
+	}
+	if _, err := client.CreateRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName, recordSet); err != nil {
+		logrus.Warnf("[service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
+		return
+	}
+
+	logrus.Debugf("[service] add: sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
 }
 
 func (c *Controller) deleteService(obj interface{}) {
@@ -182,13 +207,22 @@ func (c *Controller) deleteService(obj interface{}) {
 		return
 	}
 
-	// Delete the DNS record set for the service.
 	// Create the Azure DNS client.
 	client, err := dns.NewClient(c.azAuth)
 	if err != nil {
 		logrus.Warnf("[service] delete: creating dns client failed: %v", err)
+		return
 	}
 
+	// Delete the DNS record set for the service.
+	// TODO(jessfraz): add service name to record set name.
+	recordSetName := fmt.Sprintf("%s.%s", "", c.domainNameSuffix)
+	if err := client.DeleteRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName); err != nil {
+		logrus.Warnf("[service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
+		return
+	}
+
+	logrus.Debugf("[service] delete: sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
 }
 
 // Run starts the controller.
