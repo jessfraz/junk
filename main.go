@@ -47,7 +47,6 @@ func init() {
 	if err != nil {
 		logrus.Fatalf("getHomeDir failed: %v", err)
 	}
-
 	// Parse flags.
 	flag.StringVar(&azureConfig, "azureconfig", os.Getenv("AZURE_AUTH_LOCATION"), "Azure service principal configuration file (eg. path to azure.json, defaults to the value of 'AZURE_AUTH_LOCATION' env var")
 	flag.StringVar(&kubeConfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)")
