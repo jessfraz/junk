@@ -51,7 +51,7 @@ type Controller struct {
 	IngressInformer cache.SharedIndexInformer
 	ServiceInformer cache.SharedIndexInformer
 
-	recorder record.EventRecorder
+	Recorder record.EventRecorder
 
 	stopCh chan struct{}
 	// stopLock is used to enforce only a single call to Stop is active.
@@ -98,7 +98,7 @@ func New(opts Opts) (*Controller, error) {
 	broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
 		Interface: k8sClient.CoreV1().Events(opts.KubeNamespace),
 	})
-	rec := broadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{Component: "k8s-aks-dns-ingress-controller"})
+	rec := broadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{Component: "http-application-routing-controller"})
 
 	// Create the new controller.
 	controller := &Controller{
@@ -111,7 +111,8 @@ func New(opts Opts) (*Controller, error) {
 
 		IngressInformer: informerv1beta1.NewIngressInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
 		ServiceInformer: informerv1.NewServiceInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
-		recorder:        rec,
+
+		Recorder: rec,
 	}
 
 	// Add the ingress event handlers.
@@ -172,8 +173,10 @@ func (c *Controller) addService(obj interface{}) {
 	// Create the Azure DNS client.
 	client, err := dns.NewClient(c.azAuth)
 	if err != nil {
-		//TODO(jessfraz): bubble up the errors to service events.
 		logrus.Warnf("[service] add: creating dns client failed: %v", err)
+
+		// Bubble up the error with an event on the object.
+		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: creating dns client failed: %v", err)
 		return
 	}
 
@@ -196,8 +199,10 @@ func (c *Controller) addService(obj interface{}) {
 		},
 	}
 	if _, err := client.CreateRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName, recordSet); err != nil {
-		//TODO(jessfraz): bubble up the errors to service events.
 		logrus.Warnf("[service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
+
+		// Bubble up the error with an event on the object.
+		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
 		return
 	}
 
@@ -218,8 +223,10 @@ func (c *Controller) deleteService(obj interface{}) {
 	// Create the Azure DNS client.
 	client, err := dns.NewClient(c.azAuth)
 	if err != nil {
-		//TODO(jessfraz): bubble up the errors to service events.
 		logrus.Warnf("[service] delete: creating dns client failed: %v", err)
+
+		// Bubble up the error with an event on the object.
+		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "DELETE", "[http-application-routing] [service] delete: creating dns client failed: %v", err)
 		return
 	}
 
@@ -233,8 +240,10 @@ func (c *Controller) deleteService(obj interface{}) {
 	// Delete the DNS record set for the service.
 	recordSetName := fmt.Sprintf("%s.%s", service.ObjectMeta.Name, c.domainNameSuffix)
 	if err := client.DeleteRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName); err != nil {
-		//TODO(jessfraz): bubble up the errors to service events.
 		logrus.Warnf("[service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
+
+		// Bubble up the error with an event on the object.
+		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "DELETE", "[http-application-routing] [service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
 		return
 	}
 
