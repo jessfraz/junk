@@ -137,7 +137,6 @@ func New(opts Opts) (*Controller, error) {
 	controller.ServiceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.addService,
 		UpdateFunc: func(old, cur interface{}) {
-			// TODO(jessfraz): we should probably cleanup old records if they changed.
 			if !reflect.DeepEqual(old, cur) {
 				controller.addService(cur)
 			}
