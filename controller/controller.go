@@ -177,9 +177,15 @@ func (c *Controller) addService(obj interface{}) {
 		return
 	}
 
+	// Check that the service name is not empty.
+	if len(service.ObjectMeta.Name) <= 0 {
+		// TODO(jessfraz): Generate a name for the service and update the service.
+		logrus.Warn("[service] add: service name is empty, skipping for now...")
+		return
+	}
+
 	// Create the DNS record set for the service.
-	// TODO(jessfraz): add service name to record set name.
-	recordSetName := fmt.Sprintf("%s.%s", "", c.domainNameSuffix)
+	recordSetName := fmt.Sprintf("%s.%s", service.ObjectMeta.Name, c.domainNameSuffix)
 	recordSet := dns.RecordSet{
 		Name: recordSetName,
 		Type: string(dns.CNAME),
@@ -217,9 +223,15 @@ func (c *Controller) deleteService(obj interface{}) {
 		return
 	}
 
+	// Check that the service name is not empty.
+	if len(service.ObjectMeta.Name) <= 0 {
+		// TODO(jessfraz): Generate a name for the service and update the service.
+		logrus.Warn("[service] delete: service name is empty, skipping for now...")
+		return
+	}
+
 	// Delete the DNS record set for the service.
-	// TODO(jessfraz): add service name to record set name.
-	recordSetName := fmt.Sprintf("%s.%s", "", c.domainNameSuffix)
+	recordSetName := fmt.Sprintf("%s.%s", service.ObjectMeta.Name, c.domainNameSuffix)
 	if err := client.DeleteRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName); err != nil {
 		//TODO(jessfraz): bubble up the errors to service events.
 		logrus.Warnf("[service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
