@@ -39,7 +39,7 @@ type Opts struct {
 	ResyncPeriod time.Duration
 }
 
-// Controller defines the controller object needed for the ingress controller.
+// Controller defines the controller object needed for the controller.
 type Controller struct {
 	azAuth       *azure.Authentication
 	k8sClient    *kubernetes.Clientset
