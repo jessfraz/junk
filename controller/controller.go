@@ -243,13 +243,13 @@ func (c *Controller) deleteService(obj interface{}) {
 
 // Run starts the controller.
 func (c *Controller) Run() error {
-	logrus.Infof("Starting controller")
+	logrus.Info("Starting controller")
 
 	// Start the informers.
 	c.start(c.stopCh)
 
 	<-c.stopCh
-	logrus.Infof("Shutting down controller")
+	logrus.Info("Shutting down controller")
 	return nil
 }
 
@@ -268,7 +268,7 @@ func (c *Controller) Stop() error {
 	// Only try draining the workqueue if we haven't already.
 	if !c.shutdown {
 		close(c.stopCh)
-		logrus.Infof("Shutting down controller queues.")
+		logrus.Info("Shutting down controller queues.")
 		c.shutdown = true
 	}
 
