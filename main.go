@@ -18,9 +18,9 @@ import (
 
 const (
 	// BANNER is what is printed for help/info output
-	BANNER = `k8s-aks-dns-ingress
-An ingress controller.
+	BANNER = `HTTP Application Routing Controller for AKS
 Version: %s
+
 `
 )
 
@@ -47,43 +47,52 @@ func init() {
 		logrus.Fatalf("getHomeDir failed: %v", err)
 	}
 
-	// Parse flags.
-	flag.StringVar(&azureConfig, "azureconfig", os.Getenv("AZURE_AUTH_LOCATION"), "Azure service principal configuration file (eg. path to azure.json, defaults to the value of 'AZURE_AUTH_LOCATION' env var")
-	flag.StringVar(&kubeConfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)")
-	flag.StringVar(&kubeNamespace, "namespace", v1.NamespaceAll, "Kubernetes namespace to watch for ingress (default is to watch all namespaces)")
-
-	flag.StringVar(&domainNameRoot, "domain", os.Getenv("DOMAIN_NAME_ROOT"), "Root domain name to use for the creating the DNS record sets, defaults to the value of 'DOMAIN_NAME_ROOT' env var")
-	flag.StringVar(&resourceGroupName, "resource-group", os.Getenv("AZURE_RESOURCE_GROUP_NAME"), "Azure resource group name, defaults to the value of 'AZURE_RESOURCE_GROUP' env var")
-	flag.StringVar(&resourceName, "resource", os.Getenv("AZURE_RESOURCE_NAME"), "Azure resource name, defaults to the value of 'AZURE_RESOURCE_NAME' env var")
-	flag.StringVar(&region, "region", os.Getenv("AZURE_REGION"), "Azure region, defaults to the value of 'AZURE_REGION' env var")
-
-	flag.StringVar(&interval, "interval", "30s", "Controller resync period")
-
-	flag.BoolVar(&vrsn, "version", false, "print version and exit")
-	flag.BoolVar(&debug, "d", false, "run in debug mode")
-
-	flag.Usage = func() {
-		fmt.Fprint(os.Stderr, fmt.Sprintf(BANNER, version.VERSION))
-		flag.PrintDefaults()
-	}
-
+	// This uses the kubernetes library, which uses glog (ugh), we must set these *flag*s,
+	// so we don't log to the filesystem, which can fill up and crash applications indirectly by calling os.Exit().
+	flag.Set("logtostderr", "true")
 	flag.Parse()
 
+	// Build flag set with global flags in there.
+	fs := flag.NewFlagSet("", flag.ExitOnError)
+
+	// Parse flags.
+	fs.StringVar(&azureConfig, "azureconfig", os.Getenv("AZURE_AUTH_LOCATION"), "Azure service principal configuration file (eg. path to azure.json, defaults to the value of 'AZURE_AUTH_LOCATION' env var")
+	fs.StringVar(&kubeConfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)")
+	fs.StringVar(&kubeNamespace, "namespace", v1.NamespaceAll, "Kubernetes namespace to watch for ingress (default is to watch all namespaces)")
+
+	fs.StringVar(&domainNameRoot, "domain", os.Getenv("DOMAIN_NAME_ROOT"), "Root domain name to use for the creating the DNS record sets, defaults to the value of 'DOMAIN_NAME_ROOT' env var")
+	fs.StringVar(&resourceGroupName, "resource-group", os.Getenv("AZURE_RESOURCE_GROUP"), "Azure resource group name, defaults to the value of 'AZURE_RESOURCE_GROUP' env var")
+	fs.StringVar(&resourceName, "resource", os.Getenv("AZURE_RESOURCE_NAME"), "Azure resource name, defaults to the value of 'AZURE_RESOURCE_NAME' env var")
+	fs.StringVar(&region, "region", os.Getenv("AZURE_REGION"), "Azure region, defaults to the value of 'AZURE_REGION' env var")
+
+	fs.StringVar(&interval, "interval", "30s", "Controller resync period")
+
+	fs.BoolVar(&vrsn, "version", false, "print version and exit")
+	fs.BoolVar(&vrsn, "v", false, "print version and exit (shorthand)")
+	fs.BoolVar(&debug, "d", false, "run in debug mode")
+
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, fmt.Sprintf(BANNER, version.VERSION))
+		fs.PrintDefaults()
+	}
+
+	fs.Parse(os.Args[1:])
+
 	if vrsn {
-		fmt.Printf("k8s-aks-dns-ingress version %s, build %s", version.VERSION, version.GITCOMMIT)
+		fmt.Printf("http-application-routing controller version %s, build %s", version.VERSION, version.GITCOMMIT)
 		os.Exit(0)
 	}
 
-	if flag.NArg() >= 1 {
+	if fs.NArg() >= 1 {
 		// parse the arg
-		arg := flag.Args()[0]
+		arg := fs.Args()[0]
 
 		if arg == "help" {
-			usageAndExit("", 0)
+			usageAndExit(fs, "", 0)
 		}
 
 		if arg == "version" {
-			fmt.Printf("k8s-aks-dns-ingress version %s, build %s", version.VERSION, version.GITCOMMIT)
+			fmt.Printf("http-application-routing controller version %s, build %s", version.VERSION, version.GITCOMMIT)
 			os.Exit(0)
 		}
 	}
@@ -160,12 +169,12 @@ func getHomeDir() (string, error) {
 	return u.HomeDir, nil
 }
 
-func usageAndExit(message string, exitCode int) {
+func usageAndExit(fs *flag.FlagSet, message string, exitCode int) {
 	if message != "" {
 		fmt.Fprintf(os.Stderr, message)
 		fmt.Fprintf(os.Stderr, "\n\n")
 	}
-	flag.Usage()
+	fs.Usage()
 	fmt.Fprintf(os.Stderr, "\n")
 	os.Exit(exitCode)
 }

@@ -17,12 +17,10 @@ An ingress controller.
 ## Usage
 
 ```console
-$ k8s-aks-dns-ingress -h
-k8s-aks-dns-ingress
-An ingress controller.
+$ k8s-aks-dns-ingress help
+HTTP Application Routing Controller for AKS
 Version: v0.0.0
-  -alsologtostderr
-        log to standard error as well as files
+
   -azureconfig string
         Azure service principal configuration file (eg. path to azure.json, defaults to the value of 'AZURE_AUTH_LOCATION' env var
   -d    run in debug mode
@@ -31,13 +29,7 @@ Version: v0.0.0
   -interval string
         Controller resync period (default "30s")
   -kubeconfig string
-        Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)
-  -log_backtrace_at value
-        when logging hits line file:N, emit a stack trace
-  -log_dir string
-        If non-empty, write log files in this directory
-  -logtostderr
-        log to standard error instead of files
+        Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config) (default "/home/jessie/.kube/config")
   -namespace string
         Kubernetes namespace to watch for ingress (default is to watch all namespaces)
   -region string
@@ -46,12 +38,7 @@ Version: v0.0.0
         Azure resource name, defaults to the value of 'AZURE_RESOURCE_NAME' env var
   -resource-group string
         Azure resource group name, defaults to the value of 'AZURE_RESOURCE_GROUP' env var
-  -stderrthreshold value
-        logs at or above this threshold go to stderr
-  -v value
-        log level for V logs
+  -v    print version and exit (shorthand)
   -version
         print version and exit
-  -vmodule value
-        comma-separated list of pattern=N settings for file-filtered logging
 ```

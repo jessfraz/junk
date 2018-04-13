@@ -18,7 +18,7 @@ spec:
           value: /etc/dns/azure.json
         - name: DOMAIN_NAME_ROOT
           value: {{ .Values.env.domainName }}
-        - name: AZURE_RESOURCE_GROUP_NAME
+        - name: AZURE_RESOURCE_GROUP
           value: {{ .Values.env.azureResourceGroup }}
         - name: AZURE_RESOURCE_NAME
           value: {{ .Values.env.azureResource }}
