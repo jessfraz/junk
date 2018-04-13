@@ -375,5 +375,4 @@ func getName(metadata metav1.ObjectMeta) string {
 	// Generate a name.
 	// This should then be updated for the parent object in the annotation.
 	return namesgenerator.GetRandomName(10)
-
 }
