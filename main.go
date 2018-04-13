@@ -81,7 +81,7 @@ func init() {
 	fs.Parse(os.Args[1:])
 
 	if vrsn {
-		fmt.Printf("http-application-routing controller version %s, build %s", version.VERSION, version.GITCOMMIT)
+		fmt.Printf("%s version %s, build %s", os.Args[0], version.VERSION, version.GITCOMMIT)
 		os.Exit(0)
 	}
 
@@ -94,7 +94,7 @@ func init() {
 		}
 
 		if arg == "version" {
-			fmt.Printf("http-application-routing controller version %s, build %s", version.VERSION, version.GITCOMMIT)
+			fmt.Printf("%s version %s, build %s", os.Args[0], version.VERSION, version.GITCOMMIT)
 			os.Exit(0)
 		}
 	}
@@ -117,11 +117,11 @@ func main() {
 	signal.Notify(c, syscall.SIGTERM)
 	go func() {
 		for sig := range c {
-			logrus.Infof("Received %s, exiting.", sig.String())
+			logrus.Infof("Received %s, exiting...", sig.String())
 
 			// Shutdown the controller gracefully.
 			if err := ctrl.Shutdown(); err != nil {
-				logrus.Fatalf("shutting down controller gracefully failed: %v", err)
+				logrus.Fatalf("Shutting down controller gracefully failed: %v", err)
 			}
 
 			os.Exit(0)
@@ -131,11 +131,11 @@ func main() {
 	// Parse the resync period.
 	resyncPeriod, err := time.ParseDuration(interval)
 	if err != nil {
-		logrus.Fatalf("parsing %s as duration failed: %v", interval, err)
+		logrus.Fatalf("Parsing interval %s as duration failed: %v", interval, err)
 	}
 
 	// Create the controller object.
-	opts := controller.Opts{
+	opts := controller.Options{
 		AzureConfig:   azureConfig,
 		KubeConfig:    kubeConfig,
 		KubeNamespace: kubeNamespace,
@@ -149,12 +149,12 @@ func main() {
 	}
 	ctrl, err = controller.New(opts)
 	if err != nil {
-		logrus.Fatalf("creating controller failed: %v", err)
+		logrus.Fatalf("Creating controller failed: %v", err)
 	}
 
 	// Run the controller.
 	if err := ctrl.Run(workers); err != nil {
-		logrus.Fatalf("running controller failed: %v", err)
+		logrus.Fatalf("Running controller failed: %v", err)
 	}
 }
 
