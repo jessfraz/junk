@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/jessfraz/k8s-aks-dns-ingress/controller"
 	"github.com/jessfraz/k8s-aks-dns-ingress/version"
@@ -24,9 +25,16 @@ Version: %s
 )
 
 var (
-	kubeconfig    string
-	kubenamespace string
-	azureconfig   string
+	azureConfig   string
+	kubeConfig    string
+	kubeNamespace string
+
+	domainNameRoot    string
+	resourceGroupName string
+	resourceName      string
+	region            string
+
+	interval string
 
 	debug bool
 	vrsn  bool
@@ -40,11 +48,17 @@ func init() {
 		logrus.Fatalf("getHomeDir failed: %v", err)
 	}
 
-	// parse flags
-	// Add our flags.
-	flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)")
-	flag.StringVar(&kubenamespace, "namespace", v1.NamespaceAll, "Kubernetes namespace to watch for ingress (default is to watch all namespaces)")
-	flag.StringVar(&azureconfig, "azureconfig", os.Getenv("AZURE_AUTH_LOCATION"), "Azure service principal configuration file (eg. path to azure.json, defaults to the value of 'AZURE_AUTH_LOCATION' env var")
+	// Parse flags.
+	flag.StringVar(&azureConfig, "azureconfig", os.Getenv("AZURE_AUTH_LOCATION"), "Azure service principal configuration file (eg. path to azure.json, defaults to the value of 'AZURE_AUTH_LOCATION' env var")
+	flag.StringVar(&kubeConfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)")
+	flag.StringVar(&kubeNamespace, "namespace", v1.NamespaceAll, "Kubernetes namespace to watch for ingress (default is to watch all namespaces)")
+
+	flag.StringVar(&domainNameRoot, "domain", os.Getenv("DOMAIN_NAME_ROOT"), "Root domain name to use for the creating the DNS record sets")
+	flag.StringVar(&resourceGroupName, "resource-group", os.Getenv("AZURE_RESOURCE_GROUP_NAME"), "Azure resource group name")
+	flag.StringVar(&resourceName, "resource", os.Getenv("AZURE_RESOURCE_NAME"), "Azure resource name")
+	flag.StringVar(&region, "region", os.Getenv("AZURE_REGION"), "Azure region")
+
+	flag.StringVar(&interval, "interval", "30s", "Controller resync period")
 
 	flag.BoolVar(&vrsn, "version", false, "print version and exit")
 	flag.BoolVar(&vrsn, "v", false, "print version and exit (shorthand)")
@@ -86,7 +100,6 @@ func main() {
 	// Initialize our variables.
 	var (
 		ctrl *controller.Controller
-		err  error
 	)
 
 	// On ^C, or SIGTERM handle exit.
@@ -106,11 +119,24 @@ func main() {
 		}
 	}()
 
+	// Parse the resync period.
+	resyncPeriod, err := time.ParseDuration(interval)
+	if err != nil {
+		logrus.Fatalf("parsing %s as duration failed: %v", interval, err)
+	}
+
 	// Create the controller object.
 	opts := controller.Opts{
-		KubeConfig:    kubeconfig,
-		AzureConfig:   azureconfig,
-		KubeNamespace: kubenamespace,
+		AzureConfig:   azureConfig,
+		KubeConfig:    kubeConfig,
+		KubeNamespace: kubeNamespace,
+
+		DomainNameRoot:    domainNameRoot,
+		ResourceGroupName: resourceGroupName,
+		ResourceName:      resourceName,
+		Region:            region,
+
+		ResyncPeriod: resyncPeriod,
 	}
 	ctrl, err = controller.New(opts)
 	if err != nil {
