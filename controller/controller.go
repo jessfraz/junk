@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
+	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
 	"github.com/sirupsen/logrus"
 	apiv1 "k8s.io/api/core/v1"
 	informerv1 "k8s.io/client-go/informers/core/v1"
@@ -21,6 +22,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
 // Opts holds the options for a controller instance.
@@ -121,30 +123,71 @@ func New(opts Opts) (*Controller, error) {
 
 	// Add the service event handlers.
 	controller.ServiceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: controller.addIngressForService,
+		AddFunc: controller.addService,
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
-				controller.addIngressForService(cur)
+				controller.addService(cur)
 			}
 		},
-		// Ingress deletes matter, service deletes don't.
+		DeleteFunc: controller.deleteService,
 	})
 
 	return controller, nil
 }
 
 func (c *Controller) addIngress(obj interface{}) {
-	logrus.Debugf("[ingress] add: %#v", opj)
+	ingress := obj.(*extensions.Ingress)
 
+	logrus.Debugf("[ingress] add: %#v", *ingress)
 }
 
 func (c *Controller) deleteIngress(obj interface{}) {
-	logrus.Debugf("[ingress] delete: %#v", opj)
+	ingress := obj.(*extensions.Ingress)
 
+	logrus.Debugf("[ingress] delete: %#v", *ingress)
 }
 
-func (c *Controller) addIngressForService(obj interface{}) {
-	logrus.Debugf("[service] add: %#v", opj)
+func (c *Controller) addService(obj interface{}) {
+	service := obj.(*apiv1.Service)
+
+	logrus.Debugf("[service] add: %#v", *service)
+
+	// Check that the service type is a load balancer.
+	if service.Spec.Type != apiv1.ServiceTypeLoadBalancer {
+		// return early because we don't care about anything but load balancers.
+		return
+	}
+
+	// Return early if the loadbalancer IP is empty.
+	if len(service.Spec.LoadBalancerIP) <= 0 {
+		return
+	}
+
+	// Add the DNS record set for the service.
+	// Create the Azure DNS client.
+	client, err := dns.NewClient(c.azAuth)
+	if err != nil {
+		logrus.Warnf("[service] add: creating dns client failed: %v", err)
+	}
+}
+
+func (c *Controller) deleteService(obj interface{}) {
+	service := obj.(*apiv1.Service)
+
+	logrus.Debugf("[service] delete: %#v", *service)
+
+	// Check that the service type is a load balancer.
+	if service.Spec.Type != apiv1.ServiceTypeLoadBalancer {
+		// return early because we don't care about anything but load balancers.
+		return
+	}
+
+	// Delete the DNS record set for the service.
+	// Create the Azure DNS client.
+	client, err := dns.NewClient(c.azAuth)
+	if err != nil {
+		logrus.Warnf("[service] delete: creating dns client failed: %v", err)
+	}
 
 }
 
