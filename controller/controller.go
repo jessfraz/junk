@@ -134,14 +134,17 @@ func New(opts Opts) (*Controller, error) {
 }
 
 func (c *Controller) addIngress(obj interface{}) {
+	logrus.Debugf("[ingress] add: %#v", opj)
 
 }
 
 func (c *Controller) deleteIngress(obj interface{}) {
+	logrus.Debugf("[ingress] delete: %#v", opj)
 
 }
 
 func (c *Controller) addIngressForService(obj interface{}) {
+	logrus.Debugf("[service] add: %#v", opj)
 
 }
 
