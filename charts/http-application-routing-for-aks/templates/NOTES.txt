@@ -1,0 +1,5 @@
+The http-application-routing controller is getting deployed on your cluster.
+
+To verify that http-application-routing controller has started, run:
+
+  kubectl --namespace={{ .Release.Namespace }} get pods -l "app={{ template "fullname" . }}"
