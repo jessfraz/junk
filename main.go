@@ -1,124 +1,113 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"os/user"
-	"strings"
-	"text/tabwriter"
+	"path/filepath"
+	"syscall"
 
+	"github.com/jessfraz/k8s-aks-dns-ingress/controller"
+	"github.com/jessfraz/k8s-aks-dns-ingress/version"
 	"github.com/sirupsen/logrus"
+	"k8s.io/api/core/v1"
+)
+
+const (
+	// BANNER is what is printed for help/info output
+	BANNER = `k8s-aks-dns-ingress
+An ingress controller.
+Version: %s
+`
 )
 
 var (
+	kubeconfig    string
+	kubenamespace string
+	azureconfig   string
+
 	debug bool
+	vrsn  bool
 )
 
-type command interface {
-	Name() string           // "foobar"
-	Args() string           // "<baz> [quux...]"
-	ShortHelp() string      // "Foo the first bar"
-	LongHelp() string       // "Foo the first bar meeting the following conditions..."
-	Register(*flag.FlagSet) // command-specific flags
-	Hidden() bool           // indicates whether the command should be hidden from help output
-	Run([]string) error
+func init() {
+	var err error
+	// get the home directory
+	home, err := getHomeDir()
+	if err != nil {
+		logrus.Fatalf("getHomeDir failed: %v", err)
+	}
+
+	// parse flags
+	// Add our flags.
+	flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)")
+	flag.StringVar(&kubenamespace, "namespace", v1.NamespaceAll, "Kubernetes namespace to watch for ingress (default is to watch all namespaces)")
+	flag.StringVar(&azureconfig, "azureconfig", os.Getenv("AZURE_AUTH_LOCATION"), "Azure service principal configuration file (eg. path to azure.json, defaults to the value of 'AZURE_AUTH_LOCATION' env var")
+
+	flag.BoolVar(&vrsn, "version", false, "print version and exit")
+	flag.BoolVar(&vrsn, "v", false, "print version and exit (shorthand)")
+	flag.BoolVar(&debug, "d", false, "run in debug mode")
+
+	flag.Usage = func() {
+		fmt.Fprint(os.Stderr, fmt.Sprintf(BANNER, version.VERSION))
+		flag.PrintDefaults()
+	}
+
+	flag.Parse()
+
+	if vrsn {
+		fmt.Printf("k8s-aks-dns-ingress version %s, build %s", version.VERSION, version.GITCOMMIT)
+		os.Exit(0)
+	}
+
+	if flag.NArg() >= 1 {
+		// parse the arg
+		arg := flag.Args()[0]
+
+		if arg == "help" {
+			usageAndExit("", 0)
+		}
+
+		if arg == "version" {
+			fmt.Printf("k8s-aks-dns-ingress version %s, build %s", version.VERSION, version.GITCOMMIT)
+			os.Exit(0)
+		}
+	}
+
+	// set log level
+	if debug {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
 }
 
 func main() {
-	// Build the list of available commands.
-	commands := []command{
-		&ingressControllerCommand{},
-		&versionCommand{},
+	// On ^C, or SIGTERM handle exit.
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, syscall.SIGTERM)
+	go func() {
+		for sig := range c {
+			logrus.Infof("Received %s, exiting.", sig.String())
+			// TODO:(jessfraz) stop the controller here.
+			os.Exit(0)
+		}
+	}()
+
+	// Create the controller object.
+	opts := controller.Opts{
+		KubeConfig:    kubeconfig,
+		AzureConfig:   azureconfig,
+		KubeNamespace: kubenamespace,
+	}
+	ctrl, err := controller.New(opts)
+	if err != nil {
+		logrus.Fatalf("creating controller failed: %v", err)
 	}
 
-	usage := func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s <command>\n", os.Args[0])
-		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, "Commands:")
-		fmt.Fprintln(os.Stderr)
-		w := tabwriter.NewWriter(os.Stderr, 0, 4, 2, ' ', 0)
-		for _, command := range commands {
-			if !command.Hidden() {
-				fmt.Fprintf(w, "\t%s\t%s\n", command.Name(), command.ShortHelp())
-			}
-		}
-		w.Flush()
-		fmt.Fprintln(os.Stderr)
-	}
-
-	if len(os.Args) <= 1 || len(os.Args) == 2 && (strings.Contains(strings.ToLower(os.Args[1]), "help") || strings.ToLower(os.Args[1]) == "-h") {
-		usage()
-		os.Exit(1)
-	}
-
-	for _, command := range commands {
-		if name := command.Name(); os.Args[1] == name {
-			// Build flag set with global flags in there.
-			fs := flag.NewFlagSet(name, flag.ExitOnError)
-			fs.BoolVar(&debug, "d", false, "enable debug logging")
-
-			// Register the subcommand flags in there, too.
-			command.Register(fs)
-
-			// Override the usage text to something nicer.
-			resetUsage(fs, command.Name(), command.Args(), command.LongHelp())
-
-			// Parse the flags the user gave us.
-			if err := fs.Parse(os.Args[2:]); err != nil {
-				fs.Usage()
-				os.Exit(1)
-			}
-
-			// Set log level.
-			if debug {
-				logrus.SetLevel(logrus.DebugLevel)
-			}
-
-			// Run the command with the post-flag-processing args.
-			if err := command.Run(fs.Args()); err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
-			}
-
-			// Easy peasy livin' breezy.
-			return
-		}
-	}
-
-	fmt.Fprintf(os.Stderr, "%s: no such command\n", os.Args[1])
-	usage()
-	os.Exit(1)
-}
-
-func resetUsage(fs *flag.FlagSet, name, args, longHelp string) {
-	var (
-		hasFlags   bool
-		flagBlock  bytes.Buffer
-		flagWriter = tabwriter.NewWriter(&flagBlock, 0, 4, 2, ' ', 0)
-	)
-	fs.VisitAll(func(f *flag.Flag) {
-		hasFlags = true
-		// Default-empty string vars should read "(default: <none>)"
-		// rather than the comparatively ugly "(default: )".
-		defValue := f.DefValue
-		if defValue == "" {
-			defValue = "<none>"
-		}
-		fmt.Fprintf(flagWriter, "\t-%s\t%s (default: %s)\n", f.Name, f.Usage, defValue)
-	})
-	flagWriter.Flush()
-	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s %s %s\n", os.Args[0], name, args)
-		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, strings.TrimSpace(longHelp))
-		fmt.Fprintln(os.Stderr)
-		if hasFlags {
-			fmt.Fprintln(os.Stderr, "Flags:")
-			fmt.Fprintln(os.Stderr)
-			fmt.Fprintln(os.Stderr, flagBlock.String())
-		}
+	if err := ctrl.Run(); err != nil {
+		logrus.Fatalf("running controller failed: %v", err)
 	}
 }
 
@@ -133,4 +122,14 @@ func getHomeDir() (string, error) {
 		return "", err
 	}
 	return u.HomeDir, nil
+}
+
+func usageAndExit(message string, exitCode int) {
+	if message != "" {
+		fmt.Fprintf(os.Stderr, message)
+		fmt.Fprintf(os.Stderr, "\n\n")
+	}
+	flag.Usage()
+	fmt.Fprintf(os.Stderr, "\n")
+	os.Exit(exitCode)
 }

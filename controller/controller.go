@@ -22,19 +22,17 @@ import (
 
 // Opts holds the options for a controller instance.
 type Opts struct {
-	AzureConfig    string
-	KubeConfig     string
-	KubeNamespace  string
-	DNSServiceAddr string
-	ResyncPeriod   time.Duration
+	AzureConfig   string
+	KubeConfig    string
+	KubeNamespace string
+	ResyncPeriod  time.Duration
 }
 
 // Controller defines the controller object needed for the ingress controller.
 type Controller struct {
-	k8sClient      *kubernetes.Clientset
-	k8sNamespace   string
-	dnsServiceAddr string
-	azAuth         *azure.Authentication
+	k8sClient    *kubernetes.Clientset
+	k8sNamespace string
+	azAuth       *azure.Authentication
 
 	IngressInformer cache.SharedIndexInformer
 	ServiceInformer cache.SharedIndexInformer
@@ -78,7 +76,6 @@ func New(opts Opts) (*Controller, error) {
 	controller := &Controller{
 		k8sClient:       k8sClient,
 		k8sNamespace:    opts.KubeNamespace,
-		dnsServiceAddr:  opts.DNSServiceAddr,
 		azAuth:          azAuth,
 		IngressInformer: informerv1beta1.NewIngressInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
 		ServiceInformer: informerv1.NewServiceInformer(k8sClient, opts.KubeNamespace, opts.ResyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),

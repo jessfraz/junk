@@ -107,13 +107,6 @@ md5sum $(BUILDDIR)/$(NAME)-$(1)-$(2) > $(BUILDDIR)/$(NAME)-$(1)-$(2).md5;
 sha256sum $(BUILDDIR)/$(NAME)-$(1)-$(2) > $(BUILDDIR)/$(NAME)-$(1)-$(2).sha256;
 endef
 
-protoc: ## Build the protobuf api in a docker container.
-	docker build --rm --force-rm -t "$(NAME)-dev" -f Dockerfile.dev .
-	docker run --rm -it --disable-content-trust=true \
-		-v "$(CURDIR):/go/src/github.com/$(PKG)" \
-		-w "/go/src/github.com/$(PKG)" \
-		"$(NAME)-dev" protoc -I ./api/grpc/devops ./api/grpc/devops/api.proto --go_out=plugins=grpc:api/grpc/devops
-
 .PHONY: release
 release: *.go VERSION.txt ## Builds the cross-compiled binaries, naming them in such a way for release (eg. binary-GOOS-GOARCH)
 	@echo "+ $@"
