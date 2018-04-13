@@ -243,20 +243,6 @@ func (c *Controller) start(stopCh chan struct{}) {
 	go c.ServiceInformer.Run(stopCh)
 }
 
-// hasSynced returns true if all relevant informers has been synced.
-func (c *Controller) hasSynced() bool {
-	funcs := []func() bool{
-		c.IngressInformer.HasSynced,
-		c.ServiceInformer.HasSynced,
-	}
-	for _, f := range funcs {
-		if !f() {
-			return false
-		}
-	}
-	return true
-}
-
 // Stop stops controller.
 func (c *Controller) Stop() error {
 	// Stop is invoked from the http endpoint.
