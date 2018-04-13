@@ -329,8 +329,8 @@ func getKubeConfig(kubeconfig string) (*rest.Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		return config, err
 
+		return config, err
 	}
 
 	// Set to in-cluster config because the passed config does not exist.
