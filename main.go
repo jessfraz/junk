@@ -83,6 +83,12 @@ func init() {
 }
 
 func main() {
+	// Initialize our variables.
+	var (
+		ctrl *controller.Controller
+		err  error
+	)
+
 	// On ^C, or SIGTERM handle exit.
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -90,7 +96,12 @@ func main() {
 	go func() {
 		for sig := range c {
 			logrus.Infof("Received %s, exiting.", sig.String())
-			// TODO:(jessfraz) stop the controller here.
+
+			// Shutdown the controller gracefully.
+			if err := ctrl.Stop(); err != nil {
+				logrus.Fatalf("shutting down controller gracefully failed: %v", err)
+			}
+
 			os.Exit(0)
 		}
 	}()
@@ -101,11 +112,12 @@ func main() {
 		AzureConfig:   azureconfig,
 		KubeNamespace: kubenamespace,
 	}
-	ctrl, err := controller.New(opts)
+	ctrl, err = controller.New(opts)
 	if err != nil {
 		logrus.Fatalf("creating controller failed: %v", err)
 	}
 
+	// Run the controller.
 	if err := ctrl.Run(); err != nil {
 		logrus.Fatalf("running controller failed: %v", err)
 	}
