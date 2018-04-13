@@ -206,7 +206,9 @@ func (c *Controller) addService(obj interface{}) {
 		return
 	}
 
-	logrus.Debugf("[service] add: sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
+	logrus.Infof("[service] add: sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
+	// Add an event on the service.
+	c.Recorder.Eventf(service, apiv1.EventTypeNormal, "ADD", "[http-application-routing] [service] add: sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
 }
 
 func (c *Controller) deleteService(obj interface{}) {
@@ -247,7 +249,9 @@ func (c *Controller) deleteService(obj interface{}) {
 		return
 	}
 
-	logrus.Debugf("[service] delete: sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
+	logrus.Infof("[service] delete: sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
+	// Add an event on the service.
+	c.Recorder.Eventf(service, apiv1.EventTypeNormal, "DELETE", "[http-application-routing] [service] delete: sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
 }
 
 // Run starts the controller.
