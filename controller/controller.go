@@ -11,9 +11,11 @@ import (
 
 	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
 	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
+	"github.com/moby/moby/pkg/namesgenerator"
 	"github.com/sirupsen/logrus"
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	informerv1 "k8s.io/client-go/informers/core/v1"
 	informerv1beta1 "k8s.io/client-go/informers/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes"
@@ -23,6 +25,10 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
+)
+
+const (
+	httpApplicationRoutingServiceNameLabel = "http-application-routing.io/servicenamelabel"
 )
 
 // Opts holds the options for a controller instance.
@@ -180,15 +186,25 @@ func (c *Controller) addService(obj interface{}) {
 		return
 	}
 
-	// Check that the service name is not empty.
-	if len(service.ObjectMeta.Name) <= 0 {
-		// TODO(jessfraz): Generate a name for the service and update the service.
-		logrus.Warn("[service] add: service name is empty, skipping for now...")
+	// Get the service name. This will either be from the service name, annotation, or generated.
+	serviceName := getName(service.ObjectMeta)
+	// Update the service annotations with the service name.
+	svcClient := c.k8sClient.CoreV1().Services(service.Namespace)
+	if service.Annotations == nil {
+		service.Annotations = map[string]string{}
+	}
+	service.Annotations[httpApplicationRoutingServiceNameLabel] = serviceName
+	logrus.Debugf("[service] add: updating annotations for service with label %s=%s", httpApplicationRoutingServiceNameLabel, serviceName)
+	if _, err := svcClient.Update(service); err != nil {
+		logrus.Warnf("[service] add: updating annotation failed: %v", err)
+
+		// Bubble up the error with an event on the object.
+		c.Recorder.Eventf(service, apiv1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: updating annotation failed: %v", err)
 		return
 	}
 
 	// Create the DNS record set for the service.
-	recordSetName := fmt.Sprintf("%s.%s", service.ObjectMeta.Name, c.domainNameSuffix)
+	recordSetName := fmt.Sprintf("%s.%s", serviceName, c.domainNameSuffix)
 	recordSet := dns.RecordSet{
 		Name: recordSetName,
 		Type: string(dns.CNAME),
@@ -232,15 +248,11 @@ func (c *Controller) deleteService(obj interface{}) {
 		return
 	}
 
-	// Check that the service name is not empty.
-	if len(service.ObjectMeta.Name) <= 0 {
-		// TODO(jessfraz): Generate a name for the service and update the service.
-		logrus.Warn("[service] delete: service name is empty, skipping for now...")
-		return
-	}
+	// Get the service name.
+	serviceName := getName(service.ObjectMeta)
 
 	// Delete the DNS record set for the service.
-	recordSetName := fmt.Sprintf("%s.%s", service.ObjectMeta.Name, c.domainNameSuffix)
+	recordSetName := fmt.Sprintf("%s.%s", serviceName, c.domainNameSuffix)
 	if err := client.DeleteRecordSet(c.resourceGroupName, c.domainNameSuffix, dns.CNAME, recordSetName); err != nil {
 		logrus.Warnf("[service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
 
@@ -340,4 +352,27 @@ func getKubeConfig(kubeconfig string) (*rest.Config, error) {
 	}
 
 	return config, err
+}
+
+// getName returns the objectMeta.Name if it is set, or the Annotation label.
+// If both are empty it will generate one.
+func getName(metadata metav1.ObjectMeta) string {
+	// If we have a name return early.
+	if len(metadata.Name) > 0 {
+		return metadata.Name
+	}
+
+	// Check the annotation for the name.
+	if metadata.Annotations != nil {
+		name, ok := metadata.Annotations[httpApplicationRoutingServiceNameLabel]
+		if ok && len(name) > 0 {
+			// If we have a name and it is non-empty, return it.
+			return name
+		}
+	}
+
+	// Generate a name.
+	// This should then be updated for the parent object in the annotation.
+	return namesgenerator.GetRandomName(10)
+
 }
