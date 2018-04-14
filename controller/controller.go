@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 	"sync"
 	"time"
@@ -21,9 +20,7 @@ import (
 	core "k8s.io/client-go/kubernetes/typed/core/v1"
 	listers "k8s.io/client-go/listers/core/v1"
 	extensionslisters "k8s.io/client-go/listers/extensions/v1beta1"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 )
@@ -36,7 +33,7 @@ const (
 // Controller defines the controller object needed for the controller.
 type Controller struct {
 	azAuth       *azure.Authentication
-	k8sClient    *kubernetes.Clientset
+	k8sClient    kubernetes.Interface
 	k8sNamespace string
 
 	domainNameSuffix  string
@@ -85,16 +82,6 @@ func New(opts Options) (*Controller, error) {
 		return nil, err
 	}
 
-	// Create the k8s client.
-	config, err := getKubeConfig(opts.KubeConfig)
-	if err != nil {
-		return nil, err
-	}
-	k8sClient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
 	// Get the Azure authentication credentials.
 	azAuth, err := azure.GetAuthCreds(opts.AzureConfig)
 	if err != nil {
@@ -114,18 +101,18 @@ func New(opts Options) (*Controller, error) {
 	broadcaster := record.NewBroadcaster()
 	broadcaster.StartLogging(logrus.Infof)
 	broadcaster.StartRecordingToSink(&core.EventSinkImpl{
-		Interface: k8sClient.CoreV1().Events(opts.KubeNamespace),
+		Interface: opts.KubeClient.CoreV1().Events(opts.KubeNamespace),
 	})
 	recorder := broadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: controllerName})
 
 	// Obtain references to shared index informers for the Ingress and Service types.
-	ingressInformer := informers.NewFilteredSharedInformerFactory(k8sClient, opts.ResyncPeriod, opts.KubeNamespace, nil).Extensions().V1beta1().Ingresses()
-	serviceInformer := informers.NewFilteredSharedInformerFactory(k8sClient, opts.ResyncPeriod, opts.KubeNamespace, nil).Core().V1().Services()
+	ingressInformer := informers.NewFilteredSharedInformerFactory(opts.KubeClient, opts.ResyncPeriod, opts.KubeNamespace, nil).Extensions().V1beta1().Ingresses()
+	serviceInformer := informers.NewFilteredSharedInformerFactory(opts.KubeClient, opts.ResyncPeriod, opts.KubeNamespace, nil).Core().V1().Services()
 
 	// Create the new controller.
 	controller := &Controller{
 		azAuth:       azAuth,
-		k8sClient:    k8sClient,
+		k8sClient:    opts.KubeClient,
 		k8sNamespace: opts.KubeNamespace,
 
 		ingressesLister: ingressInformer.Lister(),
@@ -139,6 +126,8 @@ func New(opts Options) (*Controller, error) {
 		resourceGroupName: opts.ResourceGroupName,
 
 		recorder: recorder,
+
+		stopCh: make(chan struct{}),
 	}
 
 	logrus.Info("Setting up event handlers...")
@@ -208,27 +197,6 @@ func (c *Controller) Shutdown() error {
 	}
 
 	return nil
-}
-
-func getKubeConfig(kubeconfig string) (*rest.Config, error) {
-	// Check if the kubeConfig file exists.
-	if _, err := os.Stat(kubeconfig); !os.IsNotExist(err) {
-		// Get the kubeconfig from the filepath.
-		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-		if err != nil {
-			return nil, err
-		}
-
-		return config, err
-	}
-
-	// Set to in-cluster config because the passed config does not exist.
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return config, err
 }
 
 // getName returns the objectMeta.Name if it is set, or the Annotation label.

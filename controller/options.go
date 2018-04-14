@@ -3,12 +3,14 @@ package controller
 import (
 	"errors"
 	"time"
+
+	"k8s.io/client-go/kubernetes"
 )
 
 // Options holds the options for a controller instance.
 type Options struct {
 	AzureConfig   string
-	KubeConfig    string
+	KubeClient    kubernetes.Interface
 	KubeNamespace string
 
 	DomainNameRoot    string
@@ -25,8 +27,8 @@ func (opts Options) validate() error {
 		return errors.New("Azure config cannot be empty")
 	}
 
-	if len(opts.KubeConfig) <= 0 {
-		return errors.New("Kube config cannot be empty")
+	if opts.KubeClient == nil {
+		return errors.New("Kube client cannot be nil")
 	}
 
 	if len(opts.KubeNamespace) <= 0 {

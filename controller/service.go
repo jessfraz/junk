@@ -11,7 +11,7 @@ import (
 
 // addService adds a dns record set for a loadbalancer to the zone.
 func (c *Controller) addService(obj *v1.Service) {
-	logrus.Debugf("[service] add: %#v", *obj)
+	logrus.Debugf("[service] add: from workqueue -> %#v", *obj)
 
 	// Get the resource from our lister. We do this as the delayed nature of the
 	// workqueue means the items in the informer cache may actually be
@@ -34,6 +34,8 @@ func (c *Controller) addService(obj *v1.Service) {
 		c.recorder.Eventf(obj, v1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: getting %s in namespace %s failed: %v", name, namespace, err)
 		return
 	}
+
+	logrus.Debugf("[service] add: from lister -> %#v", *service)
 
 	// Check that the service type is a load balancer.
 	if service.Spec.Type != v1.ServiceTypeLoadBalancer {
@@ -101,7 +103,7 @@ func (c *Controller) addService(obj *v1.Service) {
 
 // deleteService deletes a dns record set for a loadbalancer from the zone.
 func (c *Controller) deleteService(obj *v1.Service) {
-	logrus.Debugf("[service] delete: %#v", *obj)
+	logrus.Debugf("[service] delete: from workqueue -> %#v", *obj)
 
 	// Get the resource from our lister. We do this as the delayed nature of the
 	// workqueue means the items in the informer cache may actually be
@@ -117,6 +119,8 @@ func (c *Controller) deleteService(obj *v1.Service) {
 		service = obj
 		logrus.Warnf("[service] delete: getting %s in namespace %s failed: %v, trying to garbage collect regardless", name, namespace, err)
 	}
+
+	logrus.Debugf("[service] delete: from lister -> %#v", *service)
 
 	// Check that the service type is a load balancer.
 	if service.Spec.Type != v1.ServiceTypeLoadBalancer {

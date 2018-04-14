@@ -14,6 +14,9 @@ import (
 	"github.com/jessfraz/k8s-aks-dns-ingress/version"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -59,7 +62,7 @@ func init() {
 	// Parse flags.
 	fs.StringVar(&azureConfig, "azureconfig", os.Getenv("AZURE_AUTH_LOCATION"), "Azure service principal configuration file (eg. path to azure.json, defaults to the value of 'AZURE_AUTH_LOCATION' env var")
 	fs.StringVar(&kubeConfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config)")
-	fs.StringVar(&kubeNamespace, "namespace", v1.NamespaceAll, "Kubernetes namespace to watch for ingress (default is to watch all namespaces)")
+	fs.StringVar(&kubeNamespace, "namespace", v1.NamespaceAll, "Kubernetes namespace to watch for updates (default is to watch all namespaces)")
 
 	fs.StringVar(&domainNameRoot, "domain", os.Getenv("DOMAIN_NAME_ROOT"), "Root domain name to use for the creating the DNS record sets, defaults to the value of 'DOMAIN_NAME_ROOT' env var")
 	fs.StringVar(&resourceGroupName, "resource-group", os.Getenv("AZURE_RESOURCE_GROUP"), "Azure resource group name, defaults to the value of 'AZURE_RESOURCE_GROUP' env var")
@@ -134,10 +137,20 @@ func main() {
 		logrus.Fatalf("Parsing interval %s as duration failed: %v", interval, err)
 	}
 
+	// Create the k8s client.
+	config, err := getKubeConfig(kubeConfig)
+	if err != nil {
+		logrus.Fatalf("Getting kube config %q failed: %v", kubeConfig, err)
+	}
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		logrus.Fatalf("Creating k8s client failed: %v", err)
+	}
+
 	// Create the controller object.
 	opts := controller.Options{
 		AzureConfig:   azureConfig,
-		KubeConfig:    kubeConfig,
+		KubeClient:    k8sClient,
 		KubeNamespace: kubeNamespace,
 
 		DomainNameRoot:    domainNameRoot,
@@ -169,6 +182,27 @@ func getHomeDir() (string, error) {
 		return "", err
 	}
 	return u.HomeDir, nil
+}
+
+func getKubeConfig(kubeconfig string) (*rest.Config, error) {
+	// Check if the kubeConfig file exists.
+	if _, err := os.Stat(kubeconfig); !os.IsNotExist(err) {
+		// Get the kubeconfig from the filepath.
+		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			return nil, err
+		}
+
+		return config, err
+	}
+
+	// Set to in-cluster config because the passed config does not exist.
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return config, err
 }
 
 func usageAndExit(fs *flag.FlagSet, message string, exitCode int) {
