@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,6 +15,85 @@ import (
 var (
 	testIPManager = testIP{}
 )
+
+func TestControllerSingleIngress(t *testing.T) {
+	ingress := newIngress(map[string]map[string]string{
+		"foo.example.com": {
+			"/foo1": "foo1svc",
+			"/foo2": "foo2svc",
+		},
+	})
+	controller, fakeClient := newTestController(t)
+	defer controller.Shutdown()
+
+	// Run the controller in a goroutine.
+	go func(c *Controller) {
+		if err := c.Run(1); err != nil {
+			c.Shutdown()
+			logrus.Fatalf("running controller failed: %v", err)
+		}
+	}(controller)
+
+	addIngress(t, controller, ingress)
+
+	// Make sure we got events that match "create" "ingresses"
+	// This is more consistent that matching all the actions.
+	foundCreateIngress := false
+	for !foundCreateIngress {
+		// Check our actions.
+		actions := fakeClient.Actions()
+		for _, a := range actions {
+			if a.Matches("create", "ingresses") {
+				foundCreateIngress = true
+				break
+			}
+		}
+	}
+}
+
+func TestControllerSingleIngressWithDelete(t *testing.T) {
+	ingress := newIngress(map[string]map[string]string{
+		"foo.example.com": {
+			"/foo1": "foo1svc",
+			"/foo2": "foo2svc",
+		},
+	})
+	controller, fakeClient := newTestController(t)
+	defer controller.Shutdown()
+
+	// Run the controller in a goroutine.
+	go func(c *Controller) {
+		if err := c.Run(1); err != nil {
+			c.Shutdown()
+			logrus.Fatalf("running controller failed: %v", err)
+		}
+	}(controller)
+
+	addIngress(t, controller, ingress)
+
+	// Delete the ingress from our fake clientset.
+	if err := controller.k8sClient.ExtensionsV1beta1().Ingresses(ingress.Namespace).Delete(ingress.GetName(), &meta.DeleteOptions{}); err != nil {
+		t.Fatalf("deleting ingress failed: %v", err)
+	}
+
+	// Make sure we got events that match "create" "ingresses" and "delete" "ingresses"
+	// This is more consistent that matching all the actions.
+	foundCreateIngress, foundDeleteIngress := false, false
+	for !(foundCreateIngress && foundDeleteIngress) {
+		// Check our actions.
+		actions := fakeClient.Actions()
+		for _, a := range actions {
+			if a.Matches("create", "ingresses") {
+				foundCreateIngress = true
+				continue
+			}
+			if a.Matches("delete", "ingresses") {
+				foundDeleteIngress = true
+				continue
+			}
+		}
+	}
+}
 
 // addIngress adds an Ingress resource to the fake clientset's ingress store.
 func addIngress(t *testing.T, c *Controller, ingress *extensions.Ingress) {
