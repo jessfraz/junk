@@ -130,6 +130,12 @@
   version = "1.0.0"
 
 [[projects]]
+  name = "github.com/pborman/uuid"
+  packages = ["."]
+  revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
+  version = "v1.1"
+
+[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
@@ -285,6 +291,7 @@
     "pkg/util/runtime",
     "pkg/util/sets",
     "pkg/util/strategicpatch",
+    "pkg/util/uuid",
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/wait",
@@ -462,6 +469,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6b34481863f160d661075894eb91cbfb795870b703bdc5b470dce35901e7801c"
+  inputs-digest = "2bcfe9bec3098efcb1643e7878ee82c179d86f2e45dd2751ee37d39d794d50d6"
   solver-name = "gps-cdcl"
   solver-version = 1

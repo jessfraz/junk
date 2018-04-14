@@ -6,6 +6,18 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 )
 
+const (
+	addAction    action = "insert"
+	deleteAction action = "add"
+)
+
+type action string
+
+type queueItem struct {
+	action action
+	obj    interface{}
+}
+
 // enqueueAdd takes a resource and converts it into a queueItem
 // with the addAction and adds it to the  work queue.
 func (c *Controller) enqueueAdd(obj interface{}) {

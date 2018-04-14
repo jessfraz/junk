@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
+	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
 	"github.com/moby/moby/pkg/namesgenerator"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
@@ -32,7 +33,9 @@ const (
 
 // Controller defines the controller object needed for the controller.
 type Controller struct {
-	azAuth       *azure.Authentication
+	azAuth      *azure.Authentication
+	azDNSClient dns.Interface
+
 	k8sClient    kubernetes.Interface
 	k8sNamespace string
 
@@ -41,8 +44,9 @@ type Controller struct {
 
 	ingressesLister extensionslisters.IngressLister
 	ingressesSynced cache.InformerSynced
-	servicesLister  listers.ServiceLister
-	servicesSynced  cache.InformerSynced
+
+	servicesLister listers.ServiceLister
+	servicesSynced cache.InformerSynced
 
 	// workqueue is a rate limited work queue. This is used to queue work to be
 	// processed instead of performing it as soon as a change happens. This
@@ -63,28 +67,10 @@ type Controller struct {
 	shutdown bool
 }
 
-type action string
-
-const (
-	addAction    action = "insert"
-	deleteAction action = "add"
-)
-
-type queueItem struct {
-	action action
-	obj    interface{}
-}
-
 // New creates a new controller object.
 func New(opts Options) (*Controller, error) {
 	// Validate our controller options.
 	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-
-	// Get the Azure authentication credentials.
-	azAuth, err := azure.GetAuthCreds(opts.AzureConfig)
-	if err != nil {
 		return nil, err
 	}
 
@@ -93,7 +79,7 @@ func New(opts Options) (*Controller, error) {
 	// - HEX(Subscription Id + Cluster Resource Group Name + Resource Name)
 	// - Region
 	// - The domain name root
-	zone := hex.EncodeToString([]byte(azAuth.SubscriptionID + opts.ResourceGroupName + opts.ResourceName))
+	zone := hex.EncodeToString([]byte(opts.AzureAuthentication.SubscriptionID + opts.ResourceGroupName + opts.ResourceName))
 	domainNameSuffix := fmt.Sprintf("%s.%s.%s", zone, opts.Region, opts.DomainNameRoot)
 
 	// Create the event watcher.
@@ -111,14 +97,17 @@ func New(opts Options) (*Controller, error) {
 
 	// Create the new controller.
 	controller := &Controller{
-		azAuth:       azAuth,
+		azAuth:      opts.AzureAuthentication,
+		azDNSClient: opts.AzureDNSClient,
+
 		k8sClient:    opts.KubeClient,
 		k8sNamespace: opts.KubeNamespace,
 
 		ingressesLister: ingressInformer.Lister(),
 		ingressesSynced: ingressInformer.Informer().HasSynced,
-		servicesLister:  serviceInformer.Lister(),
-		servicesSynced:  serviceInformer.Informer().HasSynced,
+
+		servicesLister: serviceInformer.Lister(),
+		servicesSynced: serviceInformer.Informer().HasSynced,
 
 		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), controllerName),
 
@@ -183,8 +172,7 @@ func (c *Controller) Run(threadiness int) error {
 }
 
 // Shutdown stops controller.
-func (c *Controller) Shutdown() error {
-	// Stop is invoked from the http endpoint.
+func (c *Controller) Shutdown() {
 	c.stopLock.Lock()
 	defer c.stopLock.Unlock()
 
@@ -195,8 +183,6 @@ func (c *Controller) Shutdown() error {
 		c.workqueue.ShutDown()
 		c.shutdown = true
 	}
-
-	return nil
 }
 
 // getName returns the objectMeta.Name if it is set, or the Annotation label.

@@ -49,7 +49,7 @@ func (c *Controller) addService(obj *v1.Service) {
 	}
 
 	// Create the Azure DNS client.
-	client, err := dns.NewClient(c.azAuth)
+	client, err := c.getAzureDNSClient()
 	if err != nil {
 		logrus.Warnf("[service] add: creating dns client failed: %v", err)
 
@@ -129,7 +129,7 @@ func (c *Controller) deleteService(obj *v1.Service) {
 	}
 
 	// Create the Azure DNS client.
-	client, err := dns.NewClient(c.azAuth)
+	client, err := c.getAzureDNSClient()
 	if err != nil {
 		logrus.Warnf("[service] delete: creating dns client failed: %v", err)
 

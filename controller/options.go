@@ -4,12 +4,16 @@ import (
 	"errors"
 	"time"
 
+	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
+	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
 	"k8s.io/client-go/kubernetes"
 )
 
 // Options holds the options for a controller instance.
 type Options struct {
-	AzureConfig   string
+	AzureAuthentication *azure.Authentication
+	AzureDNSClient      dns.Interface
+
 	KubeClient    kubernetes.Interface
 	KubeNamespace string
 
@@ -22,17 +26,15 @@ type Options struct {
 }
 
 // validate returns an error if the options are not valid for the controller.
+// KubeNamespace can be empty because that is the value of v1.NamespaceAll.
 func (opts Options) validate() error {
-	if len(opts.AzureConfig) <= 0 {
-		return errors.New("Azure config cannot be empty")
+	// AzureDNSClient is only not nil for the tests.
+	if opts.AzureAuthentication == nil && opts.AzureDNSClient == nil {
+		return errors.New("Azure authentication cannot be nil")
 	}
 
 	if opts.KubeClient == nil {
 		return errors.New("Kube client cannot be nil")
-	}
-
-	if len(opts.KubeNamespace) <= 0 {
-		return errors.New("Kube namespace cannot be empty")
 	}
 
 	if len(opts.DomainNameRoot) <= 0 {

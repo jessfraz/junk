@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
 	"github.com/jessfraz/k8s-aks-dns-ingress/controller"
 	"github.com/jessfraz/k8s-aks-dns-ingress/version"
 	"github.com/sirupsen/logrus"
@@ -123,9 +124,7 @@ func main() {
 			logrus.Infof("Received %s, exiting...", sig.String())
 
 			// Shutdown the controller gracefully.
-			if err := ctrl.Shutdown(); err != nil {
-				logrus.Fatalf("Shutting down controller gracefully failed: %v", err)
-			}
+			ctrl.Shutdown()
 
 			os.Exit(0)
 		}
@@ -135,6 +134,15 @@ func main() {
 	resyncPeriod, err := time.ParseDuration(interval)
 	if err != nil {
 		logrus.Fatalf("Parsing interval %s as duration failed: %v", interval, err)
+	}
+
+	// Get the Azure authentication credentials.
+	if len(azureConfig) <= 0 {
+		logrus.Fatal("azure config cannot be empty")
+	}
+	azAuth, err := azure.GetAuthCreds(azureConfig)
+	if err != nil {
+		logrus.Fatalf("Getting Azure authentication credentials from config %s failed: %v", azureConfig, err)
 	}
 
 	// Create the k8s client.
@@ -149,7 +157,8 @@ func main() {
 
 	// Create the controller object.
 	opts := controller.Options{
-		AzureConfig:   azureConfig,
+		AzureAuthentication: azAuth,
+
 		KubeClient:    k8sClient,
 		KubeNamespace: kubeNamespace,
 
