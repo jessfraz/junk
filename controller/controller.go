@@ -42,11 +42,11 @@ type Controller struct {
 	domainNameSuffix  string
 	resourceGroupName string
 
+	ingressInformer cache.SharedIndexInformer
 	ingressesLister extensionslisters.IngressLister
-	ingressesSynced cache.InformerSynced
 
-	servicesLister listers.ServiceLister
-	servicesSynced cache.InformerSynced
+	serviceInformer cache.SharedIndexInformer
+	servicesLister  listers.ServiceLister
 
 	// workqueue is a rate limited work queue. This is used to queue work to be
 	// processed instead of performing it as soon as a change happens. This
@@ -103,11 +103,11 @@ func New(opts Options) (*Controller, error) {
 		k8sClient:    opts.KubeClient,
 		k8sNamespace: opts.KubeNamespace,
 
+		ingressInformer: ingressInformer.Informer(),
 		ingressesLister: ingressInformer.Lister(),
-		ingressesSynced: ingressInformer.Informer().HasSynced,
 
-		servicesLister: serviceInformer.Lister(),
-		servicesSynced: serviceInformer.Informer().HasSynced,
+		serviceInformer: serviceInformer.Informer(),
+		servicesLister:  serviceInformer.Lister(),
 
 		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), controllerName),
 
@@ -152,9 +152,15 @@ func (c *Controller) Run(threadiness int) error {
 
 	logrus.Info("Starting controller...")
 
+	logrus.Infof("Starting ingress informer...")
+	go c.ingressInformer.Run(c.stopCh)
+
+	logrus.Infof("Starting service informer...")
+	go c.serviceInformer.Run(c.stopCh)
+
 	// Wait for the caches to be synced before starting workers.
 	logrus.Info("Waiting for informer caches to sync...")
-	if ok := cache.WaitForCacheSync(c.stopCh, c.ingressesSynced, c.servicesSynced); !ok {
+	if ok := cache.WaitForCacheSync(c.stopCh, c.ingressInformer.HasSynced, c.serviceInformer.HasSynced); !ok {
 		return errors.New("Failed to wait for caches to sync")
 	}
 
@@ -180,7 +186,6 @@ func (c *Controller) Shutdown() {
 	if !c.shutdown {
 		logrus.Info("Shutting down controller queues.")
 		c.workqueue.ShutDown()
-		// close(c.stopCh)
 		c.shutdown = true
 	}
 }

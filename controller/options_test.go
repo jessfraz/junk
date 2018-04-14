@@ -103,10 +103,8 @@ func TestValidateOptionsResyncPeriodZero(t *testing.T) {
 		ResourceName:      fakeResourceName,
 		Region:            fakeRegion,
 	}
-	err := opts.validate()
-
-	if err != errResyncPeriodZero {
-		t.Fatalf("expected error %v, got %v", errResyncPeriodZero, err)
+	if err := opts.validate(); err != nil {
+		t.Fatal(err)
 	}
 }
 

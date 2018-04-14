@@ -16,7 +16,6 @@ var (
 	errResourceGroupNameEmpty = errors.New("Resource group name is empty")
 	errResourceNameEmpty      = errors.New("Resource name is empty")
 	errRegionEmpty            = errors.New("Region is empty")
-	errResyncPeriodZero       = errors.New("Resync period is zero")
 )
 
 // Options holds the options for a controller instance.
@@ -61,10 +60,6 @@ func (opts Options) validate() error {
 
 	if len(opts.Region) <= 0 {
 		return errRegionEmpty
-	}
-
-	if opts.ResyncPeriod <= 0 {
-		return errResyncPeriodZero
 	}
 
 	return nil

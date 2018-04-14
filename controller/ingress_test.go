@@ -2,13 +2,13 @@ package controller
 
 import (
 	"fmt"
-	"testing"
 
 	"k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/apimachinery/pkg/watch"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 )
 
 // addIngress adds an Ingress resource to the fake clientset's ingress store.
-func addIngress(t *testing.T, c *Controller, ingress *extensions.Ingress) {
+func addIngress(ingressWatcher, serviceWatcher *watch.FakeWatcher, ingress *extensions.Ingress) {
 	for _, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			service := &v1.Service{
@@ -26,27 +26,23 @@ func addIngress(t *testing.T, c *Controller, ingress *extensions.Ingress) {
 				},
 			}
 
-			var svcPort v1.ServicePort
+			var servicePort v1.ServicePort
 			switch path.Backend.ServicePort.Type {
 			case intstr.Int:
-				svcPort = v1.ServicePort{Port: path.Backend.ServicePort.IntVal}
+				servicePort = v1.ServicePort{Port: path.Backend.ServicePort.IntVal}
 			default:
-				svcPort = v1.ServicePort{Name: path.Backend.ServicePort.StrVal}
+				servicePort = v1.ServicePort{Name: path.Backend.ServicePort.StrVal}
 			}
 
-			service.Spec.Ports = []v1.ServicePort{svcPort}
+			service.Spec.Ports = []v1.ServicePort{servicePort}
 
 			// Add the Service resource to our fake clientset.
-			if _, err := c.k8sClient.CoreV1().Services(service.Namespace).Create(service); err != nil {
-				t.Fatalf("creating service failed: %v", err)
-			}
+			serviceWatcher.Add(service)
 		}
 	}
 
 	// Add the Ingress resource to our fake clientset.
-	if _, err := c.k8sClient.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(ingress); err != nil {
-		t.Fatalf("creating ingress failed: %v", err)
-	}
+	ingressWatcher.Add(ingress)
 }
 
 // newIngress returns a new Ingress resource with the given path map.

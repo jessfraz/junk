@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -25,7 +26,13 @@ func init() {
 }
 
 func TestController(t *testing.T) {
-	controller := newTestController(t)
+	ingress := newIngress(map[string]map[string]string{
+		"foo.example.com": {
+			"/foo1": "foo1svc",
+			"/foo2": "foo2svc",
+		},
+	})
+	controller := newTestController(t, newService(), ingress)
 	defer controller.Shutdown()
 
 	// Run the controller in a goroutine.
@@ -36,18 +43,8 @@ func TestController(t *testing.T) {
 		}
 	}(controller)
 
-	// Add an Ingress resource.
-	addIngress(t, controller, newIngress(map[string]map[string]string{
-		"foo.example.com": {
-			"/foo1": "foo1svc",
-			"/foo2": "foo2svc",
-		},
-	}))
-
-	// Add a Service resource.
-	addService(t, controller, newService())
-
-	time.Sleep(time.Second * 20)
+	logrus.Info("sleeping")
+	time.Sleep(time.Second * 15)
 
 	// Check our mock DNS record sets.
 }
@@ -89,8 +86,8 @@ func TestGetName(t *testing.T) {
 }
 
 // newTestController creates a new controller for testing.
-func newTestController(t *testing.T) *Controller {
-	k8sClient := fake.NewSimpleClientset()
+func newTestController(t *testing.T, objects ...runtime.Object) *Controller {
+	k8sClient := fake.NewSimpleClientset(objects...)
 	azDNSClient := mock.NewClient()
 
 	opts := Options{
@@ -107,7 +104,7 @@ func newTestController(t *testing.T) *Controller {
 		ResourceName:      fakeResourceName,
 		Region:            fakeRegion,
 
-		ResyncPeriod: time.Second,
+		ResyncPeriod: 0,
 	}
 	controller, err := New(opts)
 	if err != nil {
