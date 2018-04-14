@@ -127,7 +127,7 @@ func TestAddIngress(t *testing.T) {
 	addIngress(t, controller, ingress, false)
 
 	addIngressTests := []struct {
-		ingress    *extensions.Ingress
+		ingress    extensions.Ingress
 		annotation string
 	}{
 		{
@@ -135,10 +135,10 @@ func TestAddIngress(t *testing.T) {
 			annotation: ingress.GetName(),
 		},
 		{
-			ingress: &extensions.Ingress{ObjectMeta: meta.ObjectMeta{Namespace: "blah"}},
+			ingress: extensions.Ingress{ObjectMeta: meta.ObjectMeta{Namespace: "blah"}},
 		},
 		{
-			// purposely empty to check nil case
+			ingress: extensions.Ingress{},
 		},
 	}
 
@@ -183,7 +183,7 @@ func TestDeleteIngress(t *testing.T) {
 	addIngress(t, controller, ingress, false)
 
 	deleteIngressTests := []struct {
-		ingress    *extensions.Ingress
+		ingress    extensions.Ingress
 		annotation string
 	}{
 		{
@@ -191,10 +191,10 @@ func TestDeleteIngress(t *testing.T) {
 			annotation: ingress.GetName(),
 		},
 		{
-			ingress: &extensions.Ingress{ObjectMeta: meta.ObjectMeta{Namespace: "blah"}},
+			ingress: extensions.Ingress{ObjectMeta: meta.ObjectMeta{Namespace: "blah"}},
 		},
 		{
-			// purposely empty to check nil case
+			ingress: extensions.Ingress{},
 		},
 	}
 
@@ -219,7 +219,7 @@ func TestDeleteIngress(t *testing.T) {
 }
 
 // addIngress adds an Ingress resource to the fake clientset's ingress store.
-func addIngress(t *testing.T, c *Controller, ingress *extensions.Ingress, isUpdate bool) {
+func addIngress(t *testing.T, c *Controller, ingress extensions.Ingress, isUpdate bool) {
 	for _, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			service := &v1.Service{
@@ -256,20 +256,20 @@ func addIngress(t *testing.T, c *Controller, ingress *extensions.Ingress, isUpda
 
 	if isUpdate {
 		// Update the Ingress resource in our fake clientset.
-		if _, err := c.k8sClient.ExtensionsV1beta1().Ingresses(ingress.Namespace).Update(ingress); err != nil {
+		if _, err := c.k8sClient.ExtensionsV1beta1().Ingresses(ingress.Namespace).Update(&ingress); err != nil {
 			t.Fatalf("updating ingress failed: %v", err)
 		}
 		return
 	}
 
 	// Add the Ingress resource to our fake clientset.
-	if _, err := c.k8sClient.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(ingress); err != nil {
+	if _, err := c.k8sClient.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(&ingress); err != nil {
 		t.Fatalf("creating ingress failed: %v", err)
 	}
 }
 
 // newIngress returns a new Ingress resource with the given path map.
-func newIngress(rules map[string]map[string]string) *extensions.Ingress {
+func newIngress(rules map[string]map[string]string) extensions.Ingress {
 	r := []extensions.IngressRule{}
 	for host, pathMap := range rules {
 		httpPaths := []extensions.HTTPIngressPath{}
@@ -293,7 +293,7 @@ func newIngress(rules map[string]map[string]string) *extensions.Ingress {
 		})
 	}
 
-	ret := &extensions.Ingress{
+	ret := extensions.Ingress{
 		TypeMeta: meta.TypeMeta{
 			Kind:       "Ingress",
 			APIVersion: "extensions/v1beta1",

@@ -78,15 +78,15 @@ func (c *Controller) processNextWorkItem() bool {
 		switch v := item.obj.(type) {
 		case *extensions.Ingress:
 			if item.action == addAction {
-				c.addIngress(v)
+				c.addIngress(*v)
 			} else {
-				c.deleteIngress(v)
+				c.deleteIngress(*v)
 			}
 		case *v1.Service:
 			if item.action == addAction {
-				c.addService(v)
+				c.addService(*v)
 			} else {
-				c.deleteService(v)
+				c.deleteService(*v)
 			}
 		default:
 			// As the item in the workqueue is actually invalid, we call

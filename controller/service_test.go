@@ -25,19 +25,23 @@ func TestControllerSingleService(t *testing.T) {
 
 	// Add the Service resource to our fake clientset.
 	service := newService()
-	if _, err := controller.k8sClient.CoreV1().Services(service.Namespace).Create(service); err != nil {
+	if _, err := controller.k8sClient.CoreV1().Services(service.GetNamespace()).Create(&service); err != nil {
 		t.Fatalf("creating service failed: %v", err)
 	}
 
-	// Make sure we got events that match "create" "services" and "create" "events"
+	// Make sure we got events that match "create" "services", "update" "services", and "create" "events"
 	// This is more consistent that matching all the actions.
-	var foundCreateService, foundCreateEvent bool
-	for !(foundCreateService && foundCreateEvent) {
+	var foundCreateService, foundUpdateService, foundCreateEvent bool
+	for !(foundCreateService && foundUpdateService && foundCreateEvent) {
 		// Check our actions.
 		actions := fakeClient.Actions()
 		for _, a := range actions {
 			if !foundCreateService && a.Matches("create", "services") {
 				foundCreateService = true
+				continue
+			}
+			if !foundUpdateService && a.Matches("update", "services") {
+				foundUpdateService = true
 				continue
 			}
 			if !foundCreateEvent && a.Matches("create", "events") {
@@ -69,22 +73,22 @@ func TestControllerSingleService(t *testing.T) {
 
 	// Update the Service resource in our fake clientset.
 	service.Spec.LoadBalancerIP = "1.3.3.7"
-	if _, err := controller.k8sClient.CoreV1().Services(service.Namespace).Update(service); err != nil {
+	if _, err := controller.k8sClient.CoreV1().Services(service.Namespace).Update(&service); err != nil {
 		t.Fatalf("updating service failed: %v", err)
 	}
 
-	// Make sure we got events that match "update" "services" and  2 "create" "events"
+	// Make sure we got events that match 2 "update" "services" and  2 "create" "events"
 	// This is more consistent that matching all the actions.
-	var foundUpdateService, foundCreateEvents bool
-	for !(foundUpdateService && foundCreateEvents) {
+	var foundUpdateServices, foundCreateEvents bool
+	for !(foundUpdateServices && foundCreateEvents) {
 		// Check our actions.
 		actions := fakeClient.Actions()
-		var countCreateEvents int
+		var countCreateEvents, countUpdateServices int
 		for _, a := range actions {
-			if !foundUpdateService && a.Matches("update", "services") {
-				foundUpdateService = true
-				continue
+			if !foundUpdateServices && a.Matches("update", "services") {
+				countUpdateServices++
 			}
+			foundUpdateServices = countUpdateServices == 2
 			if !foundCreateEvents && a.Matches("create", "events") {
 				countCreateEvents++
 			}
@@ -156,7 +160,7 @@ func TestAddService(t *testing.T) {
 	emptyLoadBalancerIP := newService()
 	emptyLoadBalancerIP.Spec.LoadBalancerIP = ""
 
-	controller, fakeClient := newTestController(t, stdService, stdService2, clusterIPService, emptyLoadBalancerIP)
+	controller, fakeClient := newTestController(t, &stdService, &stdService2, &clusterIPService, &emptyLoadBalancerIP)
 	defer controller.Shutdown()
 
 	// Run the controller in a goroutine.
@@ -168,7 +172,7 @@ func TestAddService(t *testing.T) {
 	}(controller)
 
 	addServiceTests := []struct {
-		service    *v1.Service
+		service    v1.Service
 		annotation string
 	}{
 		{
@@ -185,10 +189,103 @@ func TestAddService(t *testing.T) {
 			service: newService(),
 		},
 		{
-			service: &v1.Service{ObjectMeta: meta.ObjectMeta{Namespace: "blah"}},
+			service: v1.Service{ObjectMeta: meta.ObjectMeta{Namespace: "blah"}},
 		},
 		{
-			// purposely empty to check nil case
+			service: v1.Service{},
+		},
+		{
+			// keep this one at the end, we use it to change the DNS client to nil
+			service:    stdService2,
+			annotation: stdService2.GetName(),
+		},
+	}
+
+	// Make sure we got events that match "update" "services"
+	// This is more consistent that matching all the actions.
+	var foundUpdateServices bool
+	for !foundUpdateServices {
+		// Check our actions.
+		actions := fakeClient.Actions()
+		var countUpdateServices int
+		for _, a := range actions {
+			if !foundUpdateServices && a.Matches("update", "services") {
+				countUpdateServices++
+			}
+			foundUpdateServices = countUpdateServices == 2
+		}
+	}
+
+	for _, a := range addServiceTests {
+		if &a.service == &stdService2 {
+			controller.azDNSClient = nil
+		}
+
+		// Run the addService function.
+		controller.addService(a.service)
+
+		// Get the service object from our client set so we can compare the annotations.
+		service, err := controller.servicesLister.Services(a.service.GetNamespace()).Get(a.service.GetName())
+		if err != nil {
+			if len(a.annotation) <= 0 {
+				// Let's just ignore the error if we don't have an annotation to match againt anyways.
+				continue
+			}
+
+			t.Fatalf("getting service %s failed: %v", service.GetName(), err)
+		}
+
+		annotation, ok := service.ObjectMeta.Annotations[httpApplicationRoutingServiceNameLabel]
+		if !ok && len(a.annotation) > 0 {
+			t.Fatalf("expected annotation on service to be %q, got nothing", a.annotation)
+		}
+
+		if a.annotation != annotation {
+			t.Fatalf("expected annotation on service to be %q, got %q", a.annotation, annotation)
+		}
+	}
+}
+
+func TestDeleteService(t *testing.T) {
+	stdService := newService()
+	stdService2 := newService()
+
+	clusterIPService := newServiceWithClusterIP()
+
+	emptyLoadBalancerIP := newService()
+	emptyLoadBalancerIP.Spec.LoadBalancerIP = ""
+
+	controller, fakeClient := newTestController(t, &stdService, &stdService2, &clusterIPService, &emptyLoadBalancerIP)
+	defer controller.Shutdown()
+
+	// Run the controller in a goroutine.
+	go func(c *Controller) {
+		if err := c.Run(1); err != nil {
+			c.Shutdown()
+			logrus.Fatalf("running controller failed: %v", err)
+		}
+	}(controller)
+
+	deleteServiceTests := []struct {
+		service v1.Service
+	}{
+		{
+			service: stdService,
+		},
+		{
+			service: clusterIPService,
+		},
+		{
+			service: emptyLoadBalancerIP,
+		},
+		{
+			service: newService(),
+		},
+		{
+			service: v1.Service{ObjectMeta: meta.ObjectMeta{Namespace: "blah"}},
+		},
+		{
+			service: v1.Service{},
 		},
 		{
 			// keep this one at the end, we use it to change the DNS client to nil
@@ -210,95 +307,19 @@ func TestAddService(t *testing.T) {
 		}
 	}
 
-	for _, a := range addServiceTests {
-		if a.service == stdService2 {
+	for _, a := range deleteServiceTests {
+		if &a.service == &stdService2 {
 			controller.azDNSClient = nil
 		}
 
-		// Run the addService function.
-		controller.addService(a.service)
-
-		if a.service == nil {
-			continue
-		}
-
-		annotation, ok := a.service.Annotations[httpApplicationRoutingServiceNameLabel]
-		if !ok && len(a.annotation) > 0 {
-			t.Fatalf("expected annotation on service to be %s, got nothing", a.annotation)
-		}
-
-		if a.annotation != annotation {
-			t.Fatalf("expected annotation on service to be %s, got %s", a.annotation, annotation)
-		}
-	}
-}
-
-func TestDeleteService(t *testing.T) {
-	stdService := newService()
-
-	clusterIPService := newServiceWithClusterIP()
-
-	emptyLoadBalancerIP := newService()
-	emptyLoadBalancerIP.Spec.LoadBalancerIP = ""
-
-	controller, fakeClient := newTestController(t, stdService, clusterIPService, emptyLoadBalancerIP)
-	defer controller.Shutdown()
-
-	// Run the controller in a goroutine.
-	go func(c *Controller) {
-		if err := c.Run(1); err != nil {
-			c.Shutdown()
-			logrus.Fatalf("running controller failed: %v", err)
-		}
-	}(controller)
-
-	deleteServiceTests := []struct {
-		service *v1.Service
-	}{
-		{
-			service: stdService,
-		},
-		{
-			service: clusterIPService,
-		},
-		{
-			service: emptyLoadBalancerIP,
-		},
-		{
-			service: newService(),
-		},
-		{
-			service: &v1.Service{ObjectMeta: meta.ObjectMeta{Namespace: "blah"}},
-		},
-		{
-			// purposely empty to check nil case
-		},
-	}
-
-	// Make sure we got events that match "update" "services"
-	// This is more consistent that matching all the actions.
-	var foundUpdateService bool
-	for !foundUpdateService {
-		// Check our actions.
-		actions := fakeClient.Actions()
-		for _, a := range actions {
-			if a.Matches("update", "services") {
-				foundUpdateService = true
-				break
-			}
-		}
-	}
-
-	controller.azDNSClient = nil
-	for _, a := range deleteServiceTests {
 		// Run the deleteService function.
 		controller.deleteService(a.service)
 	}
 }
 
 // newService returns a new Service resource.
-func newService() *v1.Service {
-	ret := &v1.Service{
+func newService() v1.Service {
+	ret := v1.Service{
 		TypeMeta: meta.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
@@ -318,8 +339,8 @@ func newService() *v1.Service {
 }
 
 // newServiceWithClusterIP returns a new Service resource with a CluserIP, not a LoadBalancerIP.
-func newServiceWithClusterIP() *v1.Service {
-	ret := &v1.Service{
+func newServiceWithClusterIP() v1.Service {
+	ret := v1.Service{
 		TypeMeta: meta.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
