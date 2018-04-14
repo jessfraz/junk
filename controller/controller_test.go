@@ -23,7 +23,7 @@ const (
 
 func init() {
 	// Set the logrus level to debug for the tests.
-	// logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetLevel(logrus.DebugLevel)
 }
 
 func TestControllerSingleService(t *testing.T) {
@@ -69,6 +69,62 @@ func TestControllerSingleService(t *testing.T) {
 		{
 			verb:     "create",
 			resource: "events",
+		},
+	}
+
+	// Check our actions.
+	actions := fakeClient.Actions()
+	if len(actions) != len(expectedActions) {
+		t.Fatalf("expected %d actions, got %d: %#v", len(expectedActions), len(actions), actions)
+	}
+	for i, a := range actions {
+		if !a.Matches(expectedActions[i].verb, expectedActions[i].resource) {
+			t.Fatalf("unexpected action for index %d to be verb -> %s resource -> %s, got verb -> %s resource -> %s", i, expectedActions[i].verb, expectedActions[i].resource, a.GetVerb(), a.GetResource().Resource)
+		}
+	}
+}
+
+func TestControllerSingleIngress(t *testing.T) {
+	ingress := newIngress(map[string]map[string]string{
+		"foo.example.com": {
+			"/foo1": "foo1svc",
+			"/foo2": "foo2svc",
+		},
+	})
+	controller, fakeClient := newTestController(t, ingress)
+	defer controller.Shutdown()
+
+	// Run the controller in a goroutine.
+	go func(c *Controller) {
+		if err := c.Run(1); err != nil {
+			c.Shutdown()
+			logrus.Fatalf("running controller failed: %v", err)
+		}
+	}(controller)
+
+	// TODO: figure out a less shitty way to do this.
+	time.Sleep(time.Second * 2)
+
+	// Set our expected actions.
+	expectedActions := []struct {
+		verb     string
+		resource string
+	}{
+		{
+			verb:     "list",
+			resource: "ingresses",
+		},
+		{
+			verb:     "watch",
+			resource: "ingresses",
+		},
+		{
+			verb:     "list",
+			resource: "services",
+		},
+		{
+			verb:     "watch",
+			resource: "services",
 		},
 	}
 
