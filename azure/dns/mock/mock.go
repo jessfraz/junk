@@ -6,48 +6,67 @@ import (
 
 // NewClient creates a new mock DNS client.
 func NewClient() dns.Interface {
-	return &mockClient{}
+	return &mockClient{
+		zoneStore:      map[string]dns.Zone{},
+		recordSetStore: map[string]dns.RecordSet{},
+	}
 }
 
 type mockClient struct {
+	zoneStore      map[string]dns.Zone
+	recordSetStore map[string]dns.RecordSet
 }
 
 func (m *mockClient) CreateZone(resourceGroup, zoneName string, zone dns.Zone) (*dns.Zone, error) {
-	return nil, nil
+	m.zoneStore[zoneName] = zone
+	return &zone, nil
 }
 
 func (m *mockClient) CreateRecordSet(resourceGroup, zoneName string, recordType dns.RecordType, relativeRecordSetName string, recordSet dns.RecordSet) (*dns.RecordSet, error) {
-	return nil, nil
+	m.recordSetStore[relativeRecordSetName] = recordSet
+	return &recordSet, nil
 }
 
 func (m *mockClient) DeleteZone(resourceGroup, zoneName string) error {
+	delete(m.zoneStore, zoneName)
 	return nil
 }
 
 func (m *mockClient) DeleteRecordSet(resourceGroup, zoneName string, recordType dns.RecordType, relativeRecordSetName string) error {
+	delete(m.recordSetStore, relativeRecordSetName)
 	return nil
 }
 
 func (m *mockClient) GetZone(resourceGroup, zoneName string) (*dns.Zone, *int, error) {
-	return nil, nil, nil
+	zone, _ := m.zoneStore[zoneName]
+	return &zone, nil, nil
 }
 
 func (m *mockClient) GetRecordSet(resourceGroup, zoneName string, recordType dns.RecordType, relativeRecordSetName string) (*dns.RecordSet, *int, error) {
-	return nil, nil, nil
+	recordSet, _ := m.recordSetStore[relativeRecordSetName]
+	return &recordSet, nil, nil
 }
 
 func (m *mockClient) ListZones(resourceGroup string) (*dns.ZoneListResult, error) {
-	return nil, nil
+	zones := []dns.Zone{}
+	for _, z := range m.zoneStore {
+		zones = append(zones, z)
+	}
+	return &dns.ZoneListResult{Value: zones}, nil
 }
 
 func (m *mockClient) ListRecordSets(resourceGroup, zoneName string, recordType dns.RecordType) (*dns.RecordSetListResult, error) {
-	return nil, nil
+	recordSets := []dns.RecordSet{}
+	for _, r := range m.recordSetStore {
+		recordSets = append(recordSets, r)
+	}
+	return &dns.RecordSetListResult{Value: recordSets}, nil
 }
 
 func (m *mockClient) UpdateZone(resourceGroup, zoneName string, zone dns.Zone) (*dns.Zone, error) {
-	return nil, nil
+	return m.CreateZone(resourceGroup, zoneName, zone)
 }
 
 func (m *mockClient) UpdateRecordSet(resourceGroup, zoneName string, recordType dns.RecordType, relativeRecordSetName string, recordSet dns.RecordSet) (*dns.RecordSet, error) {
-	return nil, nil
+	return m.CreateRecordSet(resourceGroup, zoneName, recordType, relativeRecordSetName, recordSet)
 }
