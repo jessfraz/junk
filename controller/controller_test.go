@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -46,6 +47,36 @@ func TestController(t *testing.T) {
 func TestControllerInvalidOptions(t *testing.T) {
 	if _, err := New(Options{}); err != errAzureAuthenticationNil {
 		t.Fatalf("expected error %v, got %v", errAzureAuthenticationNil, err)
+	}
+}
+
+func TestGetName(t *testing.T) {
+	getNameTests := []struct {
+		in       meta.ObjectMeta
+		out      string
+		isRandom bool
+	}{
+		{
+			in:  meta.ObjectMeta{Name: "thing"},
+			out: "thing",
+		},
+		{
+			in:  meta.ObjectMeta{Annotations: map[string]string{httpApplicationRoutingServiceNameLabel: "blah.io/thing"}},
+			out: "blah.io/thing",
+		},
+		{
+			isRandom: true,
+		},
+	}
+
+	for _, a := range getNameTests {
+		name := getName(a.in)
+		if !a.isRandom && name != a.out {
+			t.Fatalf("expected %s, got %s for input: %#v", a.out, name, a.in)
+		}
+		if a.isRandom && name == "" {
+			t.Fatal("expected non-empty name after a random generation")
+		}
 	}
 }
 
