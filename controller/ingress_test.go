@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
@@ -38,8 +39,8 @@ func TestControllerSingleIngress(t *testing.T) {
 
 	// Make sure we got events that match "create" "ingresses"
 	// This is more consistent that matching all the actions.
-	foundCreateIngress := false
-	for !foundCreateIngress {
+	var foundCreateIngress bool
+	for foundCreateIngress {
 		// Check our actions.
 		actions := fakeClient.Actions()
 		for _, a := range actions {
@@ -71,6 +72,8 @@ func TestControllerSingleIngressWithDelete(t *testing.T) {
 
 	addIngress(t, controller, ingress)
 
+	time.Sleep(time.Second * 1)
+
 	// Delete the ingress from our fake clientset.
 	if err := controller.k8sClient.ExtensionsV1beta1().Ingresses(ingress.Namespace).Delete(ingress.GetName(), &meta.DeleteOptions{}); err != nil {
 		t.Fatalf("deleting ingress failed: %v", err)
@@ -78,16 +81,16 @@ func TestControllerSingleIngressWithDelete(t *testing.T) {
 
 	// Make sure we got events that match "create" "ingresses" and "delete" "ingresses"
 	// This is more consistent that matching all the actions.
-	foundCreateIngress, foundDeleteIngress := false, false
+	var foundCreateIngress, foundDeleteIngress bool
 	for !(foundCreateIngress && foundDeleteIngress) {
 		// Check our actions.
 		actions := fakeClient.Actions()
 		for _, a := range actions {
-			if a.Matches("create", "ingresses") {
+			if !foundCreateIngress && a.Matches("create", "ingresses") {
 				foundCreateIngress = true
 				continue
 			}
-			if a.Matches("delete", "ingresses") {
+			if !foundDeleteIngress && a.Matches("delete", "ingresses") {
 				foundDeleteIngress = true
 				continue
 			}

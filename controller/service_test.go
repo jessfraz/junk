@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,40 +31,40 @@ func TestControllerSingleService(t *testing.T) {
 
 	// Make sure we got events that match "create" "services" and "create" "events"
 	// This is more consistent that matching all the actions.
-	foundCreateService, foundCreateEvent := false, false
+	var foundCreateService, foundCreateEvent bool
 	for !(foundCreateService && foundCreateEvent) {
 		// Check our actions.
 		actions := fakeClient.Actions()
 		for _, a := range actions {
-			if a.Matches("create", "services") {
+			if !foundCreateService && a.Matches("create", "services") {
 				foundCreateService = true
 				continue
 			}
-			if a.Matches("create", "events") {
+			if !foundCreateEvent && a.Matches("create", "events") {
 				foundCreateEvent = true
-				continue
 			}
 		}
 	}
-}
 
-func TestControllerSingleServiceWithDelete(t *testing.T) {
-	service := newService()
-	controller, fakeClient := newTestController(t, service)
-	defer controller.Shutdown()
+	recordSetName := fmt.Sprintf("%s.%s", service.GetName(), fakeDomainNameSuffix)
 
-	// Run the controller in a goroutine.
-	go func(c *Controller) {
-		if err := c.Run(1); err != nil {
-			c.Shutdown()
-			logrus.Fatalf("running controller failed: %v", err)
+	for {
+		// Check that we have a dns record for this service.
+		recordSet, _, err := controller.azDNSClient.GetRecordSet(fakeResourceGroupName, fakeDomainNameSuffix, dns.A, recordSetName)
+		if err != nil {
+			t.Fatalf("getting record set failed: %v", err)
 		}
-	}(controller)
 
-	// Make sure the ingress and service informers cache has synced.
-	synced := false
-	for !synced {
-		synced = controller.ingressInformer.HasSynced() && controller.serviceInformer.HasSynced()
+		if recordSet.RecordSetProperties.ARecords == nil {
+			continue
+		}
+
+		ip := recordSet.RecordSetProperties.ARecords[0].Ipv4Address
+		if ip == service.Spec.LoadBalancerIP {
+			break
+		}
+
+		t.Fatalf("expected record set A record to be %s, got %s", service.Spec.LoadBalancerIP, ip)
 	}
 
 	// Delete the service from our fake clientset.
@@ -71,24 +72,34 @@ func TestControllerSingleServiceWithDelete(t *testing.T) {
 		t.Fatalf("deleting service failed: %v", err)
 	}
 
-	// Make sure we got events that match "delete" "services" and "create" "events"
+	// Make sure we got events that match "delete" "services" and  2 "create" "events"
 	// This is more consistent that matching all the actions.
-	foundDeleteService, foundCreateEvent := false, false
-	for !(foundDeleteService && foundCreateEvent) {
+	var foundDeleteService, foundCreateEvents bool
+	for !(foundDeleteService && foundCreateEvents) {
 		// Check our actions.
 		actions := fakeClient.Actions()
+		var countCreateEvents int
 		for _, a := range actions {
-			if a.Matches("delete", "services") {
+			if !foundDeleteService && a.Matches("delete", "services") {
 				foundDeleteService = true
 				continue
 			}
-			if a.Matches("create", "events") {
-				foundCreateEvent = true
-				continue
+			if countCreateEvents < 2 && a.Matches("create", "events") {
+				countCreateEvents++
 			}
+			foundCreateEvents = countCreateEvents == 2
 		}
 	}
 
+	// Check that we no longer have a dns record for this service.
+	recordSets, err := controller.azDNSClient.ListRecordSets(fakeResourceGroupName, fakeDomainNameSuffix, dns.A)
+	if err != nil {
+		t.Fatalf("listing record sets failed: %v", err)
+	}
+
+	if len(recordSets.Value) > 0 {
+		t.Fatalf("expected record set to be deleted from the record set list, got %#v", recordSets.Value)
+	}
 }
 
 // newService returns a new Service resource.

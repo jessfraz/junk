@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
@@ -18,6 +20,10 @@ const (
 	fakeResourceName      = "resource-name"
 	fakeRegion            = "region"
 	fakeSubscriptionID    = "subscription-id"
+)
+
+var (
+	fakeDomainNameSuffix = fmt.Sprintf("%s.%s.%s", hex.EncodeToString([]byte(fakeSubscriptionID+fakeResourceGroupName+fakeResourceName)), fakeRegion, fakeDomainNameRoot)
 )
 
 func init() {
