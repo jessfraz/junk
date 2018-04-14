@@ -71,7 +71,7 @@ func init() {
 	fs.StringVar(&region, "region", os.Getenv("AZURE_REGION"), "Azure region, defaults to the value of 'AZURE_REGION' env var")
 
 	fs.StringVar(&interval, "interval", "30s", "Controller resync period")
-	fs.IntVar(&workers, "interval", 2, "Controller workers to be spawned to process the queue")
+	fs.IntVar(&workers, "workers", 2, "Controller workers to be spawned to process the queue")
 
 	fs.BoolVar(&vrsn, "version", false, "print version and exit")
 	fs.BoolVar(&vrsn, "v", false, "print version and exit (shorthand)")

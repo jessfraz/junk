@@ -27,9 +27,9 @@ Version: v0.0.0
   -interval string
         Controller resync period (default "30s")
   -kubeconfig string
-        Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config) (default "/home/jessie/.kube/config")
+        Path to kubeconfig file with authorization and master location information (default is $HOME/.kube/config) 
   -namespace string
-        Kubernetes namespace to watch for ingress (default is to watch all namespaces)
+        Kubernetes namespace to watch for updates (default is to watch all namespaces)
   -region string
         Azure region, defaults to the value of 'AZURE_REGION' env var
   -resource string
@@ -39,4 +39,6 @@ Version: v0.0.0
   -v    print version and exit (shorthand)
   -version
         print version and exit
+  -workers int
+        Controller workers to be spawned to process the queue (default 2)
 ```
