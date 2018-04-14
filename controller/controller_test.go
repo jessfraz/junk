@@ -8,7 +8,6 @@ import (
 	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns/mock"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
@@ -20,6 +19,10 @@ const (
 	fakeRegion            = "region"
 	fakeSubscriptionID    = "subscription-id"
 )
+
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+}
 
 func TestController(t *testing.T) {
 	controller := newTestController(t)
@@ -34,12 +37,17 @@ func TestController(t *testing.T) {
 	}(controller)
 
 	// Add an Ingress resource.
-	addIngress(controller, &extensions.Ingress{})
+	addIngress(t, controller, newIngress(map[string]map[string]string{
+		"foo.example.com": {
+			"/foo1": "foo1svc",
+			"/foo2": "foo2svc",
+		},
+	}))
 
 	// Add a Service resource.
-	addService(controller, &v1.Service{})
+	addService(t, controller, newService())
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 20)
 
 	// Check our mock DNS record sets.
 }

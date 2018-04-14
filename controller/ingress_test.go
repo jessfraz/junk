@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"testing"
 
 	"k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -15,7 +16,7 @@ var (
 )
 
 // addIngress adds an Ingress resource to the fake clientset's ingress store.
-func addIngress(c *Controller, ingress *extensions.Ingress) {
+func addIngress(t *testing.T, c *Controller, ingress *extensions.Ingress) {
 	for _, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			service := &v1.Service{
@@ -36,30 +37,34 @@ func addIngress(c *Controller, ingress *extensions.Ingress) {
 			service.Spec.Ports = []v1.ServicePort{svcPort}
 
 			// Add the Service resource to our fake clientset.
-			c.k8sClient.CoreV1().Services(service.Namespace).Create(service)
+			if _, err := c.k8sClient.CoreV1().Services(service.Namespace).Create(service); err != nil {
+				t.Fatalf("creating service failed: %v", err)
+			}
 		}
 	}
 
 	// Add the Ingress resource to our fake clientset.
-	c.k8sClient.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(ingress)
+	if _, err := c.k8sClient.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(ingress); err != nil {
+		t.Fatalf("creating ingress failed: %v", err)
+	}
 }
 
 // newIngress returns a new Ingress resource with the given path map.
-func newIngress(hostRules map[string]string) *extensions.Ingress {
-	rules := []extensions.IngressRule{}
-	for host, pathMap := range hostRules {
+func newIngress(rules map[string]map[string]string) *extensions.Ingress {
+	r := []extensions.IngressRule{}
+	for host, pathMap := range rules {
 		httpPaths := []extensions.HTTPIngressPath{}
 		for path, backend := range pathMap {
 			httpPaths = append(httpPaths, extensions.HTTPIngressPath{
-				Path: fmt.Sprintf("%d", path),
+				Path: path,
 				Backend: extensions.IngressBackend{
-					ServiceName: string(backend),
+					ServiceName: backend,
 					ServicePort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
 				},
 			})
 		}
 
-		rules = append(rules, extensions.IngressRule{
+		r = append(r, extensions.IngressRule{
 			Host: host,
 			IngressRuleValue: extensions.IngressRuleValue{
 				HTTP: &extensions.HTTPIngressRuleValue{
@@ -83,7 +88,7 @@ func newIngress(hostRules map[string]string) *extensions.Ingress {
 				ServiceName: "k8s-bs-testcluster",
 				ServicePort: intstr.IntOrString{Type: intstr.Int, IntVal: 80},
 			},
-			Rules: rules,
+			Rules: r,
 		},
 		Status: extensions.IngressStatus{
 			LoadBalancer: v1.LoadBalancerStatus{
