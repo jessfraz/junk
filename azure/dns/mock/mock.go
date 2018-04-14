@@ -38,12 +38,18 @@ func (m *mockClient) DeleteRecordSet(resourceGroup, zoneName string, recordType 
 }
 
 func (m *mockClient) GetZone(resourceGroup, zoneName string) (*dns.Zone, *int, error) {
-	zone, _ := m.zoneStore[zoneName]
+	zone, ok := m.zoneStore[zoneName]
+	if !ok {
+		return nil, nil, nil
+	}
 	return &zone, nil, nil
 }
 
 func (m *mockClient) GetRecordSet(resourceGroup, zoneName string, recordType dns.RecordType, relativeRecordSetName string) (*dns.RecordSet, *int, error) {
-	recordSet, _ := m.recordSetStore[relativeRecordSetName]
+	recordSet, ok := m.recordSetStore[relativeRecordSetName]
+	if !ok {
+		return nil, nil, nil
+	}
 	return &recordSet, nil, nil
 }
 
