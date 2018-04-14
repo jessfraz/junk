@@ -22,17 +22,12 @@ const (
 )
 
 func init() {
-	logrus.SetLevel(logrus.DebugLevel)
+	// Set the logrus level to debug for the tests.
+	// logrus.SetLevel(logrus.DebugLevel)
 }
 
-func TestController(t *testing.T) {
-	ingress := newIngress(map[string]map[string]string{
-		"foo.example.com": {
-			"/foo1": "foo1svc",
-			"/foo2": "foo2svc",
-		},
-	})
-	controller := newTestController(t, newService(), ingress)
+func TestControllerSingleService(t *testing.T) {
+	controller, fakeClient := newTestController(t, newService())
 	defer controller.Shutdown()
 
 	// Run the controller in a goroutine.
@@ -43,10 +38,50 @@ func TestController(t *testing.T) {
 		}
 	}(controller)
 
-	logrus.Info("sleeping")
-	time.Sleep(time.Second * 15)
+	// TODO: figure out a less shitty way to do this.
+	time.Sleep(time.Second * 2)
 
-	// Check our mock DNS record sets.
+	// Set our expected actions.
+	expectedActions := []struct {
+		verb     string
+		resource string
+	}{
+		{
+			verb:     "list",
+			resource: "ingresses",
+		},
+		{
+			verb:     "watch",
+			resource: "ingresses",
+		},
+		{
+			verb:     "list",
+			resource: "services",
+		},
+		{
+			verb:     "watch",
+			resource: "services",
+		},
+		{
+			verb:     "update",
+			resource: "services",
+		},
+		{
+			verb:     "create",
+			resource: "events",
+		},
+	}
+
+	// Check our actions.
+	actions := fakeClient.Actions()
+	if len(actions) != len(expectedActions) {
+		t.Fatalf("expected %d actions, got %d: %#v", len(expectedActions), len(actions), actions)
+	}
+	for i, a := range actions {
+		if !a.Matches(expectedActions[i].verb, expectedActions[i].resource) {
+			t.Fatalf("unexpected action for index %d to be verb -> %s resource -> %s, got verb -> %s resource -> %s", i, expectedActions[i].verb, expectedActions[i].resource, a.GetVerb(), a.GetResource().Resource)
+		}
+	}
 }
 
 func TestControllerInvalidOptions(t *testing.T) {
@@ -86,7 +121,7 @@ func TestGetName(t *testing.T) {
 }
 
 // newTestController creates a new controller for testing.
-func newTestController(t *testing.T, objects ...runtime.Object) *Controller {
+func newTestController(t *testing.T, objects ...runtime.Object) (*Controller, *fake.Clientset) {
 	k8sClient := fake.NewSimpleClientset(objects...)
 	azDNSClient := mock.NewClient()
 
@@ -96,8 +131,10 @@ func newTestController(t *testing.T, objects ...runtime.Object) *Controller {
 		},
 		AzureDNSClient: azDNSClient,
 
-		KubeClient:    k8sClient,
-		KubeNamespace: v1.NamespaceAll,
+		KubeClient: k8sClient,
+		// TODO(jessfraz): this fails when it is namespace all with:
+		// "request namespace does not match object namespace".
+		KubeNamespace: v1.NamespaceDefault,
 
 		DomainNameRoot:    fakeDomainNameRoot,
 		ResourceGroupName: fakeResourceGroupName,
@@ -111,5 +148,5 @@ func newTestController(t *testing.T, objects ...runtime.Object) *Controller {
 		t.Fatalf("creating test controller failed: %v", err)
 	}
 
-	return controller
+	return controller, k8sClient
 }

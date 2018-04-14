@@ -164,13 +164,13 @@ func (c *Controller) Run(threadiness int) error {
 		return errors.New("Failed to wait for caches to sync")
 	}
 
-	logrus.Info("Starting workers...")
+	logrus.Infof("Starting %d worker[s]...", threadiness)
 	// Launch workers to process the resources.
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(c.runWorker, time.Second, c.stopCh)
 	}
 
-	logrus.Info("Started workers...")
+	logrus.Infof("Sucessfully started %d worker[s]...", threadiness)
 	<-c.stopCh
 	logrus.Info("Shutting down workers...")
 

@@ -101,7 +101,7 @@ func (c *Controller) processNextWorkItem() bool {
 		// get queued again until another change happens.
 		c.workqueue.Forget(obj)
 
-		logrus.Infof("Successfully synced object: %#v", obj)
+		logrus.Debugf("Successfully synced object: action -> %s object -> %#v", item.action, item.obj)
 		return nil
 	}(obj)
 
