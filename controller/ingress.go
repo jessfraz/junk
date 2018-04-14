@@ -8,6 +8,10 @@ import (
 )
 
 func (c *Controller) addIngress(obj *extensions.Ingress) {
+	if obj == nil {
+		return
+	}
+
 	logrus.Debugf("[ingress] add: from workqueue -> %#v", *obj)
 
 	// Get the resource from our lister. We do this as the delayed nature of the
@@ -28,14 +32,21 @@ func (c *Controller) addIngress(obj *extensions.Ingress) {
 		logrus.Warnf("[ingress] add: getting %s in namespace %s failed: %v", name, namespace, err)
 
 		// Bubble up the error with an event on the object.
-		c.recorder.Eventf(obj, v1.EventTypeWarning, "ADD", "[http-application-routing] [ingress] add: getting %s in namespace %s failed: %v", name, namespace, err)
+		c.recorder.Eventf(obj, v1.EventTypeWarning, "ADD", "getting %s in namespace %s failed: %v", name, namespace, err)
 		return
 	}
 
 	logrus.Debugf("[ingress] add: from lister -> %#v", *ingress)
+
+	// Add an event on the ingress resource.
+	c.recorder.Event(ingress, v1.EventTypeNormal, "ADD", "complete")
 }
 
 func (c *Controller) deleteIngress(obj *extensions.Ingress) {
+	if obj == nil {
+		return
+	}
+
 	logrus.Debugf("[ingress] delete: from workqueue -> %#v", *obj)
 
 	// Get the resource from our lister. We do this as the delayed nature of the
@@ -54,4 +65,7 @@ func (c *Controller) deleteIngress(obj *extensions.Ingress) {
 	}
 
 	logrus.Debugf("[ingress] delete: from lister -> %#v", *ingress)
+
+	// Add an event on the ingress resource.
+	c.recorder.Event(ingress, v1.EventTypeNormal, "DELETE", "complete")
 }

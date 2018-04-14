@@ -54,7 +54,7 @@ func (c *Controller) processNextWorkItem() bool {
 	}
 
 	// We wrap this block in a func so we can defer c.workqueue.Done.
-	err := func(obj interface{}) error {
+	func(obj interface{}) {
 		// We call Done here so the workqueue knows we have finished
 		// processing this item. We also must remember to call Forget if we
 		// do not want this work item being re-queued. For example, we do
@@ -71,7 +71,7 @@ func (c *Controller) processNextWorkItem() bool {
 			// process a work item that is invalid.
 			c.workqueue.Forget(obj)
 			logrus.Warnf("Expected queueItem in workqueue but got %#v", obj)
-			return nil
+			return
 		}
 
 		// Try to figure out the object type to pass it to the correct sync handler.
@@ -94,7 +94,7 @@ func (c *Controller) processNextWorkItem() bool {
 			// process a work item that is invalid.
 			c.workqueue.Forget(obj)
 			logrus.Warnf("queueItem was not of type Ingress or Service: %#v", item.obj)
-			return nil
+			return
 		}
 
 		// Finally, if no error occurs we Forget this item so it does not
@@ -102,13 +102,7 @@ func (c *Controller) processNextWorkItem() bool {
 		c.workqueue.Forget(obj)
 
 		logrus.Debugf("Successfully synced object: action -> %s object -> %#v", item.action, item.obj)
-		return nil
 	}(obj)
-
-	if err != nil {
-		logrus.Warnf("Running workqueue failed: %v", err)
-		return true
-	}
 
 	return true
 }

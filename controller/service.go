@@ -11,6 +11,10 @@ import (
 
 // addService adds a dns record set for a loadbalancer to the zone.
 func (c *Controller) addService(obj *v1.Service) {
+	if obj == nil {
+		return
+	}
+
 	logrus.Debugf("[service] add: from workqueue -> %#v", *obj)
 
 	// Get the resource from our lister. We do this as the delayed nature of the
@@ -31,7 +35,7 @@ func (c *Controller) addService(obj *v1.Service) {
 		logrus.Warnf("[service] add: getting %s in namespace %s failed: %v", name, namespace, err)
 
 		// Bubble up the error with an event on the object.
-		c.recorder.Eventf(obj, v1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: getting %s in namespace %s failed: %v", name, namespace, err)
+		c.recorder.Eventf(obj, v1.EventTypeWarning, "ADD", "getting %s in namespace %s failed: %v", name, namespace, err)
 		return
 	}
 
@@ -54,7 +58,7 @@ func (c *Controller) addService(obj *v1.Service) {
 		logrus.Warnf("[service] add: creating dns client failed: %v", err)
 
 		// Bubble up the error with an event on the object.
-		c.recorder.Eventf(service, v1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: creating dns client failed: %v", err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "ADD", "creating dns client failed: %v", err)
 		return
 	}
 
@@ -71,9 +75,11 @@ func (c *Controller) addService(obj *v1.Service) {
 		logrus.Warnf("[service] add: updating annotation failed: %v", err)
 
 		// Bubble up the error with an event on the object.
-		c.recorder.Eventf(service, v1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: updating annotation failed: %v", err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "ADD", "updating annotation failed: %v", err)
 		return
 	}
+	// Setup our original variable with our new annotation.
+	obj.Annotations = service.Annotations
 
 	// Create the DNS record set for the service.
 	recordSetName := fmt.Sprintf("%s.%s", serviceName, c.domainNameSuffix)
@@ -92,17 +98,21 @@ func (c *Controller) addService(obj *v1.Service) {
 		logrus.Warnf("[service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
 
 		// Bubble up the error with an event on the object.
-		c.recorder.Eventf(service, v1.EventTypeWarning, "ADD", "[http-application-routing] [service] add: adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "ADD", "adding dns record set %s to ip %s in zone %s failed: %v", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix, err)
 		return
 	}
 
 	logrus.Infof("[service] add: sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
 	// Add an event on the service.
-	c.recorder.Eventf(service, v1.EventTypeNormal, "ADD", "[http-application-routing] [service] add: sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
+	c.recorder.Eventf(service, v1.EventTypeNormal, "ADD", "sucessfully created dns record set %s to ip %s in zone %s", recordSetName, service.Spec.LoadBalancerIP, c.domainNameSuffix)
 }
 
 // deleteService deletes a dns record set for a loadbalancer from the zone.
 func (c *Controller) deleteService(obj *v1.Service) {
+	if obj == nil {
+		return
+	}
+
 	logrus.Debugf("[service] delete: from workqueue -> %#v", *obj)
 
 	// Get the resource from our lister. We do this as the delayed nature of the
@@ -134,7 +144,7 @@ func (c *Controller) deleteService(obj *v1.Service) {
 		logrus.Warnf("[service] delete: creating dns client failed: %v", err)
 
 		// Bubble up the error with an event on the object.
-		c.recorder.Eventf(service, v1.EventTypeWarning, "DELETE", "[http-application-routing] [service] delete: creating dns client failed: %v", err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "DELETE", "creating dns client failed: %v", err)
 		return
 	}
 
@@ -147,11 +157,11 @@ func (c *Controller) deleteService(obj *v1.Service) {
 		logrus.Warnf("[service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
 
 		// Bubble up the error with an event on the object.
-		c.recorder.Eventf(service, v1.EventTypeWarning, "DELETE", "[http-application-routing] [service] delete: deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
+		c.recorder.Eventf(service, v1.EventTypeWarning, "DELETE", "deleting dns record set %s from zone %s failed: %v", recordSetName, c.domainNameSuffix, err)
 		return
 	}
 
 	logrus.Infof("[service] delete: sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
 	// Add an event on the service.
-	c.recorder.Eventf(service, v1.EventTypeNormal, "DELETE", "[http-application-routing] [service] delete: sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
+	c.recorder.Eventf(service, v1.EventTypeNormal, "DELETE", "sucessfully deleted dns record set %s from zone %s", recordSetName, c.domainNameSuffix)
 }
