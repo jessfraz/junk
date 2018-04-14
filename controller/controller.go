@@ -178,9 +178,9 @@ func (c *Controller) Shutdown() {
 
 	// Only try draining the workqueue if we haven't already.
 	if !c.shutdown {
-		close(c.stopCh)
 		logrus.Info("Shutting down controller queues.")
 		c.workqueue.ShutDown()
+		// close(c.stopCh)
 		c.shutdown = true
 	}
 }

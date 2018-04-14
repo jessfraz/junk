@@ -34,6 +34,19 @@ func TestController(t *testing.T) {
 
 	// Add an Ingress resource.
 	addIngress(controller, &extensions.Ingress{})
+
+	// Add a Service resource.
+	addService(controller, &v1.Service{})
+
+	time.Sleep(time.Second * 10)
+
+	// Check our mock DNS record sets.
+}
+
+func TestControllerInvalidOptions(t *testing.T) {
+	if _, err := New(Options{}); err != errAzureAuthenticationNil {
+		t.Fatalf("expected error %v, got %v", errAzureAuthenticationNil, err)
+	}
 }
 
 // newTestController creates a new controller for testing.
