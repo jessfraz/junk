@@ -4,12 +4,12 @@
   notifications:
     email: true
   go:
-    - 1.7.x
-    - 1.8.x
+    - 1.x
     - tip
-  env:
-    global:
-      - GO15VENDOREXPERIMENT=1
+  matrix:
+    allow_failures:
+      - go: tip
+    fast_finish: true
   install:
     - go get github.com/golang/lint/golint
   script:
