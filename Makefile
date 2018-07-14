@@ -39,12 +39,12 @@ __check_defined = \
 				  required by target `$@')))
 
 check_exists = \
-				$(strip $(foreach 1,$1, \
-				$(call __check_exists,$1)))
+			   $(strip $(foreach 1,$1, \
+			   $(call __check_exists,$1)))
 __check_exists = \
-				  $(if $(wildcard $(value $1)/*),, \
-				  $(error $(value $1) does not exist, \
-				  required by target `$@'))
+				 $(if $(wildcard $(value $1)/*),, \
+				 $(error $(value $1) does not exist, \
+				 required by target `$@'))
 
 TMP_REMOTE:=tmp
 .PHONY: move-repo
