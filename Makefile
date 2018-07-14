@@ -61,13 +61,12 @@ move-repo: ## Moves a local repository into this repo as a sub-directory (ex. RE
 		mkdir -p "$(notdir $(REPO))" && \
 		mv !($(notdir $(REPO))) "$(notdir $(REPO))" && \
 		mv .!(|.|git) "$(notdir $(REPO))" && \
+		git add "$(notdir $(REPO))" && \
 		git commit -a -m "Preparing $(notdir $(REPO)) for move"
 	git remote add "$(TMP_REMOTE)" "$(REPO)"
 	git fetch "$(TMP_REMOTE)"
 	git merge --allow-unrelated-histories "$(TMP_REMOTE)/master"
 	git remote rm "$(TMP_REMOTE)"
-
-
 
 .PHONY: clean
 clean: ## Cleanup any build binaries or packages.
