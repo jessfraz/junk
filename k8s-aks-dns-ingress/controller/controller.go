@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure/dns"
 	"github.com/moby/moby/pkg/namesgenerator"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"

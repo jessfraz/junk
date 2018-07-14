@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
-	"github.com/jessfraz/k8s-aks-dns-ingress/controller"
-	"github.com/jessfraz/k8s-aks-dns-ingress/version"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/controller"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/version"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
