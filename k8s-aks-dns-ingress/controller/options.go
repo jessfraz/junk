@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure/dns"
 	"k8s.io/client-go/kubernetes"
 )
 

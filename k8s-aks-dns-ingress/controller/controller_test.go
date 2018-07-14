@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure"
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns/mock"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure/dns/mock"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"

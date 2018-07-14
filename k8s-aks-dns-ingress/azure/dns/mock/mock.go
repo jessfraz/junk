@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure/dns"
 )
 
 // NewClient creates a new mock DNS client.

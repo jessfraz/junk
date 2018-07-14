@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure/dns"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"

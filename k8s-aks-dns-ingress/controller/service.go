@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 
-	"github.com/jessfraz/k8s-aks-dns-ingress/azure/dns"
+	"github.com/jessfraz/junk/k8s-aks-dns-ingress/azure/dns"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
