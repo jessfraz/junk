@@ -4,6 +4,7 @@ ENV PATH /go/bin:$PATH
 ENV GOPATH /go
 
 RUN apk add --no-cache \
+	bash \
 	git \
 	libpcap-dev \
 	make
