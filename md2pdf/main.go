@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jessfraz/md2pdf/version"
+	"github.com/jessfraz/junk/md2pdf/version"
 	"github.com/sirupsen/logrus"
 )
 
