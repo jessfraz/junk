@@ -5,9 +5,11 @@ ENV GOPATH /go
 
 RUN apk add --no-cache \
 	bash \
+	gcc \
 	git \
 	libpcap-dev \
-	make
+	make \
+	musl-dev
 
 # Install golint
 RUN go get github.com/golang/lint/golint
