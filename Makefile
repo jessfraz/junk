@@ -3,25 +3,25 @@ PREFIX?=$(shell pwd)
 BUILDTAGS=
 
 .PHONY: all
-all: clean build fmt lint test vet ## Runs a clean, build, fmt, lint, test, and vet
+all: clean build fmt lint test vet ## Runs a clean, build, fmt, lint, test, and vet.
 
 .PHONY: build
-build: ## Builds dynamic executables and/or packages
+build: ## Builds dynamic executables and/or packages.
 	@echo "+ $@"
 	@go build -tags "$(BUILDTAGS) cgo" ./...
 
 .PHONY: fmt
-fmt: ## Verifies all files have been `gofmt`ed
+fmt: ## Verifies all files have been `gofmt`ed.
 	@echo "+ $@"
 	@gofmt -s -l . | grep -v '.pb.go:' | grep -v vendor | tee /dev/stderr
 
 .PHONY: lint
-lint: ## Verifies `golint` passes
+lint: ## Verifies `golint` passes.
 	@echo "+ $@"
 	@golint ./... | grep -v '.pb.go:' | grep -v vendor | tee /dev/stderr
 
 .PHONY: test
-test: ## Runs the go tests
+test: ## Runs the go tests.
 	@echo "+ $@"
 	@go test -v -tags "$(BUILDTAGS) cgo" $(shell go list ./... | grep -v vendor)
 
@@ -57,7 +57,7 @@ move-repo: ## Moves a local repository into this repo as a sub-directory (ex. RE
 
 
 .PHONY: clean
-clean: ## Cleanup any build binaries or packages
+clean: ## Cleanup any build binaries or packages.
 	@echo "+ $@"
 
 .PHONY: help
