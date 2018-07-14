@@ -1,5 +1,9 @@
-# Set an output prefix, which is the local directory if not specified
+# Set an output prefix, which is the local directory if not specified.
 PREFIX?=$(shell pwd)
+
+SHELL = /bin/bash
+.SHELLFLAGS = -O extglob -c
+
 BUILDTAGS=
 
 .PHONY: all
@@ -52,12 +56,15 @@ move-repo: ## Moves a local repository into this repo as a sub-directory (ex. RE
 	@:$(call check_defined, REPO, path to the repository)
 	@:$(call check_exists, REPO)
 	cd "$(REPO)" && \
+		git checkout . && \
+		$(RM) -r "$(notdir $(REPO))" && \
 		mkdir -p "$(notdir $(REPO))" && \
-		mv \!\("$(notdir $(REPO))"\) "$(notdir $(REPO))" && \
+		mv !($(notdir $(REPO))) "$(notdir $(REPO))" && \
+		mv .!(|.|git) "$(notdir $(REPO))" && \
 		git commit -a -m "Preparing $(notdir $(REPO)) for move"
 	git remote add "$(TMP_REMOTE)" "$(REPO)"
 	git fetch "$(TMP_REMOTE)"
-	git merge "$(TMP_REMOTE)/master"
+	git merge --allow-unrelated-histories "$(TMP_REMOTE)/master"
 	git remote rm "$(TMP_REMOTE)"
 
 
