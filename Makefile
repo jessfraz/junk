@@ -38,17 +38,23 @@ __check_defined = \
 				  $(error Undefined $1$(if $2, ($2))$(if $(value @), \
 				  required by target `$@')))
 
+check_exists = \
+				$(strip $(foreach 1,$1, \
+				$(call __check_exists,$1)))
+__check_exists = \
+				  $(if $(wildcard $(value $1)/*),, \
+				  $(error $(value $1) does not exist, \
+				  required by target `$@'))
+
 TMP_REMOTE:=tmp
 .PHONY: move-repo
 move-repo: ## Moves a local repository into this repo as a sub-directory (ex. REPO=~/dumb-shit).
 	@:$(call check_defined, REPO, path to the repository)
-	@if [ ! -d "$(REPO)" ]; then \
-		$(error $(REPO) does not exist) \
-    fi
+	@:$(call check_exists, REPO)
 	cd "$(REPO)" && \
-		mkdir -p "$(dir $(REPO))" && \
-		mv !("$(dir $(REPO))") "$(dir $(REPO))" && \
-		git commit -a -m "Preparing $(dir $(REPO)) for move"
+		mkdir -p "$(notdir $(REPO))" && \
+		mv \!\("$(notdir $(REPO))"\) "$(notdir $(REPO))" && \
+		git commit -a -m "Preparing $(notdir $(REPO)) for move"
 	git remote add "$(TMP_REMOTE)" "$(REPO)"
 	git fetch "$(TMP_REMOTE)"
 	git merge "$(TMP_REMOTE)/master"
