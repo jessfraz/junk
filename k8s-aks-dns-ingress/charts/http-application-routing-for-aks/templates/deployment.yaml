@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}
+    spec:
+      containers:
+      - name: {{ template "fullname" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: AZURE_AUTH_LOCATION
+          value: /etc/dns/azure.json
+        - name: DOMAIN_NAME_ROOT
+          value: {{ .Values.env.domainName }}
+        - name: AZURE_RESOURCE_GROUP
+          value: {{ .Values.env.azureResourceGroup }}
+        - name: AZURE_RESOURCE_NAME
+          value: {{ .Values.env.azureResource }}
+        - name: AZURE_REGION
+          value: {{ default "westus" .Values.env.azureRegion }}
+        volumeMounts:
+        - name: azure-credential
+          mountPath: "/etc/dns/azure.json"
+        command: ["k8s-aks-dns-ingress"]
+        args: ["-d"]
+      volumes:
+      - name: azure-credential
+        hostPath:
+          path: /etc/kubernetes/azure.json
+          type: File

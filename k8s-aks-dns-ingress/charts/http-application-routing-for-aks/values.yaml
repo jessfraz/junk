@@ -1,0 +1,9 @@
+image:
+  repository: r.j3ss.co/k8s-aks-dns-ingress
+  tag: latest
+  pullPolicy: Always
+env:
+  azureResourceGroup:
+  azureResource:
+  azureRegion:
+  domainName:

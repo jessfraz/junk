@@ -1,0 +1,8 @@
+name: http-application-routing-for-aks
+version: 0.0.0
+description: a Helm chart to install http application routing in an AKS cluster.
+sources:
+  - https://github.com/jessfraz/k8s-aks-dns-ingress
+maintainers:
+  - name: Jessie Frazelle
+    email: acidburn@microsoft.com
