@@ -10,7 +10,7 @@ HERE.** It's all half finished or shitty crap.
 ## Using the Makefile
 
 ```console
- make help
+$ make help
 all                            Runs a clean, build, fmt, lint, test, and vet.
 build                          Builds dynamic executables and/or packages.
 clean                          Cleanup any build binaries or packages.
