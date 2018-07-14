@@ -22,7 +22,7 @@ fmt: ## Verifies all files have been `gofmt`ed.
 .PHONY: lint
 lint: ## Verifies `golint` passes.
 	@echo "+ $@"
-	@golint ./... | grep -v '.pb.go:' | grep -v vendor | tee /dev/stderr
+	@golint ./... | grep -v '.pb.go:' | grep -v vendor | grep -v paws/totessafe/reflector | tee /dev/stderr
 
 .PHONY: test
 test: ## Runs the go tests.
