@@ -12,8 +12,8 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-	"github.com/jessfraz/paws/moarpackets/types"
-	"github.com/jessfraz/paws/totessafe/reflector"
+	"github.com/jessfraz/junk/paws/moarpackets/types"
+	"github.com/jessfraz/junk/paws/totessafe/reflector"
 )
 
 func watchDevice(client *reflector.InternalReflectorClient, device pcap.Interface) {

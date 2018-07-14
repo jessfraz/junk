@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/jessfraz/paws/totessafe/cmd"
+import "github.com/jessfraz/junk/paws/totessafe/cmd"
 
 func main() {
 	cmd.Execute()

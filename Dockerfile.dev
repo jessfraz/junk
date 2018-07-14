@@ -1,0 +1,15 @@
+FROM golang:alpine
+
+ENV PATH /go/bin:$PATH
+ENV GOPATH /go
+
+RUN apk add --no-cache \
+	git \
+	libpcap-dev \
+	make
+
+# Install golint
+RUN go get github.com/golang/lint/golint
+
+COPY . /go/src/github.com/jessfraz/junk
+WORKDIR /go/src/github.com/jessfraz/junk

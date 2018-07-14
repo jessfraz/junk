@@ -7,8 +7,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/jessfraz/paws/moarpackets/types"
-	"github.com/jessfraz/paws/totessafe/reflector"
+	"github.com/jessfraz/junk/paws/moarpackets/types"
+	"github.com/jessfraz/junk/paws/totessafe/reflector"
 )
 
 func main() {

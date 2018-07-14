@@ -34,6 +34,25 @@ vet: ## Verifies `go vet` passes.
 	@echo "+ $@"
 	@go vet $(shell go list ./... | grep -v vendor) | grep -v '.pb.go:' | tee /dev/stderr
 
+# if this session isn't interactive, then we don't want to allocate a
+# TTY, which would fail, but if it is interactive, we do want to attach
+# so that the user can send e.g. ^C through.
+DOCKER_FLAGS = --rm -i
+INTERACTIVE := $(shell [ -t 0 ] && echo 1 || echo 0)
+ifeq ($(INTERACTIVE), 1)
+	DOCKER_FLAGS += -t
+endif
+
+DOCKER_IMAGE := r.j3ss.co/junk:dev
+.PHONY: ci
+ci: ## Run the makefile in a docker container.
+	@echo "+ $@"
+	docker build --rm --force-rm -f Dockerfile.dev -t $(DOCKER_IMAGE) .
+	docker run \
+		--disable-content-trust=true \
+		$(DOCKER_FLAGS) \
+		$(DOCKER_IMAGE) make
+
 check_defined = \
 				$(strip $(foreach 1,$1, \
 				$(call __check_defined,$1,$(strip $(value 2)))))
@@ -50,7 +69,7 @@ __check_exists = \
 				 $(error $(value $1) does not exist, \
 				 required by target `$@'))
 
-TMP_REMOTE:=tmp
+TMP_REMOTE := tmp
 .PHONY: move-repo
 move-repo: ## Moves a local repository into this repo as a sub-directory (ex. REPO=~/dumb-shit).
 	@:$(call check_defined, REPO, path to the repository)

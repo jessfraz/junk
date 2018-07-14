@@ -18,11 +18,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-	//"github.com/jessfraz/paws/totessafe/reflector"
-	//"github.com/jessfraz/paws/totessafe/reflector"
-	"github.com/jessfraz/paws/totessafe/reflector"
+	"github.com/jessfraz/junk/paws/totessafe/reflector"
 	"github.com/kubicorn/kubicorn/pkg/logger"
+	"github.com/spf13/cobra"
 )
 
 var (

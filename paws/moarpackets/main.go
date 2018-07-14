@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/gopacket/pcap"
-	"github.com/jessfraz/paws/totessafe/reflector"
+	"github.com/jessfraz/junk/paws/totessafe/reflector"
 )
 
 var (
