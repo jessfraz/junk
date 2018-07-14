@@ -1,0 +1,9 @@
+sleeping-beauty
+moarpackets/moarpackets
+totessafe/totessafe
+.idea*
+bin/
+
+# Go coverage results
+coverage.txt
+profile.out
