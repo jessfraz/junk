@@ -4,6 +4,9 @@
 
 A place for everything without a home.
 
+This is basically a monorepo of things that I don't feel like maintaining as
+their own repo.
+
 **IF YOU ARE LOOKING AT THIS AND YOU ARE NOT JESS, YOU WILL FIND NOTHING COOL
 HERE.** It's all half finished or shitty crap.
 
