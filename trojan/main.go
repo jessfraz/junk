@@ -63,7 +63,7 @@ func main() {
 	}
 
 	if resp.Node.Value == "" {
-		logrus.Debug("/firewall/interface returned empty contents, using %q", iface)
+		logrus.Debugf("/firewall/interface returned empty contents, using %q", iface)
 
 		if _, err = e.Set("/firewall/interface", iface, 0); err != nil {
 			logrus.Fatal(err)
