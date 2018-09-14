@@ -1,4 +1,4 @@
-FROM golang:1.10-alpine
+FROM golang:alpine
 
 ENV PATH /go/bin:$PATH
 ENV GOPATH /go
