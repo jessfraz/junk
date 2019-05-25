@@ -12,7 +12,7 @@ RUN apk add --no-cache \
 	musl-dev
 
 # Install golint
-RUN go get github.com/golang/lint/golint
+RUN go get golang.org/x/lint/golint
 
 COPY . /go/src/github.com/jessfraz/junk
 WORKDIR /go/src/github.com/jessfraz/junk
