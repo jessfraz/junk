@@ -1,4 +1,4 @@
-httplib2==0.9
+httplib2==0.18.0
 moarjson==0.3.4
 python-instagram==0.8.0
 simplejson==3.4.1
