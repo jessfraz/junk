@@ -2,4 +2,4 @@ httplib2==0.19.0
 moarjson @ https://github.com/bulv1ne/moarjson/archive/47aaa7b773d4a381970ada3d8ba11c686f85a078.tar.gz
 python-instagram==0.8.0
 simplejson==3.4.1
-tweepy==3.0
+tweepy==3.7.0
